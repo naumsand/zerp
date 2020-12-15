@@ -1,0 +1,34 @@
+unpleasant_situations	emotion-dismatch
+module_2	repetition
+repetition	
+game-principle	
+	
+emotion-dismatch	
+time-to-next-reward	
+time-to-next-reward	
+	
+repetition	
+module_2	
+controls	
+	
+	
+	
+repetition	
+	
+	
+repetition	
+repetition	
+	
+	
+	
+repetition	
+	
+	
+	
+	
+	
+	
+	
+	
+controls	
+repetition	

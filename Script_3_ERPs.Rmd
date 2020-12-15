@@ -1,0 +1,1664 @@
+---
+title: "ERP measures"
+output: 
+  rmdformats::material:
+    highlight: kate
+    css: web_style.css
+    thumbnails: false
+    lightbox: true
+    gallery: true
+    cards: true
+    self_contained: no
+    number_sections: no
+    code_folding: hide
+    fig_caption: yes
+---
+
+<!-- Set up workspace -->
+
+```{r setup, include = FALSE, message = FALSE, warning = FALSE}
+
+# Set general settings for Markdown file 
+  options(max.print="75")
+
+  knitr::opts_chunk$set(echo = TRUE,
+                 prompt = FALSE,
+                 tidy = TRUE,
+                 comment = NA,
+                 message = FALSE,
+                 warning = FALSE,
+                 results = FALSE,
+  	             fig.align = "center")
+  knitr::opts_knit$set(width = 75)
+# Swipe environment
+  rm(list=ls())
+  
+# Set libraries
+  library(afex)
+  library(car)
+  library(eegUtils)
+  library(emmeans) 
+  library(ggplot2)
+  library(lme4)
+  library(MASS)
+  library(miceadds)
+  library(pander)
+  library(ppcor)
+  library(sjmisc)
+  library(sjPlot)
+  library(tidyverse)
+  
+# Round to 2 digits   
+  options(digits=2)
+  
+# Disable scientific notation in R
+  options(scipen = 999)
+    
+# Set figure color palettes
+  ZE_ERP_col = c("#d35623","#3f9583","#b3a079") # angry, happy, neutral
+  
+  
+# Correlation function
+# https://stackoverflow.com/questions/34326906/extracting-and-formatting-results-of-cor-test-on-multiple-pairs-of-columns 
+  corrFunc <- function(var1, var2, data) {
+    result = cor.test(data[,var1], data[,var2])
+    data.frame(var1, var2, result[c("estimate","p.value","statistic")], 
+               stringsAsFactors=FALSE) }
+  
+  
+# Do graphs?
+  graph = 1
+  
+# Do linear mixed models? (lmm)
+  lmm = 0
+
+```
+
+```{r load_data, include = FALSE}
+
+# Load questionnaire data
+  load.Rdata(filename="./data/qn_data.Rdata", "qn_data")
+
+# Regress out influence of covariates - behavioral variables
+  qn_data$res_EMK_EM_P_T2 = resid(lm(z_EMK_EM_P_T2 ~ z_age + z_CPM + z_app_time, data = qn_data))
+  qn_data$res_EMK_EK_P_T2 = resid(lm(z_EMK_EK_P_T2 ~ z_age + z_CPM + z_app_time, data = qn_data))
+  qn_data$res_EMK_EK_CH_T2 = resid(lm(z_EMK_EK_CH_T2 ~ z_age + z_CPM + z_app_time, data = qn_data))
+  qn_data$res_SDQ_PB_T2 = resid(lm(z_SDQ_PB_T2 ~ z_age + z_CPM + z_app_time, data = qn_data))
+  qn_data$res_SDQ_T2 = resid(lm(z_SDQ_T2 ~ z_age + z_CPM + z_app_time, data = qn_data))
+  
+  qn_data$d_res_EMK_EM_P = resid(lm(zd_EMK_EM_P ~ z_age + z_CPM + z_app_time, data = qn_data))
+  qn_data$d_res_EMK_EK_P = resid(lm(zd_EMK_EK_P ~ z_age + z_CPM + z_app_time, data = qn_data))
+  qn_data$d_res_EMK_EK_CH = resid(lm(zd_EMK_EK_CH ~ z_age + z_CPM + z_app_time, data = qn_data))
+  qn_data$d_res_SDQ_PB = resid(lm(zd_SDQ_PB ~ z_age + z_CPM + z_app_time, data = qn_data))
+  qn_data$d_res_SDQ = resid(lm(zd_SDQ_Total ~ z_age + z_CPM + z_app_time, data = qn_data))
+
+# Regress out influence of covariates - Brain variables
+  qn_data$res_P3_amp_hap = resid(lm(z_P3_amp_hap ~ z_age + z_CPM + z_app_time, data = qn_data))
+  qn_data$res_P3_amp_ang = resid(lm(z_P3_amp_ang ~ z_age + z_CPM + z_app_time, data = qn_data))
+  qn_data$res_P3_amp_neu = resid(lm(z_P3_amp_neu ~ z_age + z_CPM + z_app_time, data = qn_data))
+  
+  qn_data$res_P3_amp_hap_neu = resid(lm(z_P3_amp_hap_neu ~ z_age + z_CPM + z_app_time, data = qn_data))
+  qn_data$res_P3_amp_ang_neu = resid(lm(z_P3_amp_ang_neu ~ z_age + z_CPM + z_app_time, data = qn_data))
+
+# Grand averaged (ga) data for head plots
+  ga_topo_wide = read.delim("./data/PFV_ga_topo.txt", header = TRUE, sep = " ", dec = ".")
+
+# Grand averaged (ga) data for ERP trajectory
+  ga_traj_wide = read.delim("./data/PFV_ga_traj.txt", header = TRUE, sep = " ", dec = ".")
+  
+# Load ERP visualization data
+  load.Rdata(filename="./data/erp_vis_data.Rdata", "erp_vis_data")  
+  
+# Separate data
+  P1_P3_traj = subset(erp_vis_data, ERP = "P1_P3")
+  N170_l_traj = subset(erp_vis_data, ERP = "N170l")
+  N170_r_traj = subset(erp_vis_data, ERP = "N170r")
+  
+# Load ERP data for statistics
+  load.Rdata(filename="./data/P1_stat.Rdata", "P1_stat")  
+  load.Rdata(filename="./data/N170_stat.Rdata", "N170_stat") 
+  load.Rdata(filename="./data/P3_short_stat.Rdata", "P3_short_stat")
+  load.Rdata(filename="./data/P3_medium_stat.Rdata", "P3_medium_stat")
+  load.Rdata(filename="./data/P3_long_stat.Rdata", "P3_long_stat")
+  
+# Prepare data for boxplots 
+  
+  # P1 amplitude
+    P1_amp_all_emo = subset(qn_data, select = c(ID, group, mc_CPM, mc_app_time, P1_amp_hap, P1_amp_neu, P1_amp_ang))
+    
+    P1_amp_emo_neu = P1_amp_all_emo
+    P1_amp_emo_neu$P1_amp_emo = (P1_amp_emo_neu$P1_amp_hap + P1_amp_emo_neu$P1_amp_ang)/2  
+    P1_amp_emo_neu = subset(P1_amp_emo_neu, select = -c(P1_amp_hap,P1_amp_ang))
+  
+  # Change from wide to long format
+    P1_amp_all_emo = gather(P1_amp_all_emo, emotion, amplitude, P1_amp_hap:P1_amp_ang, factor_key=TRUE)
+    P1_amp_all_emo$emotion = factor(P1_amp_all_emo$emotion) 
+    
+    P1_amp_emo_neu = gather(P1_amp_emo_neu, emotion, amplitude, P1_amp_neu:P1_amp_emo, factor_key=TRUE)
+    P1_amp_emo_neu$emotion = factor(P1_amp_emo_neu$emotion) 
+    
+  # N170 amplitude across hemispheres
+    N170_amp_all_emo = subset(qn_data, select = c(ID, mc_CPM, mc_app_time, group, N170_amp_hap, N170_amp_neu, N170_amp_ang))
+
+  # Change from wide to long format
+    N170_amp_all_emo = gather(N170_amp_all_emo, emotion, amplitude, N170_amp_hap:N170_amp_ang, factor_key=TRUE)
+    N170_amp_all_emo$emotion = factor(N170_amp_all_emo$emotion)  
+    
+  # N170 amplitude left hemisphere
+    N170_left_amp_box = subset(qn_data, select = c(ID, mc_CPM, mc_app_time, group, N170_left_amp_hap, N170_left_amp_neu, N170_left_amp_ang))
+
+  # Change from wide to long format
+    N170_left_amp_box = gather(N170_left_amp_box, emotion, amplitude, N170_left_amp_hap:N170_left_amp_ang, factor_key=TRUE)
+    N170_left_amp_box$emotion = factor(N170_left_amp_box$emotion)    
+    
+  # N170 amplitude right hemisphere
+    N170_right_amp_box = subset(qn_data, select = c(ID, mc_CPM, mc_app_time, group, N170_right_amp_hap, N170_right_amp_neu, N170_right_amp_ang))
+
+  # Change from wide to long format
+    N170_right_amp_box = gather(N170_right_amp_box, emotion, amplitude, N170_right_amp_hap:N170_right_amp_ang, factor_key=TRUE)
+    N170_right_amp_box$emotion = factor(N170_right_amp_box$emotion)      
+    
+  # Combine them for statistical analyses
+    N170_left_amp_box$hem = "left"
+    N170_right_amp_box$hem = "right"
+    N170_amp_hem_comp = rbind(N170_left_amp_box, N170_right_amp_box)
+    
+    N170_amp_hem_comp$emotion_rec[N170_amp_hem_comp$emotion == "N170_left_amp_ang" | N170_amp_hem_comp$emotion == "N170_right_amp_ang"] = "angry"
+    N170_amp_hem_comp$emotion_rec[N170_amp_hem_comp$emotion == "N170_left_amp_hap" | N170_amp_hem_comp$emotion == "N170_right_amp_hap"] = "happy"
+    N170_amp_hem_comp$emotion_rec[N170_amp_hem_comp$emotion == "N170_left_amp_neu" | N170_amp_hem_comp$emotion == "N170_right_amp_neu"] = "neutral"
+    
+  # P3 amplitude
+    P3_amp_all_emo= subset(qn_data, select = c(ID, group, mc_CPM, mc_app_time, P3_amp_hap, P3_amp_neu, P3_amp_ang))
+    
+    P3_amp_emo_neu = P3_amp_all_emo
+    P3_amp_emo_neu$P3_amp_emo = (P3_amp_emo_neu$P3_amp_hap + P3_amp_emo_neu$P3_amp_ang)/2  
+    P3_amp_emo_neu = subset(P3_amp_emo_neu, select = -c(P3_amp_hap,P3_amp_ang))
+  
+  # Change from wide to long format
+    P3_amp_all_emo = gather(P3_amp_all_emo, emotion, amplitude, P3_amp_hap:P3_amp_ang, factor_key=TRUE)
+    P3_amp_all_emo$emotion = factor(P3_amp_all_emo$emotion) 
+    
+    P3_amp_emo_neu = gather(P3_amp_emo_neu, emotion, amplitude, P3_amp_neu:P3_amp_emo, factor_key=TRUE)
+    P3_amp_emo_neu$emotion = factor(P3_amp_emo_neu$emotion) 
+    
+  # P1 latency
+    P1_lat_box = subset(qn_data, select = c(ID, group, mc_CPM, mc_app_time, P1_lat_hap, P1_lat_neu, P1_lat_ang))
+  
+  # Change from wide to long format
+    P1_lat_box = gather(P1_lat_box, emotion, latency, P1_lat_hap:P1_lat_ang, factor_key=TRUE)
+    P1_lat_box$emotion = factor(P1_lat_box$emotion)    
+  
+  # N170 latency across hemispheres 
+    N170_lat_box = subset(qn_data, select = c(ID, mc_CPM, mc_app_time, group, N170_lat_hap, N170_lat_neu, N170_lat_ang))
+  
+  # Change from wide to long format
+    N170_lat_box = gather(N170_lat_box, emotion, latency, N170_lat_hap:N170_lat_ang, factor_key=TRUE)
+    N170_lat_box$emotion = factor(N170_lat_box$emotion)
+    
+  # N170 latency left hemisphere
+    N170_left_lat_box = subset(qn_data, select = c(ID, mc_CPM, mc_app_time, group, N170_left_lat_hap, N170_left_lat_neu, N170_left_lat_ang))
+
+  # Change from wide to long format
+    N170_left_lat_box = gather(N170_left_lat_box, emotion, latency, N170_left_lat_hap:N170_left_lat_ang, factor_key=TRUE)
+    N170_left_lat_box$emotion = factor(N170_left_lat_box$emotion)    
+    
+  # N170 latency right hemisphere
+    N170_right_lat_box = subset(qn_data, select = c(ID, mc_CPM, mc_app_time, group, N170_right_lat_hap, N170_right_lat_neu, N170_right_lat_ang))
+
+  # Change from wide to long format
+    N170_right_lat_box = gather(N170_right_lat_box, emotion, latency, N170_right_lat_hap:N170_right_lat_ang, factor_key=TRUE)
+    N170_right_lat_box$emotion = factor(N170_right_lat_box$emotion)     
+      
+    
+  # Combine them for statistical analyses
+    N170_left_lat_box$hem = "left"
+    N170_right_lat_box$hem = "right"
+    N170_lat_hem_comp = rbind(N170_left_lat_box, N170_right_lat_box)
+    
+    N170_lat_hem_comp$emotion_rec[N170_lat_hem_comp$emotion == "N170_left_lat_ang" | N170_lat_hem_comp$emotion == "N170_right_lat_ang"] = "angry"
+    N170_lat_hem_comp$emotion_rec[N170_lat_hem_comp$emotion == "N170_left_lat_hap" | N170_lat_hem_comp$emotion == "N170_right_lat_hap"] = "happy"
+    N170_lat_hem_comp$emotion_rec[N170_lat_hem_comp$emotion == "N170_left_lat_neu" | N170_lat_hem_comp$emotion == "N170_right_lat_neu"] = "neutral"
+   
+  # Separate dataset for training group
+    qn_data_TG = subset(qn_data, group == "TG")
+    qn_data_CG = subset(qn_data, group == "CG")
+  
+     
+```
+
+# Individual / Grand-average visual inspection {.tabset .tabset-pills}
+
+## Topographies across time
+
+```{r plot_ga_topo_tws}
+
+if (graph == 1) {
+
+# Change from wide to long format 
+  ga_topo_long = gather(ga_topo_wide, electrode, amplitude, Fp1:Oz,
+                              factor_key=TRUE)
+# Topoplots
+        
+    # Rename A1/A2
+      names(ga_topo_long)[names(ga_topo_long) == "A1"] <- "TP9"
+      names(ga_topo_long)[names(ga_topo_long) == "A2"] <- "TP10"
+      
+    # Electrode locations    
+      ga_topo_long = electrode_locations(ga_topo_long, electrode = "electrode",  drop = FALSE,
+                                          montage = NULL)
+      
+      
+    # Select 1st time window
+      ga_topo_tw1 = ga_topo_long[(ga_topo_long$time >= 0)& (ga_topo_long$time <= 100),]  
+      
+    # Plot topoplot for first time window
+      ga_topo_tw1_plot = ggplot(ga_topo_tw1, aes(x = x, y = y, fill = amplitude, label = electrode)) +
+                    ggtitle("0-100ms")+
+                    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "text", chan_size = 2,
+                              head_size = 1) + 
+                    scale_fill_distiller(palette = "RdBu" , limits = c(-130,200)) + 
+                    theme_void() + 
+                    coord_equal() + 
+                    theme(legend.position = "none")
+
+    # Select 2nd time window
+      ga_topo_tw2 = ga_topo_long[(ga_topo_long$time >= 100)& (ga_topo_long$time <= 200),]  
+      
+    # Plot topoplot for first time window
+      ga_topo_tw2_plot = ggplot(ga_topo_tw2, aes(x = x, y = y, fill = amplitude, label = electrode)) +
+                    ggtitle("100-200ms")+
+                    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "text", chan_size = 2,
+                              head_size = 1) + 
+                    scale_fill_distiller(palette = "RdBu" , limits = c(-130,200)) + 
+                    theme_void() + 
+                    coord_equal() + 
+                    theme(legend.position = "none")
+      
+    # Select 3rd time window
+      ga_topo_tw3 = ga_topo_long[(ga_topo_long$time >= 200)& (ga_topo_long$time <= 300),]  
+      
+    # Plot topoplot for first time window
+      ga_topo_tw3_plot = ggplot(ga_topo_tw3, aes(x = x, y = y, fill = amplitude, label = electrode)) +
+                    ggtitle("200-300ms")+
+                    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "text", chan_size = 2,
+                              head_size = 1) + 
+                    scale_fill_distiller(palette = "RdBu" , limits = c(-130,200)) + 
+                    theme_void() + 
+                    coord_equal() + 
+                    theme(legend.position = "none")
+      
+    # Select 4th time window
+      ga_topo_tw4 = ga_topo_long[(ga_topo_long$time >= 300)& (ga_topo_long$time <= 400),]  
+      
+    # Plot topoplot for first time window
+      ga_topo_tw4_plot = ggplot(ga_topo_tw4, aes(x = x, y = y, fill = amplitude, label = electrode)) +
+                    ggtitle("300-400ms")+
+                    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "text", chan_size = 2,
+                              head_size = 1) + 
+                    scale_fill_distiller(palette = "RdBu" , limits = c(-130,200)) + 
+                    theme_void() + 
+                    coord_equal() + 
+                    theme(legend.position = "none")
+      
+    # Select 5th time window
+      ga_topo_tw5 = ga_topo_long[(ga_topo_long$time >= 400)& (ga_topo_long$time <= 500),]  
+      
+    # Plot topoplot for first time window
+      ga_topo_tw5_plot = ggplot(ga_topo_tw5, aes(x = x, y = y, fill = amplitude, label = electrode)) +
+                    ggtitle("400-500ms")+
+                    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "text", chan_size = 2,
+                              head_size = 1) + 
+                    scale_fill_distiller(palette = "RdBu" , limits = c(-130,200)) + 
+                    theme_void() + 
+                    coord_equal() + 
+                    theme(legend.position = "none")
+      
+      
+    # Select 6th time window
+      ga_topo_tw6 = ga_topo_long[(ga_topo_long$time >= 500)& (ga_topo_long$time <= 600),]  
+      
+    # Plot topoplot for first time window
+      ga_topo_tw6_plot = ggplot(ga_topo_tw6, aes(x = x, y = y, fill = amplitude, label = electrode)) +
+                    ggtitle("500-600ms")+
+                    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "text", chan_size = 2,
+                              head_size = 1) + 
+                    scale_fill_distiller(palette = "RdBu" , limits = c(-130,200)) + 
+                    theme_void() + 
+                    coord_equal() +
+                    theme(legend.position = "none")
+ 
+# Display plots
+  fig_ga_topo = cowplot::plot_grid(ga_topo_tw1_plot, ga_topo_tw2_plot, ga_topo_tw3_plot, ga_topo_tw4_plot, ga_topo_tw5_plot, ga_topo_tw6_plot, ncol=3, rel_widths=c(1, 1, 1, 1, 1, 1))
+  fig_ga_topo    
+  
+}
+      
+```
+
+<br>
+
+## Topographies specific to time windows of P1, N170, P3 
+
+```{r plot_ga_topo_erps}
+
+if (graph == 1) {
+
+# Change from wide to long format 
+  ga_topo_long = gather(ga_topo_wide, electrode, amplitude, Fp1:Oz,
+                      factor_key=TRUE)
+
+# Topoplots
+
+# Rename A1/A2
+  names(ga_topo_long)[names(ga_topo_long) == "A1"] <- "TP9"
+  names(ga_topo_long)[names(ga_topo_long) == "A2"] <- "TP10"
+
+
+# Electrode locations    
+ga_topo_long = electrode_locations(ga_topo_long, electrode = "electrode",  drop = FALSE,
+                                   montage = NULL)
+
+
+# Select P1 time window
+  ga_topo_P1 = ga_topo_long[(ga_topo_long$time >= 80)& (ga_topo_long$time <= 120),]  
+
+# Plot topoplot for P1
+  ga_topo_P1_plot = ggplot(ga_topo_P1, aes(x = x, y = y, fill = amplitude, label = electrode)) +
+    ggtitle("P1")+
+    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "text", chan_size = 2,
+              head_size = 1) + 
+    scale_fill_distiller(palette = "RdBu" , limits = c(-110,180)) + 
+    theme_void() + 
+    coord_equal() + 
+    
+    theme(legend.position = "none")
+
+
+# Select N170 time window
+  ga_topo_N170 = ga_topo_long[(ga_topo_long$time >= 160)& (ga_topo_long$time <= 200),]  
+
+# Plot topoplot for N170
+  ga_topo_N170_plot = ggplot(ga_topo_N170, aes(x = x, y = y, fill = amplitude, label = electrode)) +
+    ggtitle("N170")+
+    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "text", chan_size = 2,
+              head_size = 1) + 
+    scale_fill_distiller(palette = "RdBu" , limits = c(-50,80)) + 
+    theme_void() + 
+    coord_equal() + 
+    
+    theme(legend.position = "none")  
+
+# Select P3 time window
+  ga_topo_P3 = ga_topo_long[(ga_topo_long$time >= 300)& (ga_topo_long$time <= 500),]  
+
+# Plot topoplot for P3
+  ga_topo_P3_plot = ggplot(ga_topo_P3, aes(x = x, y = y, fill = amplitude, label = electrode)) +
+    ggtitle("P3")+
+    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "text", chan_size = 2,
+              head_size = 1) + 
+    scale_fill_distiller(palette = "RdBu" , limits = c(-120,190)) + 
+    theme_void() + 
+    coord_equal() + 
+    
+    theme(legend.position = "none")  
+
+# Display plots
+  fig_ga_topo_erps = cowplot::plot_grid(ga_topo_P1_plot, ga_topo_N170_plot, ga_topo_P3_plot, ncol=3, rel_widths=c(1, 1, 1))
+  fig_ga_topo_erps
+  
+}
+  
+```
+
+<br>
+
+## Grand average across all conditions, participants and ROI
+
+```{r plot_ga_traj}
+
+if (graph == 1) {
+
+# Change from wide to long format 
+  ga_traj_long = gather(ga_traj_wide, electrode, amplitude, P7:Oz, factor_key=TRUE)
+
+# Plot data
+  ggplot(ga_traj_long,aes(time,amplitude))+
+    ggtitle("Grand average across ROI") +
+    theme(panel.background = element_blank(), panel.border = element_rect(colour = "grey", fill=NA, size=2),
+          axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)), legend.text=element_text(size=7),
+          legend.key = element_rect(fill = "white"))+
+    stat_summary(fun.y = mean, geom = "line", size = 1, linetype = "solid")+
+    scale_color_discrete(guide = guide_legend(override.aes = list(color = "white")))+
+    labs(x = "\ntime (ms)",y = expression(paste("Mean amplitude across ROI [",mu,"V]")),colour = "")+
+    theme(legend.position="bottom") +
+    coord_cartesian(ylim=c(-40, 150),xlim=c(-100,600)) +
+    scale_y_continuous(breaks=seq(-40,150,20))+
+    scale_x_continuous(breaks=seq(-100,600,100))+
+    geom_vline(xintercept = 0, linetype = "dashed",colour="grey" )+
+    geom_hline(yintercept = 0, linetype = "dashed",colour="grey")
+  
+}
+
+```
+
+<br>
+
+## Averaged ERPs for P1, N170 (left/right) and P3
+
+```{r plot_P1_P3_av}
+
+if (graph == 1) {
+
+# Plot data
+  ggplot(P1_P3_traj,aes(time,amplitude))+
+            theme(panel.background = element_blank(),panel.border = element_rect(colour = "grey", fill=NA, size=2),
+                  axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))+
+            stat_summary(fun.y = mean,geom = "line", size = 1, linetype = "solid",aes(colour = cond))+
+            scale_colour_manual(values = ZE_ERP_col)+
+            ggtitle("P1 & P3") +
+            theme(legend.position="bottom")+            
+            labs(x = "\ntime (ms)",y = expression(paste("Mean amplitude across ROI [",mu,"V]")),colour = "")+
+            coord_cartesian(ylim=c(-4, 10),xlim=c(-100,600)) +
+            scale_y_continuous(breaks=seq(-4,10,2))+
+            scale_x_continuous(breaks=seq(-100,600,100))+
+            geom_vline(xintercept = 0,linetype = "dashed",colour="grey" )+
+            geom_hline(yintercept = 0,linetype = "dashed",colour="grey")
+  
+}
+  
+```
+
+```{r plot_N170_av}
+
+if (graph == 1) {
+
+# N170 left hemisphere
+  N170_l_traj_plot = ggplot(N170_l_traj,aes(time,amplitude))+
+            theme(panel.background = element_blank(),panel.border = element_rect(colour = "grey", fill=NA, size=2),
+                  axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))+
+            stat_summary(fun.y = mean,geom = "line", size = 1, linetype = "solid",aes(colour = cond))+
+            scale_colour_manual(values = ZE_ERP_col)+
+            ggtitle("Left hemisphere: N170") +
+            theme(legend.position="bottom")+           
+            labs(x = "\ntime (ms)",y = expression(paste("Mean amplitude across ROI [",mu,"V]")),colour = "")+
+            coord_cartesian(ylim=c(-4, 10),xlim=c(-100,600)) +
+            scale_y_continuous(breaks=seq(-4,10,2))+
+            scale_x_continuous(breaks=seq(-100,600,100))+
+            geom_vline(xintercept = 0,linetype = "dashed",colour="grey" )+
+            geom_hline(yintercept = 0,linetype = "dashed",colour="grey")
+
+
+# N170 right hemisphere 
+  N170_r_traj_plot = ggplot(N170_r_traj,aes(time,amplitude))+
+            theme(panel.background = element_blank(),panel.border = element_rect(colour = "grey", fill=NA, size=2),
+                  axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))+
+            stat_summary(fun.y = mean,geom = "line", size = 1, linetype = "solid",aes(colour = cond))+
+            scale_colour_manual(values = ZE_ERP_col)+
+            ggtitle("Right hemisphere: N170") +
+            theme(legend.position="bottom")+          
+            labs(x = "\ntime (ms)",y = expression(paste("Mean amplitude across ROI [",mu,"V]")),colour = "")+
+            coord_cartesian(ylim=c(-8, 22),xlim=c(-100,600)) +
+            scale_y_continuous(breaks=seq(-8,22,2))+
+            scale_x_continuous(breaks=seq(-100,600,100))+
+            geom_vline(xintercept = 0,linetype = "dashed",colour="grey" )+
+            geom_hline(yintercept = 0,linetype = "dashed",colour="grey")
+  
+  
+# Display plots
+  fig_traj_n170 = cowplot::plot_grid(N170_l_traj_plot, N170_r_traj_plot, ncol=2, rel_widths=c(1, 1))
+  fig_traj_n170     
+  
+}
+  
+```
+
+<br>
+
+## Individual ERPs
+
+```{r plot_P1_P3_indiv, fig.height=20, fig.width=12}
+ 
+if (graph == 1) {
+
+# Plot data
+  ggplot(P1_P3_traj,aes(time,amplitude))+
+    theme(panel.background = element_blank(),panel.border = element_rect(colour = "grey", fill=NA, size=2),
+          axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))+
+    stat_summary(fun.y = mean,geom = "line", size = 1, linetype = "solid",aes(colour = cond))+
+    scale_colour_manual(values = ZE_ERP_col)+
+    ggtitle("P1 & P3") +
+    theme(legend.position="bottom")+            
+    labs(x = "\ntime (ms)",y = expression(paste("Mean amplitude across ROI [",mu,"V]")),colour = "")+
+    coord_cartesian(ylim=c(-10, 20),xlim=c(-100,600)) +
+    scale_y_continuous(breaks=seq(-10,20,10))+
+    scale_x_continuous(breaks=seq(-100,600,300))+
+    geom_vline(xintercept = 0,linetype = "dashed",colour="grey" )+
+    geom_hline(yintercept = 0,linetype = "dashed",colour="grey")+
+    facet_wrap(~ID, nrow = 25, ncol = 5)
+  
+}
+  
+```
+
+# Visualization group differences
+
+## Variables {.tabset .tabset-pills}
+
+### Training vs control group
+
+```{r traj_group}
+
+# Plot differences between training and control group
+  ggplot(P1_P3_traj ,aes(time,amplitude))+
+    theme(panel.background = element_blank(),panel.border = element_rect(colour = "grey", fill=NA, size=2),
+          axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))+
+    stat_summary(fun.y = mean,geom = "line", size = 1.2, linetype = "solid",aes(colour = cond))+
+    scale_colour_manual(values = ZE_ERP_col)+
+    ggtitle("P1 & P3") +
+    theme(legend.position="bottom")+            
+    labs(x = "\ntime (ms)",y = expression(paste("Mean amplitude across ROI [",mu,"V]")),colour = "")+
+    coord_cartesian(ylim=c(-3,8),xlim=c(-100,600)) +
+    scale_y_continuous(breaks=seq(-3,8,2))+
+    scale_x_continuous(breaks=seq(-100,600,200))+
+    geom_vline(xintercept = 0,linetype = "dashed",colour="grey" )+
+    geom_hline(yintercept = 0,linetype = "dashed",colour="grey")+
+    facet_wrap(~group, ncol = 2)
+
+```
+
+#### Boxplots amplitude / latency {.tabset .tabset-pills}
+
+##### P1 amplitude
+
+```{r boxplot_group_P1_amp}
+
+# Draw boxplot
+  ggplot(P1_amp_emo_neu, aes(x = emotion, y = amplitude, fill = group)) + 
+  geom_boxplot(lwd = 0.7) +
+  labs(x = "", y = "Amplitude [mV]") +
+  scale_x_discrete(labels=c("happy", "neutral", "angry")) + 
+  scale_fill_manual(values=c("#707070", "#c9985f")) +
+  theme_bw()
+
+```
+
+##### N170 amplitude across hemispheres
+
+```{r boxplot_group_N170_amp}
+  
+# Draw boxplot
+  ggplot(N170_amp_all_emo, aes(x = emotion, y = amplitude, fill = group)) + 
+  geom_boxplot(lwd = 0.7) +
+  labs(x = "", y = "Amplitude [mV]") +
+  scale_x_discrete(labels=c("happy", "neutral", "angry")) + 
+  scale_fill_manual(values=c("#707070", "#c9985f")) +
+  theme_bw()
+
+```
+
+##### N170 amplitude left vs. right hemisphere
+
+```{r boxplot_group_N170_amp_left_right}
+  
+# Draw boxplot
+  N170_left_amp = ggplot(N170_left_amp_box, aes(x = emotion, y = amplitude, fill = group)) + 
+                  geom_boxplot(lwd = 0.7) +
+                  labs(x = "", y = "Amplitude [mV]") +
+                  scale_x_discrete(labels=c("happy", "neutral", "angry")) + 
+                  scale_fill_manual(values=c("#707070", "#c9985f")) +
+                  theme_bw()
+
+# Draw boxplot
+  N170_right_amp = ggplot(N170_right_amp_box, aes(x = emotion, y = amplitude, fill = group)) + 
+                  geom_boxplot(lwd = 0.7) +
+                  labs(x = "", y = "Amplitude [mV]") +
+                  scale_x_discrete(labels=c("happy", "neutral", "angry")) + 
+                  scale_fill_manual(values=c("#707070", "#c9985f")) +
+                  theme_bw()
+  
+# Show figures
+  fig_N170_left_right = cowplot::plot_grid(N170_left_amp, N170_right_amp, ncol=2, rel_widths=c(1, 1))
+  fig_N170_left_right  
+
+```
+
+##### P3 amplitude
+
+```{r boxplot_group_P3_amp}
+  
+# Draw boxplot
+  ggplot(P3_amp_all_emo, aes(x = emotion, y = amplitude, fill = group)) + 
+  geom_boxplot(lwd = 0.7) +
+  labs(x = "", y = "Amplitude [mV]") +
+  scale_x_discrete(labels=c("happy", "neutral", "angry")) + 
+  scale_fill_manual(values=c("#707070", "#c9985f")) +
+  theme_bw()
+
+```
+
+##### P1 latency
+
+```{r boxplot_group_P1_lat}
+  
+# Draw boxplot
+  ggplot(P1_lat_box, aes(x = emotion, y = latency, fill = group)) + 
+  geom_boxplot(lwd = 0.7) +
+  labs(x = "", y = "Latency [ms]") +
+  scale_x_discrete(labels=c("happy", "neutral", "angry")) + 
+  scale_fill_manual(values=c("#707070", "#c9985f")) +
+  theme_bw()
+
+```
+
+##### N170 latency
+
+```{r boxplot_group_N170_lat}
+
+# Draw boxplot
+  ggplot(N170_lat_box, aes(x = emotion, y = latency, fill = group)) + 
+  geom_boxplot(lwd = 0.7) +
+  labs(x = "", y = "Latency [ms]") +
+  scale_x_discrete(labels=c("happy", "neutral", "angry")) + 
+  scale_fill_manual(values=c("#707070", "#c9985f")) +
+  theme_bw()
+
+```
+
+
+##### N170 latency left vs. right hemisphere
+
+```{r boxplot_group_N170_lat_left_right}
+  
+# Draw boxplot
+  N170_left_lat = ggplot(N170_left_lat_box, aes(x = emotion, y = latency, fill = group)) + 
+                  geom_boxplot(lwd = 0.7) +
+                  labs(x = "", y = "latency [ms]") +
+                  scale_x_discrete(labels=c("happy", "neutral", "angry")) + 
+                  scale_fill_manual(values=c("#707070", "#c9985f")) +
+                  theme_bw()
+
+# Draw boxplot
+  N170_right_lat = ggplot(N170_right_lat_box, aes(x = emotion, y = latency, fill = group)) + 
+                  geom_boxplot(lwd = 0.7) +
+                  labs(x = "", y = "latency [ms]") +
+                  scale_x_discrete(labels=c("happy", "neutral", "angry")) + 
+                  scale_fill_manual(values=c("#707070", "#c9985f")) +
+                  theme_bw()
+  
+# Show figures
+  fig_N170_left_right = cowplot::plot_grid(N170_left_lat, N170_right_lat, ncol=2, rel_widths=c(1, 1))
+  fig_N170_left_right  
+
+```
+
+
+### Age
+
+```{r traj_age}
+ 
+# Plot age differences 
+  ggplot(P1_P3_traj,aes(time,amplitude))+
+    theme(panel.background = element_blank(),panel.border = element_rect(colour = "grey", fill=NA, size=2),
+          axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))+
+    stat_summary(fun.y = mean,geom = "line", size = 1, linetype = "solid",aes(colour = cond))+
+    scale_colour_manual(values = ZE_ERP_col)+
+    ggtitle("P1 & P3") +
+    theme(legend.position="bottom")+            
+    labs(x = "\ntime (ms)",y = expression(paste("Mean amplitude across ROI [",mu,"V]")),colour = "")+
+    coord_cartesian(ylim=c(-5, 9),xlim=c(-100,600)) +
+    scale_y_continuous(breaks=seq(-5,9,2))+
+    scale_x_continuous(breaks=seq(-100,600,200))+
+    geom_vline(xintercept = 0,linetype = "dashed",colour="grey" )+
+    geom_hline(yintercept = 0,linetype = "dashed",colour="grey")+
+    facet_wrap(~age_split, ncol = 2)    
+    
+```
+
+### Sex
+
+```{r traj_sex}
+  
+# Plot sex differences
+  ggplot(P1_P3_traj,aes(time,amplitude))+
+    theme(panel.background = element_blank(),panel.border = element_rect(colour = "grey", fill=NA, size=2),
+          axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))+
+    stat_summary(fun.y = mean,geom = "line", size = 1, linetype = "solid",aes(colour = cond))+
+    scale_colour_manual(values = ZE_ERP_col)+
+    ggtitle("P1 & P3") +
+    theme(legend.position="bottom")+            
+    labs(x = "\ntime (ms)",y = expression(paste("Mean amplitude across ROI [",mu,"V]")),colour = "")+
+    coord_cartesian(ylim=c(-3, 9),xlim=c(-100,600)) +
+    scale_y_continuous(breaks=seq(-3,9,2))+
+    scale_x_continuous(breaks=seq(-100,600,200))+
+    geom_vline(xintercept = 0,linetype = "dashed",colour="grey" )+
+    geom_hline(yintercept = 0,linetype = "dashed",colour="grey")+
+    facet_wrap(~sex, ncol = 2)    
+
+```
+
+
+# Mean amplitude analyses {.tabset .tabset-pills}
+## ANOVAs 
+
+<br>
+
+**P1 differ between all emotions**
+
+```{r anova_P1_amp, results = 'asis'}
+
+  P1_amp_all_emo_an =  aov_ez("ID", "amplitude", P1_amp_all_emo, between = c("group"),
+                      within = c("emotion") ,
+                      #covariate = c("mc_app_time","mc_CPM"),
+                      #observed = c("mc_app_time","mc_CPM"), factorize = FALSE, 
+                  anova_table = list(correction = "none", es = "pes"))
+
+  pander(P1_amp_all_emo_an$anova_table)
+  
+  
+```
+
+```{r P1_amp_ph_calc, include = FALSE}
+
+# Do post-hoc test 
+  P1_amp_ph = emmeans(P1_amp_all_emo_an, ~ "emotion")
+  P1_amp_ph_res = print(pairs(P1_amp_ph))
+
+```
+
+<br>
+
+*Post-hoc tests*
+
+```{r P1_amp_ph_res, results = 'asis'}
+
+# Display post-hoc test results
+  pander(P1_amp_ph_res)
+
+```
+
+**P1 differ between emotional vs. neutral faces**
+
+```{r anova_P1_amp_emo_neu, eval = FALSE, include = FALSE}
+
+  P1_amp_an_emo_neu =  aov_ez("ID", "amplitude", P1_amp_emo_neu, within = c("emotion"), between = c("group"),
+                   #covariate = c("mc_app_time","mc_CPM"),
+                   #observed = c("mc_app_time","mc_CPM"), factorize = FALSE,
+                   anova_table = list(correction = "none", es = "pes"))
+
+  pander(P1_amp_an_emo_neu$anova_table)
+  
+```
+
+*Post-hoc tests*
+
+```{r P1_amp_emo_neu_ph_res, eval = FALSE,  include = FALSE}
+
+# Do post-hoc test 
+  P1_amp_ph = emmeans(P1_amp_an_emo_neu, ~ "emotion")
+  P1_amp_ph_emo_neu = print(pairs(P1_amp_ph))
+
+# Display post-hoc test results
+  pander(P1_amp_ph_emo_neu)
+
+```
+
+```{r P1_amp_emo_neu_ph_calc, eval = FALSE,  include = FALSE}
+
+# Do post-hoc test 
+  P1_amp_ph = emmeans(P1_amp_an_emo_neu, ~ "group", by = "emotion")
+  P1_amp_ph_emo_neu = print(pairs(P1_amp_ph))
+  
+# Display post-hoc test results
+  pander(P1_amp_ph_emo_neu)
+  
+
+```
+
+
+<br>
+
+**N170 across hemispheres**
+
+```{r anova_N170_amp, results = 'asis'}
+
+  N170_amp =  aov_ez("ID", "amplitude", N170_amp_all_emo, within = c("emotion"), between = c("group"),
+                     # covariate = c("mc_app_time","mc_CPM"),
+                      #observed = c("mc_app_time","mc_CPM"), factorize = FALSE,
+                      anova_table = list(correction = "none", es = "pes"))
+
+  pander(N170_amp$anova_table)
+
+```
+
+<br>
+
+**N170 separated by hemisphere**
+
+```{r anova_N170_amp_left_right, results = 'asis'}
+
+  N170_amp =  aov_ez("ID", "amplitude", N170_amp_hem_comp, within = c("emotion_rec","hem"), between = c("group"),
+                     # covariate = c("mc_app_time","mc_CPM"),
+                      #observed = c("mc_app_time","mc_CPM"), factorize = FALSE,
+                      anova_table = list(correction = "none", es = "pes"))
+
+  pander(N170_amp$anova_table)
+
+```
+
+<br>
+
+**P3 differ between all emotions**
+
+```{r anova_P3_amp_all_emo, results = 'asis'}
+
+  P3_amp_an_all_emo =  aov_ez("ID", "amplitude", P3_amp_all_emo, within = c("emotion"), between = c("group"),
+                     # covariate = c("mc_app_time","mc_CPM"),
+                    #  observed = c("mc_app_time","mc_CPM"), factorize = FALSE,
+                   anova_table = list(correction = "none", es = "pes"))
+
+  pander(P3_amp_an_all_emo$anova_table)
+  
+```
+
+<br>
+
+*Post-hoc tests*
+
+```{r P3_amp_emo_ph_res, include = FALSE}
+
+# Do post-hoc test 
+  P3_amp_ph = emmeans(P3_amp_an_all_emo, ~ "emotion")
+  P3_amp_ph_all_emo = print(pairs(P3_amp_ph))
+
+```
+
+```{r, results = 'asis'}
+# Display post-hoc test results
+  pander(P3_amp_ph_all_emo)
+```
+
+```{r P3_amp_ph_calc, include = FALSE}
+
+# Do post-hoc test 
+  P3_amp_ph = emmeans(P3_amp_an_all_emo, ~ "group", by = "emotion")
+  P3_amp_ph_all_emo = print(pairs(P3_amp_ph))
+  
+```
+
+```{r, results = 'asis'}
+# Display post-hoc test results
+  pander(P3_amp_ph_all_emo)
+```
+
+
+```{r, include = FALSE}
+# Do post-hoc test 
+  P3_amp_ph = emmeans(P3_amp_an_all_emo, ~ "emotion", by = "group")
+  P3_amp_ph_all_emo = print(pairs(P3_amp_ph))
+
+```
+
+
+```{r, results = 'asis'}
+# Display post-hoc test results
+  pander(P3_amp_ph_all_emo)
+```
+
+
+*Calculate separate model for each group*
+
+```{r anova_P3_amp_all_emo_TG, results = 'asis'}
+
+P3_amp_all_emo_TG = subset(P3_amp_all_emo, group == "TG")
+
+P3_amp_an_all_emo =  aov_ez("ID", "amplitude", P3_amp_all_emo_TG, within = c("emotion"),
+                     # covariate = c("mc_app_time","mc_CPM"),
+                    #  observed = c("mc_app_time","mc_CPM"), factorize = FALSE,
+                   anova_table = list(correction = "none", es = "pes"))
+
+pander(P3_amp_an_all_emo$anova_table)
+
+# Do post-hoc test 
+  P3_amp_ph = emmeans(P3_amp_an_all_emo, ~ "emotion")
+  P3_amp_ph_all_emo = print(pairs(P3_amp_ph))
+  
+```
+
+```{r anova_P3_amp_all_emo_CG, results = 'asis'}
+
+P3_amp_all_emo_CG = subset(P3_amp_all_emo, group == "CG")
+
+P3_amp_an_all_emo =  aov_ez("ID", "amplitude", P3_amp_all_emo_CG, within = c("emotion"),
+                     # covariate = c("mc_app_time","mc_CPM"),
+                    #  observed = c("mc_app_time","mc_CPM"), factorize = FALSE,
+                   anova_table = list(correction = "none", es = "pes"))
+
+pander(P3_amp_an_all_emo$anova_table)
+
+# Do post-hoc test 
+  P3_amp_ph = emmeans(P3_amp_an_all_emo, ~ "emotion")
+  P3_amp_ph_all_emo = print(pairs(P3_amp_ph))
+  
+```
+
+
+**P3 differ between emotional vs. neutral faces**
+
+```{r anova_P3_amp_emo_neu, results = 'asis'}
+
+  P3_amp_an_emo_neu =  aov_ez("ID", "amplitude", P3_amp_emo_neu, within = c("emotion"), between = c("group"),
+                      #covariate = c("mc_app_time","mc_CPM"),
+                      #observed = c("mc_app_time","mc_CPM"), factorize = FALSE,
+                   anova_table = list(correction = "none", es = "pes"))
+
+  pander(P3_amp_an_emo_neu$anova_table)
+  
+```
+
+*Post-hoc tests*
+
+```{r P3_amp_emo_neu_ph_res, include = FALSE}
+
+# Do post-hoc test 
+  P3_amp_ph = emmeans(P3_amp_an_emo_neu, ~ "emotion")
+  P3_amp_ph_emo_neu = print(pairs(P3_amp_ph))
+
+```
+
+```{r, results = 'asis'}
+# Display post-hoc test results
+  pander(P3_amp_ph_emo_neu)
+```
+
+
+
+ 
+## LMMs
+
+<!-- Load and prepare data sets -->
+
+```{r prep_data}
+
+##### P1
+
+# Convert ID, group & emotion into factor variables
+  P1_stat$ID = factor(P1_stat$ID)
+  P1_stat$stim_ID = factor(P1_stat$stim_ID)
+
+# Factor and level emotion
+  P1_stat$emotion = factor(P1_stat$emotion, levels = c("neutral", "happy", "angry"))
+
+# Factor and level group
+  P1_stat$group = factor(P1_stat$group, levels = c("CG", "TG"))
+
+# Define effect coding contrast for group and emotion
+  contrasts(P1_stat$group) = contr.sum(2)/2
+  contrasts(P1_stat$emotion) = contr.treatment(3)
+
+##### N170
+
+# Convert ID, group & emotion into factor variables
+  N170_stat$ID = factor(N170_stat$ID)
+  N170_stat$stim_ID = factor(N170_stat$stim_ID)
+  N170_stat$group = factor(N170_stat$group)
+
+# Factor and level emotion
+  N170_stat$emotion = factor(N170_stat$emotion, levels = c("neutral", "happy", "angry"))
+
+# Factor and level group
+  N170_stat$group = factor(N170_stat$group, levels = c("CG", "TG"))
+
+# Define effect coding contrast for group and emotion
+  contrasts(N170_stat$group) = contr.sum(2)/2
+  contrasts(N170_stat$emotion) = contr.treatment(3)
+
+# Re-name and factor hemisphere
+  N170_stat$hem = factor(N170_stat$hem, levels = c('left','right'))
+  contrasts(N170_stat$hem) = contr.sum(2)/2
+
+##### P3
+
+# Convert ID, group & emotion into factor variables
+  P3_short_stat$ID = factor(P3_short_stat$ID)
+  P3_short_stat$stim_ID = factor(P3_short_stat$stim_ID)
+
+# Factor and level emotion
+  P3_short_stat$emotion = factor(P3_short_stat$emotion, levels = c("neutral", "happy", "angry"))
+
+# Factor and level group
+  P3_short_stat$group = factor(P3_short_stat$group, levels = c("CG", "TG"))
+
+# Define effect coding contrast for group and emotion
+  contrasts(P3_short_stat$group) = contr.sum(2)/2
+  contrasts(P3_short_stat$emotion) = contr.treatment(3)
+```
+
+
+### Assumption checks {.tabset .tabset-pills}
+#### LMM_P1: Normality of residuals
+
+```{r LMM_P1_res}
+if (lmm == 1) {
+# Visualize normality assumption of residuals
+  mod_P1 = lm(ROI_GA_amp ~ group*emotion, data=P1_stat)
+
+  res.mod_P1 = residuals(mod_P1)
+
+  par(mfrow=c(1,2))
+    qqpl_mod_P1 = qqPlot(res.mod_P1, main="QQplot before transformation")
+    norm_mod_P1 = plot(density(res.mod_P1), main="Density plot before transformation")
+  par(mfrow=c(1,1))
+}
+```
+
+#### LMM_P1: Random effect structure
+
+```{r LMM_P1_mod, warning = FALSE}
+
+if (lmm == 1) {
+
+# Add contrast columns
+  mm_P1 =  model.matrix( ~ emotion*group, P1_stat)
+
+# Attach to dataframe
+  P1_stat[,(ncol(P1_stat)+1):(ncol(P1_stat)+6)] = mm_P1
+  names(P1_stat)[(ncol(P1_stat)-5):ncol(P1_stat)] = c("Mean","Neu_Hap", "Neu_Ang", "Training", "Train_Neu_Hap", "Train_Neu_Ang")
+
+# Build model
+  mod_P1_lmer1 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (1 + Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang || ID) +
+                      (1 + Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang || stim_ID),
+                      data = P1_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE)
+
+# 1st: check how many zero variance terms you got in random effects
+  summary(rePCA(mod_P1_lmer1))
+
+# 2nd: check which random terms explain the least variance
+  print(VarCorr(mod_P1_lmer1), comp = "Variance")
+
+# Build full model
+  mod_P1_lmer2 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (1 + Neu_Ang + Training || ID) +
+                      (1 + Neu_Hap + Neu_Ang + Train_Neu_Ang || stim_ID),
+                      data = P1_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE)
+
+# Likelihood ratio testing
+
+# For ID
+  mod_P1_lmer3 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (1 | ID) +
+                      (1 + Neu_Hap + Neu_Ang + Train_Neu_Ang || stim_ID),
+                      data = P1_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE)
+  
+  anova(mod_P1_lmer2, mod_P1_lmer3)
+
+# For stim_ID
+  mod_P1_lmer4 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (1 + Neu_Ang + Training || ID) +
+                      (1 | stim_ID),
+                      data = P1_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE)
+
+
+  anova(mod_P1_lmer2, mod_P1_lmer4)
+
+
+# Final model
+  mod_P1_lmer5 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (1 | ID) +
+                      (1 | stim_ID),
+                      data = P1_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE)
+  
+}
+   
+```
+
+<!-- P1 model without covariates  -->
+
+```{r P1_mod_no_cov, eval = FALSE}
+
+  mod_P1_lmer5 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      (1 | ID) +
+                      (1 | stim_ID),
+                      data = P1_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE)
+
+```
+
+<!-- Contrast for pooled emotions  -->
+
+```{r LMM_P1_mod_pooled_emo, eval = FALSE}
+
+# Create contrast which pools happy/ angry facial expressions
+  contrasts = cbind(c(0,0.5,0.5))
+
+# Build model and add individualized contrast
+  mod_P1_lmer1 = lmer(ROI_GA_amp ~ emotion*group +
+                      z_app_time + z_age + z_CPM +
+                      (1|ID) +
+                      (1 |stim_ID),
+                      data = P1_stat, contrasts = list(emotion = contrasts),
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE)
+  
+  tab_model(mod_P1_lmer1)
+  
+
+```
+
+<br>
+
+#### LMM_P1: Homoscedasticity
+
+```{r LMM_P1_homosk}
+if (lmm == 1) {
+
+
+# Whether residuals are equally distributed along regression line
+  plot(fitted(mod_P1_lmer5), residuals(mod_P1_lmer5))
+  abline(0, 0)
+
+}
+  
+```
+
+<br>
+
+#### LMM_N170: Normality of residuals
+
+```{r LMM_N170_res}
+
+if (lmm == 1) {
+
+# Visualize normality assumption of residuals
+  mod_N170 = lm(ROI_GA_amp ~ group*emotion, data=N170_stat)
+
+  res.mod_N170 = residuals(mod_N170)
+
+  par(mfrow=c(1,2))
+    qqpl_mod_N170 = qqPlot(res.mod_N170, main="QQplot before transformation")
+    norm_mod_N170 = plot(density(res.mod_N170), main="Density plot before transformation")
+  par(mfrow=c(1,1))
+  
+  }
+
+```
+
+#### LMM_N170: Random effect structure
+
+```{r LMM_N170_mod, warning = FALSE}
+
+if (lmm == 1) {
+
+# Add contrast columns
+  mm_N170 =  model.matrix( ~ emotion*group + hem, N170_stat)
+
+# Attach to dataframe
+  N170_stat[,(ncol(N170_stat)+1):(ncol(N170_stat)+7)] = mm_N170
+  names(N170_stat)[(ncol(N170_stat)-6):ncol(N170_stat)] = c("Mean","Neu_Hap", "Neu_Ang", "LvR", "Training", "Train_Neu_Hap", "Train_Neu_Ang")
+
+# Build model
+  mod_N170_lmer1 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + LvR + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (1 + Neu_Hap + Neu_Ang + LvR + Training + Train_Neu_Hap + Train_Neu_Ang || ID) +
+                      (1 + Neu_Hap + Neu_Ang + LvR + Training + Train_Neu_Hap + Train_Neu_Ang || stim_ID),
+                      data = N170_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE)
+
+# 1st: check how many zero variance terms you got in random effects
+  summary(rePCA(mod_N170_lmer1))
+
+# 2nd: check which random terms explain the least variance
+  print(VarCorr(mod_N170_lmer1),comp = "Variance")
+  
+# Build model
+  mod_N170_lmer2 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + LvR + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (0 + LvR + Training + Train_Neu_Ang || ID) +
+                      (0 + Neu_Hap + Neu_Ang + LvR + Train_Neu_Hap + Train_Neu_Ang || stim_ID),
+                      data = N170_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE)
+  
+# Likelihood ratio testing
+
+# For ID
+  mod_N170_lmer3 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + LvR + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (1| ID) +
+                      (0 + Neu_Hap + Neu_Ang + LvR + Train_Neu_Hap + Train_Neu_Ang || stim_ID),
+                      data = N170_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE)
+  
+  
+  anova(mod_N170_lmer2,mod_N170_lmer3)  
+  
+# For stim_ID
+  mod_N170_lmer4 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + LvR + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (0 + LvR + Training + Train_Neu_Ang || ID) +
+                      (1 | stim_ID),
+                      data = N170_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE)
+  
+  anova(mod_N170_lmer2,mod_N170_lmer4)    
+  
+# Final model  
+  mod_N170_lmer5 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + LvR + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (0 + LvR + Training + Train_Neu_Ang || ID) +
+                      (0 + Neu_Hap + Neu_Ang + LvR + Train_Neu_Hap + Train_Neu_Ang || stim_ID),
+                      data = N170_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE)
+  
+}
+
+```
+
+
+#### LMM_N170: Homoscedasticity
+
+```{r LMM_N170_homosk}
+if (lmm == 1) {
+
+# Whether residuals are equally distributed along regression line
+  plot(fitted(mod_N170_lmer5), residuals(mod_N170_lmer5))
+  abline(0, 0)
+}
+  
+```
+
+#### LMM_P3: Normality of residuals
+
+```{r LMM_P3_res}
+if (lmm == 1) {
+
+# Visualize normality assumption of residuals
+  mod_P3 = lm(ROI_GA_amp ~ group*emotion, data=P3_short_stat)
+
+  res.mod_P3 = residuals(mod_P3)
+
+  par(mfrow=c(1,2))
+    qqpl_mod_P3 = qqPlot(res.mod_P3, main="QQplot before transformation")
+    norm_mod_P3 = plot(density(res.mod_P3), main="Density plot before transformation")
+  par(mfrow=c(1,1))
+  
+}
+
+```
+
+#### LMM_P3: Random effect structure
+
+```{r LMM_P3_mod, warning = FALSE}
+if (lmm == 1) {
+
+# Add contrast columns
+  mm_P3 =  model.matrix( ~ emotion*group, P3_short_stat)
+
+# Attach to dataframe
+  P3_short_stat[,(ncol(P3_short_stat)+1):(ncol(P3_short_stat)+6)] = mm_P3
+  names(P3_short_stat)[(ncol(P3_short_stat)-5):ncol(P3_short_stat)] = c("Mean","Neu_Hap", "Neu_Ang", "Training", "Train_Neu_Hap", "Train_Neu_Ang")
+
+# Build model
+  mod_P3_lmer1 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (1 + Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang || ID) +
+                      (1 + Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang || stim_ID),
+                      data = P3_short_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE)
+
+# 1st: check how many zero variance terms you got in random effects
+  summary(rePCA(mod_P3_lmer1))
+
+# 2nd: check which random terms explain the least variance
+  print(VarCorr(mod_P3_lmer1),comp = "Variance")
+  
+# Build model
+  mod_P3_lmer2 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (1  + Training  || ID) +
+                      (1 + Neu_Hap + Neu_Ang + Training + Train_Neu_Hap || stim_ID),
+                      data = P3_short_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE) 
+  
+  
+# Likelihood ratio testing
+
+# For ID
+  mod_P3_lmer3 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (1 | ID) +
+                      (1 + Neu_Hap + Neu_Ang + Training + Train_Neu_Hap || stim_ID),
+                      data = P3_short_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE) 
+    
+  anova(mod_P3_lmer2, mod_P3_lmer3)
+  
+# For stim_ID
+  mod_P3_lmer4 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (1  + Training  || ID) +
+                      (1 | stim_ID),
+                      data = P3_short_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE) 
+      
+  anova(mod_P3_lmer2, mod_P3_lmer4)  
+      
+# Final model
+  mod_P3_lmer5 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (1 | ID) +
+                      (1 + Neu_Hap + Neu_Ang + Training + Train_Neu_Hap || stim_ID),
+                      data = P3_short_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE) 
+  
+}
+  
+```
+
+#### LMM_P3: Homoscedasticity
+
+```{r LMM_P3_homosk}
+if (lmm == 1) {
+
+# Whether residuals are equally distributed along regression line
+  plot(fitted(mod_P3_lmer5), residuals(mod_P3_lmer5))
+  abline(0, 0)
+}
+
+```
+
+### Results
+
+```{r LMM_results, results = 'asis'}
+if (lmm == 1) {
+
+ # Create table
+  tab_model(mod_P1_lmer5, mod_N170_lmer5, mod_P3_lmer5,
+                #pred.labels=labels,
+                show.se=TRUE, show.stat=TRUE, show.ci = FALSE, string.se = "SE",
+                show.re.var=FALSE, show.obs=FALSE,
+                emph.p = TRUE, dv.labels=c("P1 Amplitudes","N170 Amplitudes","P3 Amplitudes"),
+                show.icc = FALSE)
+}
+```
+
+
+
+### P3 - Different time windows {.tabset .tabset-pills}
+
+### LMM_300_400_RES
+
+```{r LMM_P3_mod_short, warning = FALSE}
+
+if (lmm == 1) {
+
+# Convert ID, group & emotion into factor variables
+  P3_short_stat$ID = factor(P3_short_stat$ID)
+  P3_short_stat$stim_ID = factor(P3_short_stat$stim_ID)
+
+# Factor and level emotion
+  P3_short_stat$emotion = factor(P3_short_stat$emotion, levels = c("neutral", "happy", "angry"))
+
+# Factor and level group
+  P3_short_stat$group = factor(P3_short_stat$group, levels = c("CG", "TG"))
+
+# Define effect coding contrast for group and emotion
+  contrasts(P3_short_stat$group) = contr.sum(2)/2
+  contrasts(P3_short_stat$emotion) = contr.treatment(3)
+  
+
+# Add contrast columns
+  mm_P3 =  model.matrix( ~ emotion*group, P3_short_stat)
+
+# Attach to dataframe
+  P3_short_stat[,(ncol(P3_short_stat)+1):(ncol(P3_short_stat)+6)] = mm_P3
+  names(P3_short_stat)[(ncol(P3_short_stat)-5):ncol(P3_short_stat)] = c("Mean","Neu_Hap", "Neu_Ang", "Training", "Train_Neu_Hap", "Train_Neu_Ang")
+
+# Build model
+  mod_P3_short_lmer1 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (1 + Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang || ID) +
+                      (1 + Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang || stim_ID),
+                      data = P3_short_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE)
+
+# 1st: check how many zero variance terms you got in random effects
+  summary(rePCA(mod_P3_short_lmer1))
+
+# 2nd: check which random terms explain the least variance
+  print(VarCorr(mod_P3_short_lmer1),comp = "Variance")
+  
+# Build model
+  mod_P3_short_lmer2 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (1  + Training  || ID) +
+                      (1 + Neu_Hap + Neu_Ang + Training + Train_Neu_Hap || stim_ID),
+                      data = P3_short_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE) 
+  
+  
+# Likelihood ratio testing
+
+# For ID
+  mod_P3_short_lmer3 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (1 | ID) +
+                      (1 + Neu_Hap + Neu_Ang + Training + Train_Neu_Hap || stim_ID),
+                      data = P3_short_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE) 
+    
+  anova(mod_P3_short_lmer2, mod_P3_short_lmer3)
+  
+# For stim_ID
+  mod_P3_short_lmer4 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (1  + Training  || ID) +
+                      (1 | stim_ID),
+                      data = P3_short_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE) 
+      
+  anova(mod_P3_short_lmer2, mod_P3_short_lmer4)  
+      
+# Final model
+  mod_P3_short_lmer5 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (1 | ID) +
+                      (1 + Neu_Hap + Neu_Ang + Training + Train_Neu_Hap || stim_ID),
+                      data = P3_short_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE) 
+}
+  
+```
+
+### LMM_300_500_RES
+
+```{r LMM_P3_mod_medium, warning = FALSE}
+
+if (lmm == 1) {
+
+# Convert ID, group & emotion into factor variables
+  P3_medium_stat$ID = factor(P3_medium_stat$ID)
+  P3_medium_stat$stim_ID = factor(P3_medium_stat$stim_ID)
+
+# Factor and level emotion
+  P3_medium_stat$emotion = factor(P3_medium_stat$emotion, levels = c("neutral", "happy", "angry"))
+
+# Factor and level group
+  P3_medium_stat$group = factor(P3_medium_stat$group, levels = c("CG", "TG"))
+
+# Define effect coding contrast for group and emotion
+  contrasts(P3_medium_stat$group) = contr.sum(2)/2
+  contrasts(P3_medium_stat$emotion) = contr.treatment(3)
+  
+
+# Add contrast columns
+  mm_P3 =  model.matrix( ~ emotion*group, P3_medium_stat)
+
+# Attach to dataframe
+  P3_medium_stat[,(ncol(P3_medium_stat)+1):(ncol(P3_medium_stat)+6)] = mm_P3
+  names(P3_medium_stat)[(ncol(P3_medium_stat)-5):ncol(P3_medium_stat)] = c("Mean","Neu_Hap", "Neu_Ang", "Training", "Train_Neu_Hap", "Train_Neu_Ang")
+
+# Build model
+  mod_P3_medium_lmer1 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (1 + Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang || ID) +
+                      (1 + Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang || stim_ID),
+                      data = P3_medium_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE)
+
+# 1st: check how many zero variance terms you got in random effects
+  summary(rePCA(mod_P3_medium_lmer1))
+
+# 2nd: check which random terms explain the least variance
+  print(VarCorr(mod_P3_medium_lmer1),comp = "Variance")
+  
+# Build model
+  mod_P3_medium_lmer2 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (1  + Training  || ID) +
+                      (1 + Neu_Hap + Neu_Ang + Training + Train_Neu_Hap || stim_ID),
+                      data = P3_medium_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE) 
+  
+  
+# Likelihood ratio testing
+
+# For ID
+  mod_P3_medium_lmer3 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (1 | ID) +
+                      (1 + Neu_Hap + Neu_Ang + Training + Train_Neu_Hap || stim_ID),
+                      data = P3_medium_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE) 
+    
+  anova(mod_P3_medium_lmer2, mod_P3_medium_lmer3)
+  
+# For stim_ID
+  mod_P3_medium_lmer4 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (1  + Training  || ID) +
+                      (1 | stim_ID),
+                      data = P3_medium_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE) 
+      
+  anova(mod_P3_medium_lmer2, mod_P3_medium_lmer4)  
+      
+# Final model
+  mod_P3_medium_lmer5 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (1 | ID) +
+                      (1 + Neu_Hap + Neu_Ang + Training + Train_Neu_Hap || stim_ID),
+                      data = P3_medium_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE) 
+}
+  
+```
+
+### LMM_300_600_RES
+
+```{r LMM_P3_mod_long, warning = FALSE}
+
+if (lmm == 1) {
+
+# Convert ID, group & emotion into factor variables
+  P3_long_stat$ID = factor(P3_long_stat$ID)
+  P3_long_stat$stim_ID = factor(P3_long_stat$stim_ID)
+
+# Factor and level emotion
+  P3_long_stat$emotion = factor(P3_long_stat$emotion, levels = c("neutral", "happy", "angry"))
+
+# Factor and level group
+  P3_long_stat$group = factor(P3_long_stat$group, levels = c("CG", "TG"))
+
+# Define effect coding contrast for group and emotion
+  contrasts(P3_long_stat$group) = contr.sum(2)/2
+  contrasts(P3_long_stat$emotion) = contr.treatment(3)
+  
+
+# Add contrast columns
+  mm_P3 =  model.matrix( ~ emotion*group, P3_long_stat)
+
+# Attach to dataframe
+  P3_long_stat[,(ncol(P3_long_stat)+1):(ncol(P3_long_stat)+6)] = mm_P3
+  names(P3_long_stat)[(ncol(P3_long_stat)-5):ncol(P3_long_stat)] = c("Mean","Neu_Hap", "Neu_Ang", "Training", "Train_Neu_Hap", "Train_Neu_Ang")
+
+# Build model
+  mod_P3_long_lmer1 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (1 + Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang || ID) +
+                      (1 + Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang || stim_ID),
+                      data = P3_long_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE)
+
+# 1st: check how many zero variance terms you got in random effects
+  summary(rePCA(mod_P3_long_lmer1))
+
+# 2nd: check which random terms explain the least variance
+  print(VarCorr(mod_P3_long_lmer1),comp = "Variance")
+  
+# Build model
+  mod_P3_long_lmer2 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (1  + Training  || ID) +
+                      (1 + Neu_Hap + Neu_Ang + Training + Train_Neu_Hap || stim_ID),
+                      data = P3_long_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE) 
+  
+  
+# Likelihood ratio testing
+
+# For ID
+  mod_P3_long_lmer3 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (1 | ID) +
+                      (1 + Neu_Hap + Neu_Ang + Training + Train_Neu_Hap || stim_ID),
+                      data = P3_long_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE) 
+    
+  anova(mod_P3_long_lmer2, mod_P3_long_lmer3)
+  
+# For stim_ID
+  mod_P3_long_lmer4 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (1  + Training  || ID) +
+                      (1 | stim_ID),
+                      data = P3_long_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE) 
+      
+  anova(mod_P3_long_lmer2, mod_P3_long_lmer4)  
+      
+# Final model
+  mod_P3_long_lmer5 = lmer(ROI_GA_amp ~ Neu_Hap + Neu_Ang + Training + Train_Neu_Hap + Train_Neu_Ang +
+                      z_app_time + z_age + z_CPM +
+                      (1 | ID) +
+                      (1 + Neu_Hap + Neu_Ang + Training + Train_Neu_Hap || stim_ID),
+                      data = P3_long_stat,
+                      control=lmerControl(calc.derivs = FALSE), REML = FALSE) 
+}
+  
+```
+
+
+### Results
+
+```{r LMM_P3_results, results = 'asis'}
+if (lmm == 1) {
+
+ # Create table
+  tab_model(mod_P3_short_lmer5, mod_P3_medium_lmer5, mod_P3_long_lmer5,
+                #pred.labels=labels,
+                show.se=TRUE, show.stat=TRUE, show.ci = FALSE, string.se = "SE",
+                show.re.var=FALSE, show.obs=FALSE,
+                emph.p = TRUE, dv.labels=c("P3: 300-400 ms","P3: 300-500 ms","P3: 300-600 ms"),
+                show.icc = FALSE)
+}
+```
+

@@ -1,0 +1,454 @@
+---
+title: "Brain-Behavior"
+output: 
+  rmdformats::material:
+    highlight: kate
+    css: web_style.css
+    thumbnails: false
+    lightbox: true
+    gallery: true
+    cards: true
+    self_contained: no
+    number_sections: no
+    code_folding: hide
+    fig_caption: yes
+---
+
+<!-- Set up workspace -->
+
+```{r setup, include = FALSE, message = FALSE, warning = FALSE}
+
+# Set general settings for Markdown file 
+  options(max.print="75")
+
+  knitr::opts_chunk$set(echo=TRUE,
+                 prompt=FALSE,
+                 tidy=TRUE,
+                 comment=NA,
+                 message=FALSE,
+                 warning=FALSE,
+                 results = FALSE,
+  	             fig.align="center")
+  knitr::opts_knit$set(width=75)
+# Swipe environment
+  rm(list=ls())
+  
+# Set libraries
+  library(afex)
+  library(car)
+  library(emmeans) 
+  library(ggplot2)
+  library(lme4)
+  library(MASS)
+  library(miceadds)
+  library(pander)
+  library(ppcor)
+  library(sjmisc)
+  library(sjPlot)
+  library(tidyverse)
+  
+# Round to 2 digits   
+  options(digits=2)
+  
+# Disable scientific notation in R
+  options(scipen = 999)
+    
+# Set figure color palettes
+  ZE_ERP_col = c("#32104c","#50848A","#707070") 
+  
+  
+# Correlation function
+# https://stackoverflow.com/questions/34326906/extracting-and-formatting-results-of-cor-test-on-multiple-pairs-of-columns 
+  corrFunc <- function(var1, var2, data) {
+    result = cor.test(data[,var1], data[,var2])
+    data.frame(var1, var2, result[c("estimate","p.value","statistic")], 
+               stringsAsFactors=FALSE) }
+
+```
+
+```{r load_data, include = FALSE}
+
+# Load questionnaire data
+  load.Rdata(filename="./data/qn_data.Rdata", "qn_data")
+
+# # Regress out influence of covariates - behavioral variables
+#   qn_data$res_EMK_EM_P_T2 = resid(lm(z_EMK_EM_P_T2 ~ z_age + z_CPM + z_app_time, data = qn_data))
+#   qn_data$res_EMK_EK_P_T2 = resid(lm(z_EMK_EK_P_T2 ~ z_age + z_CPM + z_app_time, data = qn_data))
+#   qn_data$res_EMK_EK_CH_T2 = resid(lm(z_EMK_EK_CH_T2 ~ z_age + z_CPM + z_app_time, data = qn_data))
+#   qn_data$res_SDQ_PB_T2 = resid(lm(z_SDQ_PB_T2 ~ z_age + z_CPM + z_app_time, data = qn_data))
+#   qn_data$res_SDQ_T2 = resid(lm(z_SDQ_T2 ~ z_age + z_CPM + z_app_time, data = qn_data))
+#   
+#   qn_data$d_res_EMK_EM_P = resid(lm(zd_EMK_EM_P ~ z_age + z_CPM + z_app_time, data = qn_data))
+#   qn_data$d_res_EMK_EK_P = resid(lm(zd_EMK_EK_P ~ z_age + z_CPM + z_app_time, data = qn_data))
+#   qn_data$d_res_EMK_EK_CH = resid(lm(zd_EMK_EK_CH ~ z_age + z_CPM + z_app_time, data = qn_data))
+#   qn_data$d_res_SDQ_PB = resid(lm(zd_SDQ_PB ~ z_age + z_CPM + z_app_time, data = qn_data))
+#   qn_data$d_res_SDQ = resid(lm(zd_SDQ_Total ~ z_age + z_CPM + z_app_time, data = qn_data))
+# 
+# # Regress out influence of covariates - Brain variables
+#   qn_data$res_P3_amp_hap = resid(lm(z_P3_amp_hap ~ z_age + z_CPM + z_app_time, data = qn_data))
+#   qn_data$res_P3_amp_ang = resid(lm(z_P3_amp_ang ~ z_age + z_CPM + z_app_time, data = qn_data))
+#   qn_data$res_P3_amp_neu = resid(lm(z_P3_amp_neu ~ z_age + z_CPM + z_app_time, data = qn_data))
+#   
+#   qn_data$res_P3_amp_hap_neu = resid(lm(z_P3_amp_hap_neu ~ z_age + z_CPM + z_app_time, data = qn_data))
+#   qn_data$res_P3_amp_ang_neu = resid(lm(z_P3_amp_ang_neu ~ z_age + z_CPM + z_app_time, data = qn_data))
+  
+  
+# Regress out influence of covariates - behavioral variables
+  qn_data$res_EMK_EM_P_T2 = resid(lm(mc_EMK_EM_P_T2 ~  mc_CPM + mc_app_time, data = qn_data))
+  qn_data$res_EMK_EK_P_T2 = resid(lm(mc_EMK_EK_P_T2 ~  mc_CPM + mc_app_time, data = qn_data))
+  qn_data$res_EMK_EK_CH_T2 = resid(lm(mc_EMK_EK_CH_T2 ~  mc_CPM + mc_app_time, data = qn_data))
+  qn_data$res_SDQ_PB_T2 = resid(lm(mc_SDQ_PB_T2 ~  mc_CPM + mc_app_time, data = qn_data))
+  qn_data$res_SDQ_T2 = resid(lm(mc_SDQ_T2 ~  mc_CPM + mc_app_time, data = qn_data))
+  
+  qn_data$d_res_EMK_EM_P = resid(lm(zd_EMK_EM_P ~  mc_CPM + mc_app_time, data = qn_data))
+  qn_data$d_res_EMK_EK_P = resid(lm(zd_EMK_EK_P ~  mc_CPM + mc_app_time, data = qn_data))
+  qn_data$d_res_EMK_EK_CH = resid(lm(zd_EMK_EK_CH ~  mc_CPM + mc_app_time, data = qn_data))
+  qn_data$d_res_SDQ_PB = resid(lm(zd_SDQ_PB ~  mc_CPM + mc_app_time, data = qn_data))
+  qn_data$d_res_SDQ = resid(lm(zd_SDQ_Total ~  mc_CPM + mc_app_time, data = qn_data))
+
+# Regress out influence of covariates - Brain variables
+  qn_data$res_P3_amp_hap = resid(lm(P3_amp_hap ~  mc_CPM, data = qn_data))
+  qn_data$res_P3_amp_ang = resid(lm(P3_amp_ang ~  mc_CPM, data = qn_data))
+  qn_data$res_P3_amp_neu = resid(lm(P3_amp_neu ~  mc_CPM, data = qn_data))
+  
+  qn_data$res_P3_amp_hap_neu = resid(lm(P3_amp_hap_neu ~  mc_CPM , data = qn_data))
+  qn_data$res_P3_amp_ang_neu = resid(lm(P3_amp_ang_neu ~  mc_CPM , data = qn_data))  
+   
+  # Separate dataset for training group
+    qn_data_TG = subset(qn_data, group == "TG")
+    qn_data_CG = subset(qn_data, group == "CG")
+  
+     
+```
+
+# Correlations {.tabset .tabset-pills}
+
+## P3: T2 z-scores 
+
+**Relative amplitude**
+
+```{r corr_P3_z_all_groups_rel_amp, results = 'asis'}
+
+# http://faculty.cas.usf.edu/mbrannick/regression/Part3/Partials.html
+
+# Define correlation pairs of interest 
+  vars_P3_amp_hap_neu = data.frame(v1=names(qn_data)[c(which(colnames(qn_data)=="z_P3_amp_hap_neu"))], 
+                    v2=names(qn_data)[c(which(colnames(qn_data)=="z_EMK_EM_P_T2"), which(colnames(qn_data)=="z_EMK_EK_P_T2"),
+                            which(colnames(qn_data)=="z_EMK_EK_CH_T2"), which(colnames(qn_data)=="z_SDQ_PB_T2"), which(colnames(qn_data)=="z_SDQ_T2"))])
+  
+  vars_P3_amp_ang_neu = data.frame(v1=names(qn_data)[c(which(colnames(qn_data)=="z_P3_amp_ang_neu"))], 
+                    v2=names(qn_data)[c(which(colnames(qn_data)=="z_EMK_EM_P_T2"), which(colnames(qn_data)=="z_EMK_EK_P_T2"),
+                            which(colnames(qn_data)=="z_EMK_EK_CH_T2"), which(colnames(qn_data)=="z_SDQ_PB_T2"), which(colnames(qn_data)=="z_SDQ_T2"))])
+
+# Combine all correlation pairs 
+  vars_P3_behav = rbind(vars_P3_amp_hap_neu, vars_P3_amp_ang_neu)
+  
+# Correlate pairs of interest  
+  corrs_P3_behav = do.call(rbind, mapply(corrFunc, vars_P3_behav[,1], vars_P3_behav[,2], MoreArgs=list(data=qn_data), SIMPLIFY=FALSE))
+  
+  corrs_P3_behav = subset(corrs_P3_behav , select = -c(var1))
+
+# Print table
+  pander(corrs_P3_behav)
+  
+# Print corrected p-values  
+  print(p.adjust(corrs_P3_behav$p.value, method = "fdr"))
+
+```
+
+**All amplitudes**
+
+```{r corr_P3_z_all_groups_all_amp, results = 'asis'}
+
+# http://faculty.cas.usf.edu/mbrannick/regression/Part3/Partials.html
+
+# Define correlation pairs of interest 
+  vars_P3_amp_hap = data.frame(v1=names(qn_data)[c(which(colnames(qn_data)=="z_P3_amp_hap"))], 
+                    v2=names(qn_data)[c(which(colnames(qn_data)=="z_EMK_EM_P_T2"), which(colnames(qn_data)=="z_EMK_EK_P_T2"),
+                            which(colnames(qn_data)=="z_EMK_EK_CH_T2"), which(colnames(qn_data)=="z_SDQ_PB_T2"), which(colnames(qn_data)=="z_SDQ_T2"))])
+  
+  vars_P3_amp_ang = data.frame(v1=names(qn_data)[c(which(colnames(qn_data)=="z_P3_amp_ang"))], 
+                    v2=names(qn_data)[c(which(colnames(qn_data)=="z_EMK_EM_P_T2"), which(colnames(qn_data)=="z_EMK_EK_P_T2"),
+                            which(colnames(qn_data)=="z_EMK_EK_CH_T2"), which(colnames(qn_data)=="z_SDQ_PB_T2"), which(colnames(qn_data)=="z_SDQ_T2"))])
+    
+  vars_P3_amp_neu = data.frame(v1=names(qn_data)[c(which(colnames(qn_data)=="z_P3_amp_neu"))], 
+                    v2=names(qn_data)[c(which(colnames(qn_data)=="z_EMK_EM_P_T2"), which(colnames(qn_data)=="z_EMK_EK_P_T2"),
+                            which(colnames(qn_data)=="z_EMK_EK_CH_T2"), which(colnames(qn_data)=="z_SDQ_PB_T2"), which(colnames(qn_data)=="z_SDQ_T2"))])
+  
+  vars_P3_amp_hap_neu = data.frame(v1=names(qn_data)[c(which(colnames(qn_data)=="z_P3_amp_hap_neu"))], 
+                    v2=names(qn_data)[c(which(colnames(qn_data)=="z_EMK_EM_P_T2"), which(colnames(qn_data)=="z_EMK_EK_P_T2"),
+                            which(colnames(qn_data)=="z_EMK_EK_CH_T2"), which(colnames(qn_data)=="z_SDQ_PB_T2"), which(colnames(qn_data)=="z_SDQ_T2"))])
+  
+  vars_P3_amp_ang_neu = data.frame(v1=names(qn_data)[c(which(colnames(qn_data)=="z_P3_amp_ang_neu"))], 
+                    v2=names(qn_data)[c(which(colnames(qn_data)=="z_EMK_EM_P_T2"), which(colnames(qn_data)=="z_EMK_EK_P_T2"),
+                            which(colnames(qn_data)=="z_EMK_EK_CH_T2"), which(colnames(qn_data)=="z_SDQ_PB_T2"), which(colnames(qn_data)=="z_SDQ_T2"))])
+
+# Combine all correlation pairs 
+  vars_P3_behav = rbind(vars_P3_amp_hap, vars_P3_amp_ang, vars_P3_amp_neu, vars_P3_amp_hap_neu, vars_P3_amp_ang_neu)
+  
+# Correlate pairs of interest  
+  corrs_P3_behav = do.call(rbind, mapply(corrFunc, vars_P3_behav[,1], vars_P3_behav[,2], MoreArgs=list(data=qn_data), SIMPLIFY=FALSE))
+  
+  corrs_P3_behav = subset(corrs_P3_behav , select = -c(var1))
+
+# Print table
+  pander(corrs_P3_behav)
+
+```
+
+## P3: T2 residual scores
+
+**Relative amplitude**
+
+```{r corr_P3_res_res_all_groups_all_amp, results = 'asis'}
+
+# http://faculty.cas.usf.edu/mbrannick/regression/Part3/Partials.html
+
+# Define correlation pairs of interest 
+  vars_P3_amp_hap_neu = data.frame(v1=names(qn_data)[c(which(colnames(qn_data)=="res_P3_amp_hap_neu"))], 
+                    v2=names(qn_data)[c(which(colnames(qn_data)=="res_EMK_EM_P_T2"), which(colnames(qn_data)=="res_EMK_EK_P_T2"),
+                            which(colnames(qn_data)=="res_EMK_EK_CH_T2"), which(colnames(qn_data)=="res_SDQ_PB_T2"), which(colnames(qn_data)=="res_SDQ_T2"))])
+  
+  vars_P3_amp_ang_neu = data.frame(v1=names(qn_data)[c(which(colnames(qn_data)=="res_P3_amp_ang_neu"))], 
+                    v2=names(qn_data)[c(which(colnames(qn_data)=="res_EMK_EM_P_T2"), which(colnames(qn_data)=="res_EMK_EK_P_T2"),
+                            which(colnames(qn_data)=="res_EMK_EK_CH_T2"), which(colnames(qn_data)=="res_SDQ_PB_T2"), which(colnames(qn_data)=="res_SDQ_T2"))])
+
+# Combine all correlation pairs 
+  vars_P3_behav = rbind(vars_P3_amp_hap_neu, vars_P3_amp_ang_neu)
+  
+# Correlate pairs of interest  
+  corrs_P3_behav = do.call(rbind, mapply(corrFunc, vars_P3_behav[,1], vars_P3_behav[,2], MoreArgs=list(data=qn_data), SIMPLIFY=FALSE))
+  
+  corrs_P3_behav = subset(corrs_P3_behav , select = -c(var1))
+
+# Print table
+  pander(corrs_P3_behav)
+  
+# Print corrected p-values  
+  print(p.adjust(corrs_P3_behav$p.value, method = "fdr"))
+
+```
+
+
+**All amplitudes**
+
+```{r corr_P3_res_res_rel_groups_all_amp, results = 'asis'}
+
+# http://faculty.cas.usf.edu/mbrannick/regression/Part3/Partials.html
+
+# Define correlation pairs of interest 
+  vars_P3_amp_hap = data.frame(v1=names(qn_data)[c(which(colnames(qn_data)=="res_P3_amp_hap"))], 
+                    v2=names(qn_data)[c(which(colnames(qn_data)=="res_EMK_EM_P_T2"), which(colnames(qn_data)=="res_EMK_EK_P_T2"),
+                            which(colnames(qn_data)=="res_EMK_EK_CH_T2"), which(colnames(qn_data)=="res_SDQ_PB_T2"), which(colnames(qn_data)=="res_SDQ_T2"))])
+  
+  vars_P3_amp_ang = data.frame(v1=names(qn_data)[c(which(colnames(qn_data)=="res_P3_amp_ang"))], 
+                    v2=names(qn_data)[c(which(colnames(qn_data)=="res_EMK_EM_P_T2"), which(colnames(qn_data)=="res_EMK_EK_P_T2"),
+                            which(colnames(qn_data)=="res_EMK_EK_CH_T2"), which(colnames(qn_data)=="res_SDQ_PB_T2"), which(colnames(qn_data)=="res_SDQ_T2"))])
+    
+  vars_P3_amp_neu = data.frame(v1=names(qn_data)[c(which(colnames(qn_data)=="res_P3_amp_neu"))], 
+                    v2=names(qn_data)[c(which(colnames(qn_data)=="res_EMK_EM_P_T2"), which(colnames(qn_data)=="res_EMK_EK_P_T2"),
+                            which(colnames(qn_data)=="res_EMK_EK_CH_T2"), which(colnames(qn_data)=="res_SDQ_PB_T2"), which(colnames(qn_data)=="res_SDQ_T2"))])
+  
+  vars_P3_amp_hap_neu = data.frame(v1=names(qn_data)[c(which(colnames(qn_data)=="res_P3_amp_hap_neu"))], 
+                    v2=names(qn_data)[c(which(colnames(qn_data)=="res_EMK_EM_P_T2"), which(colnames(qn_data)=="res_EMK_EK_P_T2"),
+                            which(colnames(qn_data)=="res_EMK_EK_CH_T2"), which(colnames(qn_data)=="res_SDQ_PB_T2"), which(colnames(qn_data)=="res_SDQ_T2"))])
+  
+  vars_P3_amp_ang_neu = data.frame(v1=names(qn_data)[c(which(colnames(qn_data)=="res_P3_amp_ang_neu"))], 
+                    v2=names(qn_data)[c(which(colnames(qn_data)=="res_EMK_EM_P_T2"), which(colnames(qn_data)=="res_EMK_EK_P_T2"),
+                            which(colnames(qn_data)=="res_EMK_EK_CH_T2"), which(colnames(qn_data)=="res_SDQ_PB_T2"), which(colnames(qn_data)=="res_SDQ_T2"))])
+
+# Combine all correlation pairs 
+  vars_P3_behav = rbind(vars_P3_amp_hap, vars_P3_amp_ang, vars_P3_amp_neu, vars_P3_amp_hap_neu, vars_P3_amp_ang_neu)
+  
+# Correlate pairs of interest  
+  corrs_P3_behav = do.call(rbind, mapply(corrFunc, vars_P3_behav[,1], vars_P3_behav[,2], MoreArgs=list(data=qn_data), SIMPLIFY=FALSE))
+  
+  corrs_P3_behav = subset(corrs_P3_behav , select = -c(var1))
+
+# Print table
+  pander(corrs_P3_behav)
+
+```
+
+
+
+## TG P3: T2 z-scores
+
+```{r corr_TG_P3_z_T2, results = 'asis'}
+
+# http://faculty.cas.usf.edu/mbrannick/regression/Part3/Partials.html
+
+# Define correlation pairs of interest 
+  vars_P3_amp_hap = data.frame(v1=names(qn_data_TG)[c(which(colnames(qn_data_TG)=="z_P3_amp_hap"))], 
+                    v2=names(qn_data_TG)[c(which(colnames(qn_data_TG)=="z_EMK_EM_P_T2"), which(colnames(qn_data_TG)=="z_EMK_EK_P_T2"),
+                            which(colnames(qn_data_TG)=="z_EMK_EK_CH_T2"), which(colnames(qn_data_TG)=="z_SDQ_PB_T2"), which(colnames(qn_data_TG)=="z_SDQ_T2"))])
+  
+  vars_P3_amp_ang = data.frame(v1=names(qn_data_TG)[c(which(colnames(qn_data_TG)=="z_P3_amp_ang"))], 
+                    v2=names(qn_data_TG)[c(which(colnames(qn_data_TG)=="z_EMK_EM_P_T2"), which(colnames(qn_data_TG)=="z_EMK_EK_P_T2"),
+                            which(colnames(qn_data_TG)=="z_EMK_EK_CH_T2"), which(colnames(qn_data_TG)=="z_SDQ_PB_T2"), which(colnames(qn_data_TG)=="z_SDQ_T2"))])
+    
+  vars_P3_amp_neu = data.frame(v1=names(qn_data_TG)[c(which(colnames(qn_data_TG)=="z_P3_amp_neu"))], 
+                    v2=names(qn_data_TG)[c(which(colnames(qn_data_TG)=="z_EMK_EM_P_T2"), which(colnames(qn_data_TG)=="z_EMK_EK_P_T2"),
+                            which(colnames(qn_data_TG)=="z_EMK_EK_CH_T2"), which(colnames(qn_data_TG)=="z_SDQ_PB_T2"), which(colnames(qn_data_TG)=="z_SDQ_T2"))])
+  
+  vars_P3_amp_hap_neu = data.frame(v1=names(qn_data_TG)[c(which(colnames(qn_data_TG)=="z_P3_amp_hap_neu"))], 
+                    v2=names(qn_data_TG)[c(which(colnames(qn_data_TG)=="z_EMK_EM_P_T2"), which(colnames(qn_data_TG)=="z_EMK_EK_P_T2"),
+                            which(colnames(qn_data_TG)=="z_EMK_EK_CH_T2"), which(colnames(qn_data_TG)=="z_SDQ_PB_T2"), which(colnames(qn_data_TG)=="z_SDQ_T2"))])
+  
+  vars_P3_amp_ang_neu = data.frame(v1=names(qn_data_TG)[c(which(colnames(qn_data_TG)=="z_P3_amp_ang_neu"))], 
+                    v2=names(qn_data_TG)[c(which(colnames(qn_data_TG)=="z_EMK_EM_P_T2"), which(colnames(qn_data_TG)=="z_EMK_EK_P_T2"),
+                            which(colnames(qn_data_TG)=="z_EMK_EK_CH_T2"), which(colnames(qn_data_TG)=="z_SDQ_PB_T2"), which(colnames(qn_data_TG)=="z_SDQ_T2"))])
+
+# Combine all correlation pairs 
+  vars_P3_behav = rbind(vars_P3_amp_hap, vars_P3_amp_ang, vars_P3_amp_neu, vars_P3_amp_hap_neu, vars_P3_amp_ang_neu)
+  
+# Correlate pairs of interest  
+  corrs_P3_behav = do.call(rbind, mapply(corrFunc, vars_P3_behav[,1], vars_P3_behav[,2], MoreArgs=list(data=qn_data_TG), SIMPLIFY=FALSE))
+  
+  corrs_P3_behav = subset(corrs_P3_behav , select = -c(var1))
+
+# Print table
+  pander(corrs_P3_behav)
+
+```
+
+## TG P3: T2 residual scores
+
+```{r corr_TG_P3_res_T2, results = 'asis'}
+
+# http://faculty.cas.usf.edu/mbrannick/regression/Part3/Partials.html
+
+# Define correlation pairs of interest 
+  vars_P3_amp_hap_neu = data.frame(v1=names(qn_data_TG)[c(which(colnames(qn_data_TG)=="res_P3_amp_hap_neu"))], 
+                    v2=names(qn_data_TG)[c(which(colnames(qn_data_TG)=="res_EMK_EM_P_T2"), which(colnames(qn_data_TG)=="res_EMK_EK_P_T2"),
+                            which(colnames(qn_data_TG)=="res_EMK_EK_CH_T2"), which(colnames(qn_data_TG)=="res_SDQ_PB_T2"), which(colnames(qn_data_TG)=="res_SDQ_T2"))])
+  
+  vars_P3_amp_ang_neu = data.frame(v1=names(qn_data_TG)[c(which(colnames(qn_data_TG)=="res_P3_amp_ang_neu"))], 
+                    v2=names(qn_data_TG)[c(which(colnames(qn_data_TG)=="res_EMK_EM_P_T2"), which(colnames(qn_data_TG)=="res_EMK_EK_P_T2"),
+                            which(colnames(qn_data_TG)=="res_EMK_EK_CH_T2"), which(colnames(qn_data_TG)=="res_SDQ_PB_T2"), which(colnames(qn_data_TG)=="res_SDQ_T2"))])
+
+# Combine all correlation pairs 
+  vars_P3_behav = rbind(vars_P3_amp_hap_neu, vars_P3_amp_ang_neu)
+  
+# Correlate pairs of interest  
+  corrs_P3_behav = do.call(rbind, mapply(corrFunc, vars_P3_behav[,1], vars_P3_behav[,2], MoreArgs=list(data=qn_data_TG), SIMPLIFY=FALSE))
+  
+  corrs_P3_behav = subset(corrs_P3_behav , select = -c(var1))
+
+# Print table
+  pander(corrs_P3_behav)
+  
+# Print corrected p-values  
+  print(p.adjust(corrs_P3_behav$p.value, method = "fdr"))
+
+```
+
+## CG P3: T2 z-scores
+
+```{r corr_CG_P3_z_T2, results = 'asis'}
+
+# http://faculty.cas.usf.edu/mbrannick/regression/Part3/Partials.html
+
+# Define correlation pairs of interest 
+  vars_P3_amp_hap = data.frame(v1=names(qn_data_CG)[c(which(colnames(qn_data_CG)=="z_P3_amp_hap"))], 
+                    v2=names(qn_data_CG)[c(which(colnames(qn_data_CG)=="z_EMK_EM_P_T2"), which(colnames(qn_data_CG)=="z_EMK_EK_P_T2"),
+                            which(colnames(qn_data_CG)=="z_EMK_EK_CH_T2"), which(colnames(qn_data_CG)=="z_SDQ_PB_T2"), which(colnames(qn_data_CG)=="z_SDQ_T2"))])
+  
+  vars_P3_amp_ang = data.frame(v1=names(qn_data_CG)[c(which(colnames(qn_data_CG)=="z_P3_amp_ang"))], 
+                    v2=names(qn_data_CG)[c(which(colnames(qn_data_CG)=="z_EMK_EM_P_T2"), which(colnames(qn_data_CG)=="z_EMK_EK_P_T2"),
+                            which(colnames(qn_data_CG)=="z_EMK_EK_CH_T2"), which(colnames(qn_data_CG)=="z_SDQ_PB_T2"), which(colnames(qn_data_CG)=="z_SDQ_T2"))])
+    
+  vars_P3_amp_neu = data.frame(v1=names(qn_data_CG)[c(which(colnames(qn_data_CG)=="z_P3_amp_neu"))], 
+                    v2=names(qn_data_CG)[c(which(colnames(qn_data_CG)=="z_EMK_EM_P_T2"), which(colnames(qn_data_CG)=="z_EMK_EK_P_T2"),
+                            which(colnames(qn_data_CG)=="z_EMK_EK_CH_T2"), which(colnames(qn_data_CG)=="z_SDQ_PB_T2"), which(colnames(qn_data_CG)=="z_SDQ_T2"))])
+  
+  vars_P3_amp_hap_neu = data.frame(v1=names(qn_data_CG)[c(which(colnames(qn_data_CG)=="z_P3_amp_hap_neu"))], 
+                    v2=names(qn_data_CG)[c(which(colnames(qn_data_CG)=="z_EMK_EM_P_T2"), which(colnames(qn_data_CG)=="z_EMK_EK_P_T2"),
+                            which(colnames(qn_data_CG)=="z_EMK_EK_CH_T2"), which(colnames(qn_data_CG)=="z_SDQ_PB_T2"), which(colnames(qn_data_CG)=="z_SDQ_T2"))])
+  
+  vars_P3_amp_ang_neu = data.frame(v1=names(qn_data_CG)[c(which(colnames(qn_data_CG)=="z_P3_amp_ang_neu"))], 
+                    v2=names(qn_data_CG)[c(which(colnames(qn_data_CG)=="z_EMK_EM_P_T2"), which(colnames(qn_data_CG)=="z_EMK_EK_P_T2"),
+                            which(colnames(qn_data_CG)=="z_EMK_EK_CH_T2"), which(colnames(qn_data_CG)=="z_SDQ_PB_T2"), which(colnames(qn_data_CG)=="z_SDQ_T2"))])
+
+# Combine all correlation pairs 
+  vars_P3_behav = rbind(vars_P3_amp_hap, vars_P3_amp_ang, vars_P3_amp_neu, vars_P3_amp_hap_neu, vars_P3_amp_ang_neu)
+  
+# Correlate pairs of interest  
+  corrs_P3_behav = do.call(rbind, mapply(corrFunc, vars_P3_behav[,1], vars_P3_behav[,2], MoreArgs=list(data=qn_data_CG), SIMPLIFY=FALSE))
+  
+  corrs_P3_behav = subset(corrs_P3_behav , select = -c(var1))
+
+# Print table
+  pander(corrs_P3_behav)
+
+```
+
+## CG P3: T2 residual scores
+
+```{r corr_CG_P3_res_T2, results = 'asis'}
+
+# http://faculty.cas.usf.edu/mbrannick/regression/Part3/Partials.html
+
+# Define correlation pairs of interest 
+  vars_P3_amp_hap_neu = data.frame(v1=names(qn_data_CG)[c(which(colnames(qn_data_CG)=="res_P3_amp_hap_neu"))], 
+                    v2=names(qn_data_CG)[c(which(colnames(qn_data_CG)=="res_EMK_EM_P_T2"), which(colnames(qn_data_CG)=="res_EMK_EK_P_T2"),
+                            which(colnames(qn_data_CG)=="res_EMK_EK_CH_T2"), which(colnames(qn_data_CG)=="res_SDQ_PB_T2"), which(colnames(qn_data_CG)=="res_SDQ_T2"))])
+  
+  vars_P3_amp_ang_neu = data.frame(v1=names(qn_data_CG)[c(which(colnames(qn_data_CG)=="res_P3_amp_ang_neu"))], 
+                    v2=names(qn_data_CG)[c(which(colnames(qn_data_CG)=="res_EMK_EM_P_T2"), which(colnames(qn_data_CG)=="res_EMK_EK_P_T2"),
+                            which(colnames(qn_data_CG)=="res_EMK_EK_CH_T2"), which(colnames(qn_data_CG)=="res_SDQ_PB_T2"), which(colnames(qn_data_CG)=="res_SDQ_T2"))])
+
+# Combine all correlation pairs 
+  vars_P3_behav = rbind(vars_P3_amp_hap_neu, vars_P3_amp_ang_neu)
+  
+# Correlate pairs of interest  
+  corrs_P3_behav = do.call(rbind, mapply(corrFunc, vars_P3_behav[,1], vars_P3_behav[,2], MoreArgs=list(data=qn_data_CG), SIMPLIFY=FALSE))
+  
+  corrs_P3_behav = subset(corrs_P3_behav , select = -c(var1))
+
+# Print table
+  pander(corrs_P3_behav)
+  
+# Print corrected p-values  
+  print(p.adjust(corrs_P3_behav$p.value, method = "fdr"))
+
+```
+
+
+
+
+
+## Correlation plots
+
+### EMK EM P - P3 hap_neu
+
+```{r corr_plot_EMK_EM_P3_hap_neu}
+
+ggplot(qn_data, aes(x=EMK_EM_P_T2, y=P3_amp_hap_neu))+
+       geom_point(size = 3)+
+       geom_smooth(method=lm)
+
+ggplot(qn_data, aes(x=EMK_EM_P_T2, y=P3_amp_hap_neu))+
+       geom_point(size = 3)+
+       geom_smooth(method=lm)+
+    facet_wrap(~group)
+
+```
+
+### SDQ PV - P3 hap_neu
+
+```{r corr_plot_SDQ_PB_hap_neu}
+
+ggplot(qn_data, aes(x=SDQ_PB_T2, y=P3_amp_hap_neu))+
+       geom_point(size = 3)+
+       geom_smooth(method=lm)
+
+ggplot(qn_data, aes(x=SDQ_PB_T2, y=P3_amp_hap_neu))+
+       geom_point(size = 3)+
+       geom_smooth(method=lm)+
+    facet_wrap(~group)
+
+```
+
+
+

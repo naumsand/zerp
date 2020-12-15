@@ -1,0 +1,1055 @@
+---
+title: "Introduction"
+output: 
+  rmdformats::material:
+    highlight: kate
+    css: web_style.css
+    thumbnails: false
+    lightbox: true
+    gallery: true
+    cards: true
+    self_contained: no
+    number_sections: no
+    code_folding: hide
+    fig_caption: yes
+---
+
+<!-- Set up workspace -->
+
+```{r setup, include = FALSE, message = FALSE, warning = FALSE}
+
+# Set general settings for Markdown file 
+  options(max.print="75")
+
+  knitr::opts_chunk$set(echo=TRUE,
+                 prompt=FALSE,
+                 tidy=TRUE,
+                 comment=NA,
+                 message=FALSE,
+                 warning=FALSE,
+                 results = FALSE,
+  	             fig.align="center")
+  knitr::opts_knit$set(width=75)
+
+# Swipe environment
+  rm(list=ls())
+  
+# Load packages
+  library(eeptools)
+  library(dplyr)
+  library(kableExtra)
+  library(rmdformats)
+  library(sjmisc)
+  library(summarytools)
+  library(stats)
+  library(tidyverse)
+  library(XLConnect)
+
+# Round to 2 digits   
+  options(digits=2)
+  
+```
+
+# Overview of data sets 
+
+```{r overview, results = 'asis'}
+
+# Load data set
+  qn_data_desc = readWorksheetFromFile("./data/data_overview.xlsx", 
+                               sheet = "all_data", 
+                               startCol = 1,
+                               endCol = 0)
+
+# Create table
+  kable(qn_data_desc) %>% 
+    kable_styling(bootstrap_options = c("hover"), font_size = 14,fixed_thead = T)
+```
+
+
+# Questionnaire data 
+
+## Standardized questionnaires 
+
+Transformations:
+
+  + Recode value names
+  + Calculate age based on birth date and test date
+  + Calculate Winkler index
+  + Calculate change scores 
+  + Calculate composite scores
+  + Calculate z-scores / mean-centered values for change scores / T1 / T2 / T3 / parental values for further analyses
+  + !*Note*: For SDQ_Total, T1-T2 was calculated to invert the scale!
+  + Calculate composite score of all behavioral variables
+  
+ <!-- Centering refers to: mean of values will be subtracted from all values, it does not change the scale:  scale(A, center = TRUE, scale = FALSE) -->
+  
+ <!-- zscore: changes the scale, one-unit difference = one SD difference : scale(A, center = TRUE, scale = TRUE) -->
+
+```{r qn_data}
+
+# Load questionnaire data
+  qn_data = readWorksheetFromFile("./data/qn_data.xlsx",
+                             sheet = 1,
+                             startCol = 1,
+                             endCol = 0)
+
+# Re-code gender
+  qn_data$sex[qn_data$sex == 1] = "Male"
+  qn_data$sex[qn_data$sex == 2] = "Female"
+  
+# Re-code training group
+  qn_data$group[qn_data$group == "ZE"] = "TG"
+  qn_data$group[qn_data$group == "SB"] = "CG"
+
+# Define N/A data
+  qn_data[qn_data==-99] = NA
+  
+# Calculate age (Extract age from birth/test date)
+  qn_data$age = as.numeric(cbind(age_calc(as.Date(qn_data$birth_date),
+                                     as.Date(qn_data$test_date), units = "years"))) # Needs to be numeric to create table
+  
+# Remove birth and test date column
+  qn_data = subset(qn_data, select=-c(birth_date,test_date))
+
+# Calculate Winkler-Index 
+
+  # Create Winkler Index 
+  
+    # For the Winkler Index, one awards points for income, occupation and education level of each
+    # parent. Points range from 1-5. These points are added up. The maximum value would be 15 points.
+    # For education and occupation, the parent with the larger score was chosen per family. 
+  
+  # Income
+    # 1 = 0-1250 Euro
+    # 2 = 1250-2000 Euro
+    # 3 = 2000-3000 Euro,
+    # 4 = 3000-5000 Euro
+    # 5 = more than 5000 Euro
+  
+    qn_data$income_rec[qn_data$income==1 | qn_data$income==2 | qn_data$income==3 | qn_data$income==4] = 1
+    qn_data$income_rec[qn_data$income==5 | qn_data$income==6 | qn_data$income==7] = 2
+    qn_data$income_rec[qn_data$income==8 | qn_data$income==9 | qn_data$income==10] = 3
+    qn_data$income_rec[qn_data$income==11 | qn_data$income==12] = 4
+    qn_data$income_rec[qn_data$income==13] = 5
+    
+  # Education
+    # 1 = no degree
+    # 2 = secondary modern school [German: "Hauptschule"]
+    # 3 = middle school [German: "Realschule"]
+    # 4 = advanced technical college entrance qualification [German: "Fachhochschulreife"]
+    # 5 = higher education entrance qualification (A-levels) [German: "Abitur"]
+  
+  # for mum
+    qn_data$mum_ed_rec[qn_data$mum_ed==7 | qn_data$mum_ed==8] = 1
+    qn_data$mum_ed_rec[qn_data$mum_ed==1 | qn_data$mum_ed==6] = 2
+    qn_data$mum_ed_rec[qn_data$mum_ed==2 | qn_data$mum_ed==3] = 3
+    qn_data$mum_ed_rec[qn_data$mum_ed==4] = 4
+    qn_data$mum_ed_rec[qn_data$mum_ed==5] = 5
+
+  
+  # for dad
+    qn_data$dad_ed_rec[qn_data$dad_ed==7 | qn_data$dad_ed==8] = 1
+    qn_data$dad_ed_rec[qn_data$dad_ed==1 | qn_data$dad_ed==6] = 2
+    qn_data$dad_ed_rec[qn_data$dad_ed==2 | qn_data$dad_ed==3] = 3
+    qn_data$dad_ed_rec[qn_data$dad_ed==4] = 4
+    qn_data$dad_ed_rec[qn_data$dad_ed==5] = 5
+  
+  # Occupation 
+    # 1 = student
+    # 2 = skilled worker [German:Gelernter "Facharbeiter"]
+    # 3 = foremen/forwomen [German: "Vorarbeiter"]
+    # 4 = clerk in the middle grade of the civil service [German: "Beamter mittlerer Dienst"]
+    # 5 = senior officials [German: "Beamte höherer Dienst"]
+  
+  # for mum
+    qn_data$occ_mum[qn_data$mum_occup_ISCO==5 | qn_data$mum_occup_ISCO==11 |
+                      qn_data$mum_occup_ISCO==12 | qn_data$mum_occup_ISCO==51 | 
+                      qn_data$mum_occup_ISCO==52] = 1
+    
+    qn_data$occ_mum[qn_data$mum_occup_ISCO==13 | qn_data$mum_occup_ISCO==21 |
+                      qn_data$mum_occup_ISCO==26 | qn_data$mum_occup_ISCO==31 |
+                      qn_data$mum_occup_ISCO==32] = 2
+    
+    qn_data$occ_mum[qn_data$mum_occup_ISCO==14 | qn_data$mum_occup_ISCO==33 | 
+                      qn_data$mum_occup_ISCO==41] = 3
+    
+    qn_data$occ_mum[qn_data$mum_occup_ISCO==2 | qn_data$mum_occup_ISCO==22 | 
+                      qn_data$mum_occup_ISCO==23 | qn_data$mum_occup_ISCO==24 |
+                      qn_data$mum_occup_ISCO==34 | qn_data$mum_occup_ISCO==42] = 4
+    
+    qn_data$occ_mum[qn_data$mum_occup_ISCO==25 | 
+                      qn_data$mum_occup_ISCO==35 | qn_data$mum_occup_ISCO==43 |
+                      qn_data$mum_occup_ISCO==44] = 5
+  
+  # for dad
+    qn_data$occ_dad[qn_data$dad_occup_ISCO==5 | qn_data$dad_occup_ISCO==11 |
+                      qn_data$dad_occup_ISCO==12 | qn_data$dad_occup_ISCO==51 |
+                      qn_data$dad_occup_ISCO==52] = 1
+    
+    qn_data$occ_dad[qn_data$dad_occup_ISCO==13 | qn_data$dad_occup_ISCO==21 | 
+                      qn_data$dad_occup_ISCO==26 | qn_data$dad_occup_ISCO==31 | 
+                      qn_data$dad_occup_ISCO==32] = 2
+    
+    qn_data$occ_dad[qn_data$dad_occup_ISCO==14 | qn_data$dad_occup_ISCO==33 | 
+                      qn_data$dad_occup_ISCO==41] = 3
+    
+    qn_data$occ_dad[qn_data$dad_occup_ISCO==2 | qn_data$dad_occup_ISCO==22 | 
+                      qn_data$dad_occup_ISCO==23 | qn_data$dad_occup_ISCO==24 |
+                      qn_data$dad_occup_ISCO==34 | qn_data$dad_occup_ISCO==42] = 4
+    
+    qn_data$occ_dad[qn_data$dad_occup_ISCO==25 | qn_data$dad_occup_ISCO==35 |
+                      qn_data$dad_occup_ISCO==43 | qn_data$dad_occup_ISCO==44] = 5
+  
+  # Calculate Winkler index
+    # Sum up all points (choose the parent with the larger score). 
+  
+    for (h in 1:length(qn_data$ID)){
+      qn_data$wink_ind[h] = sum(qn_data$income_rec[h],
+                            max(qn_data$occ_dad[h],qn_data$occ_mum[h]),
+                            max(qn_data$mum_ed_rec[h],qn_data$dad_ed_rec[h]))
+    }
+     
+  
+# Remove extra SES data columns
+  qn_data = subset(qn_data, select=-c(mum_occup_ISCO,dad_occup_ISCO, income, mum_ed, dad_ed, occ_mum, occ_dad, income_rec, dad_ed_rec, mum_ed_rec))
+  
+# Choose data
+  qn_data = subset(qn_data, EEG_PFV == 1)
+  qn_data = subset(qn_data, Exclude == 0) 
+  qn_data = subset (qn_data, ID != 1 & ID != 30 & ID != 36 & ID != 54 & ID != 58 & ID != 70 & ID != 75)  
+  
+# Z-scoring for T1/T2/T3/parental values
+  qn_data$z_GEM_T1 = scale(qn_data$GEM_Total_T1)
+  qn_data$z_GEM_T2 = scale(qn_data$GEM_Total_T2)
+  qn_data$z_GEM_T3 = scale(qn_data$GEM_Total_T3)
+  qn_data$z_EMK_EM_P_T1 = scale(qn_data$EMK_EM_P_T1)
+  qn_data$z_EMK_EM_P_T2 = scale(qn_data$EMK_EM_P_T2)
+  qn_data$z_EMK_EM_P_T3 = scale(qn_data$EMK_EM_P_T3)
+  qn_data$z_EMK_EM_CH_T1 = scale(qn_data$EMK_EM_CH_T1)
+  qn_data$z_EMK_EM_CH_T2 = scale(qn_data$EMK_EM_CH_T2)
+  qn_data$z_EMK_EK_P_T1 = scale(qn_data$EMK_EK_P_T1)
+  qn_data$z_EMK_EK_P_T2 = scale(qn_data$EMK_EK_P_T2)
+  qn_data$z_EMK_EK_P_T3 = scale(qn_data$EMK_EK_P_T3)
+  qn_data$z_EMK_EK_CH_T1 = scale(qn_data$EMK_EK_CH_T1)
+  qn_data$z_EMK_EK_CH_T2 = scale(qn_data$EMK_EK_CH_T2)
+  qn_data$z_EMK_PB_CH_T1 = scale(qn_data$EMK_PB_CH_T1)
+  qn_data$z_EMK_PB_CH_T2 = scale(qn_data$EMK_PB_CH_T2)
+  qn_data$z_SDQ_PB_T1 = scale(qn_data$SDQ_PB_T1)
+  qn_data$z_SDQ_PB_T2 = scale(qn_data$SDQ_PB_T2)
+  qn_data$z_SDQ_PB_T3 = scale(qn_data$SDQ_PB_T3)
+  qn_data$z_SDQ_T1 = scale(qn_data$SDQ_Total_T1)
+  qn_data$z_SDQ_T2= scale(qn_data$SDQ_Total_T2)  
+  qn_data$z_SDQ_T3= scale(qn_data$SDQ_Total_T3)  
+  qn_data$z_SEFQ_Pos_Exp = scale(qn_data$SEFQ_Pos_Exp)
+  qn_data$z_SEFQ_Neg_Exp = scale(qn_data$SEFQ_Neg_Exp)
+  qn_data$z_wink_ind = scale(qn_data$wink_ind)
+  qn_data$z_SPF_Pers_tak = scale(qn_data$SPF_Pers_tak)
+  qn_data$z_SPF_Emp_conc= scale(qn_data$SPF_Emp_conc)
+
+# Mean-centering for T1/T2/T3/parental values
+  qn_data$mc_GEM_T1 = scale(qn_data$GEM_Total_T1, scale = F)
+  qn_data$mc_GEM_T2 = scale(qn_data$GEM_Total_T2, scale = F)
+  qn_data$mc_GEM_T3 = scale(qn_data$GEM_Total_T3, scale = F)
+  qn_data$mc_EMK_EM_P_T1 = scale(qn_data$EMK_EM_P_T1, scale = F)
+  qn_data$mc_EMK_EM_P_T2 = scale(qn_data$EMK_EM_P_T2, scale = F)
+  qn_data$mc_EMK_EM_P_T3 = scale(qn_data$EMK_EM_P_T3, scale = F)
+  qn_data$mc_EMK_EM_CH_T1 = scale(qn_data$EMK_EM_CH_T1, scale = F)
+  qn_data$mc_EMK_EM_CH_T2 = scale(qn_data$EMK_EM_CH_T2, scale = F)
+  qn_data$mc_EMK_EK_P_T1 = scale(qn_data$EMK_EK_P_T1, scale = F)
+  qn_data$mc_EMK_EK_P_T2 = scale(qn_data$EMK_EK_P_T2, scale = F)
+  qn_data$mc_EMK_EK_P_T3 = scale(qn_data$EMK_EK_P_T3, scale = F)
+  qn_data$mc_EMK_EK_CH_T1 = scale(qn_data$EMK_EK_CH_T1, scale = F)
+  qn_data$mc_EMK_EK_CH_T2 = scale(qn_data$EMK_EK_CH_T2, scale = F)
+  qn_data$mc_EMK_PB_CH_T1 = scale(qn_data$EMK_PB_CH_T1, scale = F)
+  qn_data$mc_EMK_PB_CH_T2 = scale(qn_data$EMK_PB_CH_T2, scale = F)
+  qn_data$mc_SDQ_PB_T1 = scale(qn_data$SDQ_PB_T1, scale = F)
+  qn_data$mc_SDQ_PB_T2 = scale(qn_data$SDQ_PB_T2, scale = F)
+  qn_data$mc_SDQ_PB_T3 = scale(qn_data$SDQ_PB_T3, scale = F)
+  qn_data$mc_SDQ_T1 = scale(qn_data$SDQ_Total_T1, scale = F)
+  qn_data$mc_SDQ_T2= scale(qn_data$SDQ_Total_T2, scale = F)  
+  qn_data$mc_SDQ_T3= scale(qn_data$SDQ_Total_T3, scale = F)  
+  qn_data$mc_SEFQ_Pos_Exp = scale(qn_data$SEFQ_Pos_Exp, scale = F)
+  qn_data$mc_SEFQ_Neg_Exp = scale(qn_data$SEFQ_Neg_Exp, scale = F)
+  qn_data$mc_wink_ind = scale(qn_data$wink_ind, scale = F)
+  qn_data$mc_SPF_Pers_tak = scale(qn_data$SPF_Pers_tak, scale = F)
+  qn_data$mc_SPF_Emp_conc= scale(qn_data$SPF_Emp_conc, scale = F)  
+  
+# Calculate change scores (d = delta) for T2
+  qn_data$d_GEM_CE = qn_data$GEM_CE_T2 - qn_data$GEM_CE_T1
+  qn_data$d_GEM_AE = qn_data$GEM_AE_T2 - qn_data$GEM_AE_T1
+  qn_data$d_GEM_Total = qn_data$GEM_Total_T2 - qn_data$GEM_Total_T1
+  qn_data$d_EMK_EM_CH = qn_data$EMK_EM_CH_T2 - qn_data$EMK_EM_CH_T1
+  qn_data$d_EMK_EM_P = qn_data$EMK_EM_P_T2 - qn_data$EMK_EM_P_T1
+  qn_data$d_EMK_EK_CH = qn_data$EMK_EK_CH_T2 - qn_data$EMK_EK_CH_T1
+  qn_data$d_EMK_EK_P = qn_data$EMK_EK_P_T2 - qn_data$EMK_EK_P_T1
+  qn_data$d_EMK_PB_CH = qn_data$EMK_PB_CH_T2 - qn_data$EMK_PB_CH_T1
+  qn_data$d_SDQ_PB = qn_data$SDQ_PB_T2 - qn_data$SDQ_PB_T1
+  qn_data$d_SDQ_EP = qn_data$SDQ_EP_T2 - qn_data$SDQ_EP_T1
+  qn_data$d_SDQ_Total = qn_data$SDQ_Total_T1 - qn_data$SDQ_Total_T2
+  qn_data$d_SRS = qn_data$SRS_T2 - qn_data$SRS_T1
+  
+# Calculate z-scores of change scores (d = delta) for T2
+  qn_data$zd_GEM_CE = scale(qn_data$d_GEM_CE)
+  qn_data$zd_GEM_AE = scale(qn_data$d_GEM_AE)
+  qn_data$zd_GEM_Total = scale(qn_data$d_GEM_Total) 
+  qn_data$zd_EMK_EM_CH = scale(qn_data$d_EMK_EM_CH)
+  qn_data$zd_EMK_EM_P = scale(qn_data$d_EMK_EM_P)
+  qn_data$zd_EMK_EK_CH = scale(qn_data$d_EMK_EK_CH)
+  qn_data$zd_EMK_EK_P = scale(qn_data$d_EMK_EK_P)
+  qn_data$zd_EMK_PB_CH = scale(qn_data$d_EMK_PB_CH)
+  qn_data$zd_SDQ_PB = scale(qn_data$d_SDQ_PB)
+  qn_data$zd_SDQ_EP = scale(qn_data$d_SDQ_EP)
+  qn_data$zd_SDQ_Total = scale(qn_data$d_SDQ_Total)
+  qn_data$zd_SRS = scale(qn_data$d_SRS)
+  
+# Calculate mean-centered change scores (d = delta) for T2
+  qn_data$mcd_GEM_CE = scale(qn_data$d_GEM_CE, scale = F)
+  qn_data$mcd_GEM_AE = scale(qn_data$d_GEM_AE, scale = F)
+  qn_data$mcd_GEM_Total = scale(qn_data$d_GEM_Total, scale = F) 
+  qn_data$mcd_EMK_EM_CH = scale(qn_data$d_EMK_EM_CH, scale = F)
+  qn_data$mcd_EMK_EM_P = scale(qn_data$d_EMK_EM_P, scale = F)
+  qn_data$mcd_EMK_EK_CH = scale(qn_data$d_EMK_EK_CH, scale = F)
+  qn_data$mcd_EMK_EK_P = scale(qn_data$d_EMK_EK_P, scale = F)
+  qn_data$mcd_EMK_PB_CH = scale(qn_data$d_EMK_PB_CH, scale = F)
+  qn_data$mcd_SDQ_PB = scale(qn_data$d_SDQ_PB, scale = F)
+  qn_data$mcd_SDQ_EP = scale(qn_data$d_SDQ_EP, scale = F)
+  qn_data$mcd_SDQ_Total = scale(qn_data$d_SDQ_Total, scale = F)
+  qn_data$mcd_SRS = scale(qn_data$d_SRS, scale = F)
+  
+# Calculate EMK composite scores (empathy (parent / child) and emotion knowledge (parent/child)) using z-scores
+  qn_data$zd_EMK_EM_comp = scale(qn_data$d_EMK_EM_CH) + scale(qn_data$d_EMK_EM_P)
+  qn_data$zd_EMK_EK_comp = scale(qn_data$d_EMK_EK_CH) + scale(qn_data$d_EMK_EK_P)
+  
+# Calculate change scores (d = delta) for T3
+  qn_data$d_GEM_Total_lt = qn_data$GEM_Total_T3 - qn_data$GEM_Total_T2
+  qn_data$d_EMK_EM_P_lt = qn_data$EMK_EM_P_T3 - qn_data$EMK_EM_P_T2
+  qn_data$d_EMK_EK_P_lt = qn_data$EMK_EK_P_T3 - qn_data$EMK_EK_P_T2
+  qn_data$d_SDQ_PB_lt = qn_data$SDQ_PB_T3 - qn_data$SDQ_PB_T2
+  qn_data$d_SDQ_Total_lt = qn_data$SDQ_Total_T2 - qn_data$SDQ_Total_T3
+  
+# Calculate z-scores of change scores (d = delta) for T3
+  qn_data$zd_GEM_Total_lt = scale(qn_data$d_GEM_Total_lt) 
+  qn_data$zd_EMK_EM_P_lt = scale(qn_data$d_EMK_EM_P_lt)
+  qn_data$zd_EMK_EK_P_lt = scale(qn_data$d_EMK_EK_P_lt)
+  qn_data$zd_SDQ_PB_lt = scale(qn_data$d_SDQ_PB_lt)
+  qn_data$zd_SDQ_Total_lt = scale(qn_data$d_SDQ_Total_lt)
+    
+# Calculate mean-centered change scores (d = delta) for T3
+  qn_data$mcd_GEM_Total_lt = scale(qn_data$d_GEM_Total_lt, scale = F) 
+  qn_data$mcd_EMK_EM_P_lt = scale(qn_data$d_EMK_EM_P_lt, scale = F)
+  qn_data$mcd_EMK_EK_P_lt = scale(qn_data$d_EMK_EK_P_lt, scale = F)
+  qn_data$mcd_SDQ_PB_lt = scale(qn_data$d_SDQ_PB_lt, scale = F)
+  qn_data$mcd_SDQ_Total_lt = scale(qn_data$d_SDQ_Total_lt, scale = F)
+  
+# Z-scoring for covariates 
+  qn_data$z_age = scale(qn_data$age)
+  qn_data$z_CPM = scale(qn_data$CPM)
+  qn_data$z_app_time = scale(qn_data$T_Self_Report) 
+  
+# Mean-centering for covariates 
+  qn_data$mc_age = scale(qn_data$age, scale = F)
+  qn_data$mc_CPM = scale(qn_data$CPM, scale = F)
+  qn_data$mc_app_time = scale(qn_data$T_Self_Report, scale = F)   
+  
+# Calculate composite score
+  qn_data$comp = qn_data$zd_GEM_Total + qn_data$zd_EMK_EK_CH + qn_data$zd_EMK_EK_P + qn_data$zd_EMK_EM_P +
+                 qn_data$zd_EMK_EM_CH + qn_data$zd_EMK_PB_CH + qn_data$zd_SDQ_PB + qn_data$zd_SDQ_Total  
+
+```
+
+## App-based questionnaire
+
+```{r app_qn}
+
+# Load questionnaire data
+  app_qn = readWorksheetFromFile("./data/app_qn.xlsx",
+                             sheet = 1,
+                             startCol = 1,
+                             endCol = 0)
+
+# Define N/A data
+  app_qn[app_qn==-99] = NA
+
+# Choose data
+  # Choose data
+  app_qn = subset (app_qn, ID != 1 & ID != 11 & ID != 21 & ID != 30 & ID != 36 & ID != 48 &  ID != 54 & ID != 58 & ID != 70 & ID != 75) 
+  app_qn = subset(app_qn, EEG_PFV == 1)
+  app_qn = subset(app_qn, Exclude == 0)  
+
+# Define N/A data
+  app_qn[app_qn==99] = NA
+  
+# Re-code group
+  app_qn$App[app_qn$App == 1] = "TG"
+  app_qn$App[app_qn$App == 2] = "CG"
+  
+  
+# Save in Rdata format
+  save(app_qn, file = "./data/app_qn.RData")  
+
+
+# Get info for module 4
+  qn_data$mod_4 = app_qn$mod_4
+  
+```
+
+# ERP data
+
+## ERP visualization data
+
+  + Re-name conditions
+  
+```{r ERP_vis_data}
+
+# Averaged P1/P3 trajectories per participant 
+  P1_P3_traj = read.delim("./data/P1_P3_traj.txt", header = TRUE, sep = " ", dec = ".")
+  
+# Averaged N170 left / N170 right trajectories per participant 
+  N170_l_traj = read.delim("./data/N170_l_traj.txt", header = TRUE, sep = " ", dec = ".")
+  N170_r_traj = read.delim("./data/N170_r_traj.txt", header = TRUE, sep = " ", dec = ".")
+
+# Add info which ROI is included    
+  P1_P3_traj$ERP = 'P1_P3'
+  N170_l_traj$ERP = 'N170l'
+  N170_r_traj$ERP = 'N170r'
+  
+# Combine data sets
+  erp_vis_data = rbind(P1_P3_traj, N170_l_traj, N170_r_traj)
+  
+# De-select ape faces (event code: 4)
+  erp_vis_data = subset(erp_vis_data, cond != 4)  
+  
+# Rename condition
+  erp_vis_data$cond[erp_vis_data$cond == 1]='happy'
+  erp_vis_data$cond[erp_vis_data$cond == 2]='neutral'
+  erp_vis_data$cond[erp_vis_data$cond == 3]='angry'
+
+# Calculate median split for age
+  qn_data$age_split = dicho(as.numeric(qn_data$age), dich.by = "median")
+  
+# Rename age_split variable
+  qn_data$age_split = as.numeric(qn_data$age_split)
+  qn_data$age_split[qn_data$age_split == 1]='young'
+  qn_data$age_split[qn_data$age_split == 2]='old'
+ 
+# Match info of qn_data with EEG data
+  erp_vis_data$group = qn_data$group[match(erp_vis_data$ID, qn_data$ID,nomatch = NA)]
+  erp_vis_data$group = factor(erp_vis_data$group) 
+  erp_vis_data$age_split = qn_data$age_split[match(erp_vis_data$ID, qn_data$ID,nomatch = NA)]
+  erp_vis_data$age_split = factor(erp_vis_data$age_split)  
+  erp_vis_data$sex = qn_data$sex[match(erp_vis_data$ID, qn_data$ID,nomatch = NA)]
+  erp_vis_data$sex = factor(erp_vis_data$sex)
+  erp_vis_data$exc = qn_data$Exclude[match(erp_vis_data$ID, qn_data$ID,nomatch = NA)]
+  
+# De-select participants  
+  erp_vis_data = subset(erp_vis_data, exc == 0)
+  erp_vis_data = subset (erp_vis_data, ID != 1 & ID != 30 & ID != 36 & ID != 54 & ID != 58 & ID != 70 & ID != 75)
+
+# Save in Rdata format
+  save(erp_vis_data, file = "./data/erp_vis_data.RData")  
+
+```
+
+## ERP statistical data
+
+  + Re-name conditions
+  + Match ERP and behavioral data 
+  + Average ERPs for each participant
+  + Get trial count per condition / per participant
+  + Calculate z-scores
+
+```{r ERP_stat_data} 
+
+## P1
+
+# Get P1 data
+  P1 = read.delim("./data/P1_singl_trial_data.txt", header = TRUE, sep = " ", dec = ".") 
+
+# Load questionnaire data
+  stim = readWorksheetFromFile("./data/stim_info.xlsx", 
+                             sheet = 1, 
+                             startCol = 1,
+                             endCol = 0) 
+  
+# Match questionnaire data
+  P1$age = qn_data$age[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$z_age = qn_data$z_age[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$group = qn_data$group[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$sex = qn_data$sex[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$app_time = qn_data$T_Self_Report[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$z_app_time = qn_data$z_app_time[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$app_eng = qn_data$app_compl[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$CPM = qn_data$CPM[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$z_CPM = qn_data$z_CPM[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$d_GEM_CE = qn_data$d_GEM_CE[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$d_GEM_AE = qn_data$d_GEM_AE[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$d_GEM_Total = qn_data$d_GEM_Total[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$d_EMK_EM_CH = qn_data$d_EMK_EM_CH[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$d_EMK_EM_P = qn_data$d_EMK_EM_P[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$d_EMK_EK_CH = qn_data$d_EMK_EK_CH[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$d_EMK_EK_P = qn_data$d_EMK_EK_P[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$d_EMK_PB_CH = qn_data$d_EMK_PB_CH[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$d_SDQ_PB = qn_data$d_SDQ_PB[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$d_SDQ_EP = qn_data$d_SDQ_EP[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$d_SDQ_Total = qn_data$d_SDQ_Total[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$d_SRS = qn_data$d_SRS[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$GEM_CE_T1 = qn_data$GEM_CE_T1[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$GEM_AE_T1 = qn_data$GEM_AE_T1[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$GEM_Total_T1 = qn_data$GEM_Total_T1[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$EMK_EM_CH_T1 = qn_data$EMK_EM_CH_T1[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$EMK_EM_P_T1 = qn_data$EMK_EM_P_T1[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$EMK_EK_CH_T1 = qn_data$EMK_EK_CH_T1[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$EMK_EK_P_T1 = qn_data$EMK_EK_P_T1[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$EMK_PB_CH_T1 = qn_data$EMK_PB_CH_T1[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$SDQ_PB_T1 = qn_data$SDQ_PB_T1[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$SDQ_EP_T1 = qn_data$SDQ_EP_T1[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$SDQ_Total_T1 = qn_data$SDQ_Total_T1[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$SRS_T1 = qn_data$SRS_T1[match(P1$ID, qn_data$ID,nomatch = NA)]
+  P1$exc = qn_data$Exclude[match(P1$ID, qn_data$ID,nomatch = NA)]
+  
+# Match stimulus info
+  P1$stim_ID = stim$Stim_ID[match(P1$Trial, stim$Position, nomatch = NA)]  
+  P1$stim_emo = stim$Stim_Emotion[match(P1$Trial, stim$Position, nomatch = NA)]  
+  P1$stim_sex = stim$Stim_Sex[match(P1$Trial, stim$Position, nomatch = NA)]  
+  P1$block = stim$Block[match(P1$Trial, stim$Position, nomatch = NA)]  
+  
+# Re-order data frame
+  P1 = subset(P1, select=c(ID, group, age, z_age, sex, emotion,
+                           exc, ROI_GA_amp, ROI_GA_lat, Trial, block,
+                           stim_ID, stim_emo, stim_sex, app_time:SRS_T1, PO3_amp:PO10_lat))
+
+# De-select ape faces and AD trials  
+  P1_stat = subset(P1, emotion != 4)
+  
+# De-select participants  
+  P1_stat = subset(P1_stat, exc == 0)  
+  
+# Rename emotion
+  P1_stat$emotion[P1_stat$emotion == 1]='happy'
+  P1_stat$emotion[P1_stat$emotion == 2]='neutral'
+  P1_stat$emotion[P1_stat$emotion == 3]='angry'  
+
+##### N170
+  
+# Get N170 data
+  N170l = read.delim("./data/N170_l_singl_trial_data.txt", header = TRUE, sep = " ", dec = ".") 
+  N170r = read.delim("./data/N170_r_singl_trial_data.txt", header = TRUE, sep = " ", dec = ".") 
+
+# Combine N170 left and right hemisphere 
+  N170l = N170l[,-c(1:3, 5:7)]
+  N170r = N170r[,-c(1:3, 5:7)]
+  N170 = rbind(N170l, N170r)
+  
+# Match questionnaire data
+  N170$age = qn_data$age[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$z_age = qn_data$z_age[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$group = qn_data$group[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$sex = qn_data$sex[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$app_time = qn_data$T_Self_Report[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$z_app_time = qn_data$z_app_time[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$app_eng = qn_data$app_compl[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$CPM = qn_data$CPM[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$z_CPM = qn_data$z_CPM[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$d_GEM_CE = qn_data$d_GEM_CE[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$d_GEM_AE = qn_data$d_GEM_AE[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$d_GEM_Total = qn_data$d_GEM_Total[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$d_EMK_EM_CH = qn_data$d_EMK_EM_CH[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$d_EMK_EM_P = qn_data$d_EMK_EM_P[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$d_EMK_EK_CH = qn_data$d_EMK_EK_CH[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$d_EMK_EK_P = qn_data$d_EMK_EK_P[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$d_EMK_PB_CH = qn_data$d_EMK_PB_CH[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$d_SDQ_PB = qn_data$d_SDQ_PB[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$d_SDQ_EP = qn_data$d_SDQ_EP[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$d_SDQ_Total = qn_data$d_SDQ_Total[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$d_SRS = qn_data$d_SRS[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$GEM_CE_T1 = qn_data$GEM_CE_T1[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$GEM_AE_T1 = qn_data$GEM_AE_T1[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$GEM_Total_T1 = qn_data$GEM_Total_T1[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$EMK_EM_CH_T1 = qn_data$EMK_EM_CH_T1[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$EMK_EM_P_T1 = qn_data$EMK_EM_P_T1[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$EMK_EK_CH_T1 = qn_data$EMK_EK_CH_T1[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$EMK_EK_P_T1 = qn_data$EMK_EK_P_T1[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$EMK_PB_CH_T1 = qn_data$EMK_PB_CH_T1[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$SDQ_PB_T1 = qn_data$SDQ_PB_T1[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$SDQ_EP_T1 = qn_data$SDQ_EP_T1[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$SDQ_Total_T1 = qn_data$SDQ_Total_T1[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$SRS_T1 = qn_data$SRS_T1[match(N170$ID, qn_data$ID,nomatch = NA)]
+  N170$exc = qn_data$Exclude[match(N170$ID, qn_data$ID,nomatch = NA)]
+
+# Match stimulus info
+  N170$stim_ID = stim$Stim_ID[match(N170$Trial, stim$Position, nomatch = NA)]  
+  N170$stim_emo = stim$Stim_Emotion[match(N170$Trial, stim$Position, nomatch = NA)]  
+  N170$stim_sex = stim$Stim_Sex[match(N170$Trial, stim$Position, nomatch = NA)]  
+  N170$block = stim$Block[match(N170$Trial, stim$Position, nomatch = NA)]    
+  
+# Re-order data frame
+  N170 = subset(N170, select=c(ID, group, age, z_age, sex, emotion, exc, ROI_GA_amp, ROI_GA_lat, hem, Trial, block, stim_ID, stim_emo, stim_sex, app_time:SRS_T1))
+  
+# De-select ape faces and AD trials  
+  N170_stat = subset(N170, emotion != 4)
+  
+# De-select participants  
+  N170_stat = subset(N170_stat, exc == 0)    
+  
+# Rename emotion
+  N170_stat$emotion[N170_stat$emotion == 1]='happy'
+  N170_stat$emotion[N170_stat$emotion == 2]='neutral'
+  N170_stat$emotion[N170_stat$emotion == 3]='angry'  
+  
+# Rename hemisphere
+  N170_stat$hem[N170_stat$hem == 1]='left'
+  N170_stat$hem[N170_stat$hem == 2]='right' 
+  
+# De-select participants  
+  P1_stat = subset (P1_stat, ID != 1 & ID != 30 & ID != 36 & ID != 54 & ID != 58 & ID != 70 & ID != 75) 
+  N170_stat = subset (N170_stat,ID != 1 & ID != 30 & ID != 36 & ID != 54 & ID != 58 & ID != 70 & ID != 75)
+
+# Save in Rdata format
+  save(P1_stat, file = "./data/P1_stat.RData")  
+  save(N170_stat, file = "./data/N170_stat.RData")  
+  
+```
+
+```{r P3_stat_data}
+
+##### P3
+  
+# Get P3 data
+  P3_short = read.delim("./data/P3_singl_trial_data_short.txt", header = TRUE, sep = " ", dec = ".") 
+  
+# Match questionnaire data
+  P3_short$age = qn_data$age[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$z_age = qn_data$z_age[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$group = qn_data$group[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$sex = qn_data$sex[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$app_time = qn_data$T_Self_Report[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$z_app_time = qn_data$z_app_time[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$app_eng = qn_data$app_compl[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$CPM = qn_data$CPM[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$z_CPM = qn_data$z_CPM[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$d_GEM_CE = qn_data$d_GEM_CE[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$d_GEM_AE = qn_data$d_GEM_AE[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$d_GEM_Total = qn_data$d_GEM_Total[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$d_EMK_EM_CH = qn_data$d_EMK_EM_CH[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$d_EMK_EM_P = qn_data$d_EMK_EM_P[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$d_EMK_EK_CH = qn_data$d_EMK_EK_CH[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$d_EMK_EK_P = qn_data$d_EMK_EK_P[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$d_EMK_PB_CH = qn_data$d_EMK_PB_CH[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$d_SDQ_PB = qn_data$d_SDQ_PB[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$d_SDQ_EP = qn_data$d_SDQ_EP[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$d_SDQ_Total = qn_data$d_SDQ_Total[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$d_SRS = qn_data$d_SRS[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$GEM_CE_T1 = qn_data$GEM_CE_T1[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$GEM_AE_T1 = qn_data$GEM_AE_T1[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$GEM_Total_T1 = qn_data$GEM_Total_T1[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$EMK_EM_CH_T1 = qn_data$EMK_EM_CH_T1[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$EMK_EM_P_T1 = qn_data$EMK_EM_P_T1[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$EMK_EK_CH_T1 = qn_data$EMK_EK_CH_T1[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$EMK_EK_P_T1 = qn_data$EMK_EK_P_T1[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$EMK_PB_CH_T1 = qn_data$EMK_PB_CH_T1[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$SDQ_PB_T1 = qn_data$SDQ_PB_T1[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$SDQ_EP_T1 = qn_data$SDQ_EP_T1[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$SDQ_Total_T1 = qn_data$SDQ_Total_T1[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$SRS_T1 = qn_data$SRS_T1[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+  P3_short$exc = qn_data$Exclude[match(P3_short$ID, qn_data$ID,nomatch = NA)]
+
+  
+# Match stimulus info
+  P3_short$stim_ID = stim$Stim_ID[match(P3_short$Trial, stim$Position, nomatch = NA)]  
+  P3_short$stim_emo = stim$Stim_Emotion[match(P3_short$Trial, stim$Position, nomatch = NA)]  
+  P3_short$stim_sex = stim$Stim_Sex[match(P3_short$Trial, stim$Position, nomatch = NA)]  
+  P3_short$block = stim$Block[match(P3_short$Trial, stim$Position, nomatch = NA)]  
+  
+# Re-order data frame
+  P3_short = subset(P3_short, select=c(ID, group, age, z_age, sex, emotion, exc, ROI_GA_amp, Trial, block, stim_ID, stim_emo, stim_sex, app_time:SRS_T1,PO3_amp:PO10_amp))
+
+# De-select ape faces and AD trials  
+  P3_short_stat = subset(P3_short, emotion != 4)
+  
+# De-select participants  
+  P3_short_stat = subset(P3_short_stat, exc == 0)     
+  
+# Rename emotion
+  P3_short_stat$emotion[P3_short_stat$emotion == 1]='happy'
+  P3_short_stat$emotion[P3_short_stat$emotion == 2]='neutral'
+  P3_short_stat$emotion[P3_short_stat$emotion == 3]='angry'  
+
+# De-select participants  
+  P3_short_stat = subset (P3_short_stat, ID != 1 & ID != 30 & ID != 36 & ID != 54 & ID != 58 & ID != 70 & ID != 75)
+
+# Save in Rdata format
+  save(P3_short_stat, file = "./data/P3_short_stat.RData")  
+  
+  
+#########  
+  
+# Get P3 data
+  P3_medium = read.delim("./data/P3_singl_trial_data_medium.txt", header = TRUE, sep = " ", dec = ".") 
+  
+# Match questionnaire data
+  P3_medium$age = qn_data$age[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$z_age = qn_data$z_age[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$group = qn_data$group[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$sex = qn_data$sex[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$app_time = qn_data$T_Self_Report[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$z_app_time = qn_data$z_app_time[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$app_eng = qn_data$app_compl[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$CPM = qn_data$CPM[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$z_CPM = qn_data$z_CPM[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$d_GEM_CE = qn_data$d_GEM_CE[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$d_GEM_AE = qn_data$d_GEM_AE[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$d_GEM_Total = qn_data$d_GEM_Total[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$d_EMK_EM_CH = qn_data$d_EMK_EM_CH[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$d_EMK_EM_P = qn_data$d_EMK_EM_P[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$d_EMK_EK_CH = qn_data$d_EMK_EK_CH[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$d_EMK_EK_P = qn_data$d_EMK_EK_P[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$d_EMK_PB_CH = qn_data$d_EMK_PB_CH[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$d_SDQ_PB = qn_data$d_SDQ_PB[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$d_SDQ_EP = qn_data$d_SDQ_EP[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$d_SDQ_Total = qn_data$d_SDQ_Total[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$d_SRS = qn_data$d_SRS[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$GEM_CE_T1 = qn_data$GEM_CE_T1[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$GEM_AE_T1 = qn_data$GEM_AE_T1[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$GEM_Total_T1 = qn_data$GEM_Total_T1[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$EMK_EM_CH_T1 = qn_data$EMK_EM_CH_T1[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$EMK_EM_P_T1 = qn_data$EMK_EM_P_T1[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$EMK_EK_CH_T1 = qn_data$EMK_EK_CH_T1[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$EMK_EK_P_T1 = qn_data$EMK_EK_P_T1[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$EMK_PB_CH_T1 = qn_data$EMK_PB_CH_T1[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$SDQ_PB_T1 = qn_data$SDQ_PB_T1[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$SDQ_EP_T1 = qn_data$SDQ_EP_T1[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$SDQ_Total_T1 = qn_data$SDQ_Total_T1[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$SRS_T1 = qn_data$SRS_T1[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+  P3_medium$exc = qn_data$Exclude[match(P3_medium$ID, qn_data$ID,nomatch = NA)]
+
+  
+# Match stimulus info
+  P3_medium$stim_ID = stim$Stim_ID[match(P3_medium$Trial, stim$Position, nomatch = NA)]  
+  P3_medium$stim_emo = stim$Stim_Emotion[match(P3_medium$Trial, stim$Position, nomatch = NA)]  
+  P3_medium$stim_sex = stim$Stim_Sex[match(P3_medium$Trial, stim$Position, nomatch = NA)]  
+  P3_medium$block = stim$Block[match(P3_medium$Trial, stim$Position, nomatch = NA)]  
+  
+# Re-order data frame
+  P3_medium = subset(P3_medium, select=c(ID, group, age, z_age, sex, emotion, exc, ROI_GA_amp, Trial, block, stim_ID, stim_emo, stim_sex, app_time:SRS_T1,PO3_amp:PO10_amp))
+
+# De-select ape faces and AD trials  
+  P3_medium_stat = subset(P3_medium, emotion != 4)
+  
+# De-select participants  
+  P3_medium_stat = subset(P3_medium_stat, exc == 0)     
+  
+# Rename emotion
+  P3_medium_stat$emotion[P3_medium_stat$emotion == 1]='happy'
+  P3_medium_stat$emotion[P3_medium_stat$emotion == 2]='neutral'
+  P3_medium_stat$emotion[P3_medium_stat$emotion == 3]='angry'  
+
+# De-select participants  
+  P3_medium_stat = subset (P3_medium_stat, ID != 1 & ID != 30 & ID != 36 & ID != 54 & ID != 58 & ID != 70 & ID != 75)
+
+# Save in Rdata format
+  save(P3_medium_stat, file = "./data/P3_medium_stat.RData")    
+  
+#########  
+  
+# Get P3 data
+  P3_long = read.delim("./data/P3_singl_trial_data_long.txt", header = TRUE, sep = " ", dec = ".") 
+  
+# Match questionnaire data
+  P3_long$age = qn_data$age[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$z_age = qn_data$z_age[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$group = qn_data$group[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$sex = qn_data$sex[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$app_time = qn_data$T_Self_Report[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$z_app_time = qn_data$z_app_time[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$app_eng = qn_data$app_compl[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$CPM = qn_data$CPM[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$z_CPM = qn_data$z_CPM[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$d_GEM_CE = qn_data$d_GEM_CE[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$d_GEM_AE = qn_data$d_GEM_AE[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$d_GEM_Total = qn_data$d_GEM_Total[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$d_EMK_EM_CH = qn_data$d_EMK_EM_CH[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$d_EMK_EM_P = qn_data$d_EMK_EM_P[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$d_EMK_EK_CH = qn_data$d_EMK_EK_CH[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$d_EMK_EK_P = qn_data$d_EMK_EK_P[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$d_EMK_PB_CH = qn_data$d_EMK_PB_CH[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$d_SDQ_PB = qn_data$d_SDQ_PB[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$d_SDQ_EP = qn_data$d_SDQ_EP[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$d_SDQ_Total = qn_data$d_SDQ_Total[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$d_SRS = qn_data$d_SRS[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$GEM_CE_T1 = qn_data$GEM_CE_T1[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$GEM_AE_T1 = qn_data$GEM_AE_T1[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$GEM_Total_T1 = qn_data$GEM_Total_T1[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$EMK_EM_CH_T1 = qn_data$EMK_EM_CH_T1[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$EMK_EM_P_T1 = qn_data$EMK_EM_P_T1[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$EMK_EK_CH_T1 = qn_data$EMK_EK_CH_T1[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$EMK_EK_P_T1 = qn_data$EMK_EK_P_T1[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$EMK_PB_CH_T1 = qn_data$EMK_PB_CH_T1[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$SDQ_PB_T1 = qn_data$SDQ_PB_T1[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$SDQ_EP_T1 = qn_data$SDQ_EP_T1[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$SDQ_Total_T1 = qn_data$SDQ_Total_T1[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$SRS_T1 = qn_data$SRS_T1[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+  P3_long$exc = qn_data$Exclude[match(P3_long$ID, qn_data$ID,nomatch = NA)]
+
+  
+# Match stimulus info
+  P3_long$stim_ID = stim$Stim_ID[match(P3_long$Trial, stim$Position, nomatch = NA)]  
+  P3_long$stim_emo = stim$Stim_Emotion[match(P3_long$Trial, stim$Position, nomatch = NA)]  
+  P3_long$stim_sex = stim$Stim_Sex[match(P3_long$Trial, stim$Position, nomatch = NA)]  
+  P3_long$block = stim$Block[match(P3_long$Trial, stim$Position, nomatch = NA)]  
+  
+# Re-order data frame
+  P3_long = subset(P3_long, select=c(ID, group, age, z_age,
+                                     sex, emotion, exc, ROI_GA_amp, Trial, block, stim_ID, stim_emo, stim_sex,
+                                     app_time:SRS_T1,PO3_amp:PO10_amp))
+
+# De-select ape faces and AD trials  
+  P3_long_stat = subset(P3_long, emotion != 4)
+  
+# De-select participants  
+  P3_long_stat = subset(P3_long_stat, exc == 0)     
+  
+# Rename emotion
+  P3_long_stat$emotion[P3_long_stat$emotion == 1]='happy'
+  P3_long_stat$emotion[P3_long_stat$emotion == 2]='neutral'
+  P3_long_stat$emotion[P3_long_stat$emotion == 3]='angry'  
+
+# De-select participants  
+  P3_long_stat = subset (P3_long_stat, ID != 1 & ID != 30 & ID != 36 & ID != 54 & ID != 58 & ID != 70 & ID != 75)
+
+# Save in Rdata format
+  save(P3_long_stat, file = "./data/P3_long_stat.RData")      
+
+```
+
+```{r calc_ERP_av_trial_num}
+
+# Calculate amplitude mean for each ERP component and difference scores between emotions 
+
+# P1
+  P1_mean_amp = aggregate(P1_stat$ROI_GA_amp,
+            list(ID = P1_stat$ID,
+            emotion = P1_stat$emotion), mean)
+
+  qn_data$P1_amp_hap = P1_mean_amp[P1_mean_amp$emotion == 'happy',]$x
+  qn_data$P1_amp_ang = P1_mean_amp[P1_mean_amp$emotion == 'angry',]$x
+  qn_data$P1_amp_neu = P1_mean_amp[P1_mean_amp$emotion == 'neutral',]$x
+  
+  qn_data$P1_amp_hap_neu = P1_mean_amp[P1_mean_amp$emotion == 'happy',]$x - P1_mean_amp[P1_mean_amp$emotion == 'neutral',]$x
+  qn_data$P1_amp_ang_neu = P1_mean_amp[P1_mean_amp$emotion == 'angry',]$x - P1_mean_amp[P1_mean_amp$emotion == 'neutral',]$x
+  
+# N170 across hemispheres
+  N170_mean_amp = aggregate(N170_stat$ROI_GA_amp,
+            list(ID = N170_stat$ID,
+            emotion = N170_stat$emotion), mean)
+
+  qn_data$N170_amp_hap = N170_mean_amp[N170_mean_amp$emotion == 'happy',]$x
+  qn_data$N170_amp_ang = N170_mean_amp[N170_mean_amp$emotion == 'angry',]$x
+  qn_data$N170_amp_neu = N170_mean_amp[N170_mean_amp$emotion == 'neutral',]$x
+  
+  qn_data$N170_amp_hap_neu = N170_mean_amp[N170_mean_amp$emotion == 'happy',]$x - N170_mean_amp[N170_mean_amp$emotion == 'neutral',]$x
+  qn_data$N170_amp_ang_neu = N170_mean_amp[N170_mean_amp$emotion == 'angry',]$x - N170_mean_amp[N170_mean_amp$emotion == 'neutral',]$x
+  
+# N170 left hemisphere
+  N170_left_mean_amp = aggregate(N170_stat[N170_stat$hem == "left",]$ROI_GA_amp,
+            list(ID = N170_stat[N170_stat$hem == "left",]$ID,
+            emotion = N170_stat[N170_stat$hem == "left",]$emotion), mean)
+  
+  qn_data$N170_left_amp_hap = N170_left_mean_amp[N170_left_mean_amp$emotion == 'happy',]$x
+  qn_data$N170_left_amp_ang = N170_left_mean_amp[N170_left_mean_amp$emotion == 'angry',]$x
+  qn_data$N170_left_amp_neu = N170_left_mean_amp[N170_left_mean_amp$emotion == 'neutral',]$x
+  
+  qn_data$N170_left_amp_hap_neu = N170_left_mean_amp[N170_left_mean_amp$emotion == 'happy',]$x - N170_left_mean_amp[N170_left_mean_amp$emotion == 'neutral',]$x
+  qn_data$N170_left_amp_ang_neu = N170_left_mean_amp[N170_left_mean_amp$emotion == 'angry',]$x - N170_left_mean_amp[N170_left_mean_amp$emotion == 'neutral',]$x
+  
+# N170 right hemisphere
+  N170_right_mean_amp = aggregate(N170_stat[N170_stat$hem == "right",]$ROI_GA_amp,
+            list(ID = N170_stat[N170_stat$hem == "right",]$ID,
+            emotion = N170_stat[N170_stat$hem == "right",]$emotion), mean)
+  
+  qn_data$N170_right_amp_hap = N170_right_mean_amp[N170_right_mean_amp$emotion == 'happy',]$x
+  qn_data$N170_right_amp_ang = N170_right_mean_amp[N170_right_mean_amp$emotion == 'angry',]$x
+  qn_data$N170_right_amp_neu = N170_right_mean_amp[N170_right_mean_amp$emotion == 'neutral',]$x
+  
+  qn_data$N170_right_amp_hap_neu = N170_right_mean_amp[N170_right_mean_amp$emotion == 'happy',]$x - N170_right_mean_amp[N170_right_mean_amp$emotion == 'neutral',]$x
+  qn_data$N170_right_amp_ang_neu = N170_right_mean_amp[N170_right_mean_amp$emotion == 'angry',]$x - N170_right_mean_amp[N170_right_mean_amp$emotion == 'neutral',]$x  
+  
+# P3
+  P3_mean_amp = aggregate(P3_short_stat$ROI_GA_amp,
+            list(ID = P3_short_stat$ID,
+            emotion = P3_short_stat$emotion), mean)
+  
+  qn_data$P3_amp_hap = P3_mean_amp[P3_mean_amp$emotion == 'happy',]$x
+  qn_data$P3_amp_ang = P3_mean_amp[P3_mean_amp$emotion == 'angry',]$x
+  qn_data$P3_amp_neu = P3_mean_amp[P3_mean_amp$emotion == 'neutral',]$x
+
+  qn_data$P3_amp_hap_neu = P3_mean_amp[P3_mean_amp$emotion == 'happy',]$x - P3_mean_amp[P3_mean_amp$emotion == 'neutral',]$x
+  qn_data$P3_amp_ang_neu = P3_mean_amp[P3_mean_amp$emotion == 'angry',]$x - P3_mean_amp[P3_mean_amp$emotion == 'neutral',]$x  
+  
+# Calculate latency mean for each ERP component and difference scores between emotions 
+
+# P1
+  P1_mean_lat = aggregate(P1_stat$ROI_GA_lat,
+            list(ID = P1_stat$ID,
+            emotion = P1_stat$emotion), mean)
+
+  qn_data$P1_lat_hap = P1_mean_lat[P1_mean_lat$emotion == 'happy',]$x
+  qn_data$P1_lat_ang = P1_mean_lat[P1_mean_lat$emotion == 'angry',]$x
+  qn_data$P1_lat_neu = P1_mean_lat[P1_mean_lat$emotion == 'neutral',]$x
+  
+  qn_data$P1_lat_hap_neu = P1_mean_lat[P1_mean_lat$emotion == 'happy',]$x - P1_mean_lat[P1_mean_lat$emotion == 'neutral',]$x
+  qn_data$P1_lat_ang_neu = P1_mean_lat[P1_mean_lat$emotion == 'angry',]$x - P1_mean_lat[P1_mean_lat$emotion == 'neutral',]$x
+  
+# N170 across hemispheres
+  N170_mean_lat = aggregate(N170_stat$ROI_GA_lat,
+            list(ID = N170_stat$ID,
+            emotion = N170_stat$emotion), mean)
+
+  qn_data$N170_lat_hap = N170_mean_lat[N170_mean_lat$emotion == 'happy',]$x
+  qn_data$N170_lat_ang = N170_mean_lat[N170_mean_lat$emotion == 'angry',]$x
+  qn_data$N170_lat_neu = N170_mean_lat[N170_mean_lat$emotion == 'neutral',]$x
+  
+  qn_data$N170_lat_hap_neu = N170_mean_lat[N170_mean_lat$emotion == 'happy',]$x - N170_mean_lat[N170_mean_lat$emotion == 'neutral',]$x
+  qn_data$N170_lat_ang_neu = N170_mean_lat[N170_mean_lat$emotion == 'angry',]$x - N170_mean_lat[N170_mean_lat$emotion == 'neutral',]$x
+  
+  
+# N170 left hemisphere
+  N170_left_mean_lat = aggregate(N170_stat[N170_stat$hem == "left",]$ROI_GA_lat,
+            list(ID = N170_stat[N170_stat$hem == "left",]$ID,
+            emotion = N170_stat[N170_stat$hem == "left",]$emotion), mean)
+  
+  qn_data$N170_left_lat_hap = N170_left_mean_lat[N170_left_mean_lat$emotion == 'happy',]$x
+  qn_data$N170_left_lat_ang = N170_left_mean_lat[N170_left_mean_lat$emotion == 'angry',]$x
+  qn_data$N170_left_lat_neu = N170_left_mean_lat[N170_left_mean_lat$emotion == 'neutral',]$x
+  
+  qn_data$N170_left_lat_hap_neu = N170_left_mean_lat[N170_left_mean_lat$emotion == 'happy',]$x - N170_left_mean_lat[N170_left_mean_lat$emotion == 'neutral',]$x
+  qn_data$N170_left_lat_ang_neu = N170_left_mean_lat[N170_left_mean_lat$emotion == 'angry',]$x - N170_left_mean_lat[N170_left_mean_lat$emotion == 'neutral',]$x
+  
+  
+# N170 right hemisphere
+  N170_right_mean_lat = aggregate(N170_stat[N170_stat$hem == "right",]$ROI_GA_lat,
+            list(ID = N170_stat[N170_stat$hem == "right",]$ID,
+            emotion = N170_stat[N170_stat$hem == "right",]$emotion), mean)
+  
+  qn_data$N170_right_lat_hap = N170_right_mean_lat[N170_right_mean_lat$emotion == 'happy',]$x
+  qn_data$N170_right_lat_ang = N170_right_mean_lat[N170_right_mean_lat$emotion == 'angry',]$x
+  qn_data$N170_right_lat_neu = N170_right_mean_lat[N170_right_mean_lat$emotion == 'neutral',]$x
+  
+  qn_data$N170_right_lat_hap_neu = N170_right_mean_lat[N170_right_mean_lat$emotion == 'happy',]$x - N170_right_mean_lat[N170_right_mean_lat$emotion == 'neutral',]$x
+  qn_data$N170_right_lat_ang_neu = N170_right_mean_lat[N170_right_mean_lat$emotion == 'angry',]$x - N170_right_mean_lat[N170_right_mean_lat$emotion == 'neutral',]$x
+    
+
+# Count how many trials per participant / per emotion condition are left (take P1, all components have same number of artifact trials)
+  trial_count = P1_stat %>% count(ID, emotion)
+  
+  qn_data$hap_trials = trial_count[trial_count$emotion == 'happy',]$n
+  qn_data$ang_trials = trial_count[trial_count$emotion == 'angry',]$n
+  qn_data$neu_trials = trial_count[trial_count$emotion == 'neutral',]$n
+  
+  
+# Z-scoring for further analyses
+  qn_data$z_P1_amp_ang = scale(qn_data$P1_amp_ang)
+  qn_data$z_P1_amp_neu = scale(qn_data$P1_amp_neu)
+  qn_data$z_P1_amp_hap = scale(qn_data$P1_amp_hap)
+  qn_data$z_P1_amp_hap_neu = scale(qn_data$P1_amp_hap_neu)
+  qn_data$z_P1_amp_ang_neu = scale(qn_data$P1_amp_ang_neu)
+  qn_data$z_P1_lat_ang = scale(qn_data$P1_lat_ang)
+  qn_data$z_P1_lat_neu = scale(qn_data$P1_lat_neu)
+  qn_data$z_P1_lat_hap = scale(qn_data$P1_lat_hap)
+  qn_data$z_P1_lat_hap_neu = scale(qn_data$P1_lat_hap_neu)
+  qn_data$z_P1_lat_ang_neu = scale(qn_data$P1_lat_ang_neu)
+  
+  qn_data$z_N170_amp_ang = scale(qn_data$N170_amp_ang)
+  qn_data$z_N170_amp_neu = scale(qn_data$N170_amp_neu)
+  qn_data$z_N170_amp_hap = scale(qn_data$N170_amp_hap)
+  qn_data$z_N170_amp_hap_neu = scale(qn_data$N170_amp_hap_neu)
+  qn_data$z_N170_amp_ang_neu = scale(qn_data$N170_amp_ang_neu)
+  qn_data$z_N170_lat_ang = scale(qn_data$N170_lat_ang)
+  qn_data$z_N170_lat_neu = scale(qn_data$N170_lat_neu)
+  qn_data$z_N170_lat_hap = scale(qn_data$N170_lat_hap)
+  qn_data$z_N170_lat_hap_neu = scale(qn_data$N170_lat_hap_neu)
+  qn_data$z_N170_lat_ang_neu = scale(qn_data$N170_lat_ang_neu)
+  
+  qn_data$z_N170_left_amp_ang = scale(qn_data$N170_left_amp_ang)
+  qn_data$z_N170_left_amp_neu = scale(qn_data$N170_left_amp_neu)
+  qn_data$z_N170_left_amp_hap = scale(qn_data$N170_left_amp_hap)
+  qn_data$z_N170_left_amp_hap_neu = scale(qn_data$N170_left_amp_hap_neu)
+  qn_data$z_N170_left_amp_ang_neu = scale(qn_data$N170_left_amp_ang_neu)
+  qn_data$z_N170_left_lat_ang = scale(qn_data$N170_left_lat_ang)
+  qn_data$z_N170_left_lat_neu = scale(qn_data$N170_left_lat_neu)
+  qn_data$z_N170_left_lat_hap = scale(qn_data$N170_left_lat_hap)
+  qn_data$z_N170_left_lat_hap_neu = scale(qn_data$N170_left_lat_hap_neu)
+  qn_data$z_N170_left_lat_ang_neu = scale(qn_data$N170_left_lat_ang_neu)
+  
+  qn_data$z_N170_right_amp_ang = scale(qn_data$N170_right_amp_ang)
+  qn_data$z_N170_right_amp_neu = scale(qn_data$N170_right_amp_neu)
+  qn_data$z_N170_right_amp_hap = scale(qn_data$N170_right_amp_hap)
+  qn_data$z_N170_right_amp_hap_neu = scale(qn_data$N170_right_amp_hap_neu)
+  qn_data$z_N170_right_amp_ang_neu = scale(qn_data$N170_right_amp_ang_neu)
+  qn_data$z_N170_right_lat_ang = scale(qn_data$N170_right_lat_ang)
+  qn_data$z_N170_right_lat_neu = scale(qn_data$N170_right_lat_neu)
+  qn_data$z_N170_right_lat_hap = scale(qn_data$N170_right_lat_hap)
+  qn_data$z_N170_right_lat_hap_neu = scale(qn_data$N170_right_lat_hap_neu)
+  qn_data$z_N170_right_lat_ang_neu = scale(qn_data$N170_right_lat_ang_neu)
+  
+  qn_data$z_P3_amp_ang = scale(qn_data$P3_amp_ang)
+  qn_data$z_P3_amp_neu = scale(qn_data$P3_amp_neu)
+  qn_data$z_P3_amp_hap = scale(qn_data$P3_amp_hap)
+  qn_data$z_P3_amp_hap_neu = scale(qn_data$P3_amp_hap_neu)
+  qn_data$z_P3_amp_ang_neu = scale(qn_data$P3_amp_ang_neu)
+  
+# Mean-centering for further analyses
+  qn_data$mc_P1_amp_ang = scale(qn_data$P1_amp_ang, scale = F)
+  qn_data$mc_P1_amp_neu = scale(qn_data$P1_amp_neu, scale = F)
+  qn_data$mc_P1_amp_hap = scale(qn_data$P1_amp_hap, scale = F)
+  qn_data$mc_P1_amp_hap_neu = scale(qn_data$P1_amp_hap_neu, scale = F)
+  qn_data$mc_P1_amp_ang_neu = scale(qn_data$P1_amp_ang_neu, scale = F)
+  qn_data$mc_P1_lat_ang = scale(qn_data$P1_lat_ang, scale = F)
+  qn_data$mc_P1_lat_neu = scale(qn_data$P1_lat_neu, scale = F)
+  qn_data$mc_P1_lat_hap = scale(qn_data$P1_lat_hap, scale = F)
+  qn_data$mc_P1_lat_hap_neu = scale(qn_data$P1_lat_hap_neu, scale = F)
+  qn_data$mc_P1_lat_ang_neu = scale(qn_data$P1_lat_ang_neu, scale = F)
+  
+  qn_data$mc_N170_amp_ang = scale(qn_data$N170_amp_ang, scale = F)
+  qn_data$mc_N170_amp_neu = scale(qn_data$N170_amp_neu, scale = F)
+  qn_data$mc_N170_amp_hap = scale(qn_data$N170_amp_hap, scale = F)
+  qn_data$mc_N170_amp_hap_neu = scale(qn_data$N170_amp_hap_neu, scale = F)
+  qn_data$mc_N170_amp_ang_neu = scale(qn_data$N170_amp_ang_neu, scale = F)
+  qn_data$mc_N170_lat_ang = scale(qn_data$N170_lat_ang, scale = F)
+  qn_data$mc_N170_lat_neu = scale(qn_data$N170_lat_neu, scale = F)
+  qn_data$mc_N170_lat_hap = scale(qn_data$N170_lat_hap, scale = F)
+  qn_data$mc_N170_lat_hap_neu = scale(qn_data$N170_lat_hap_neu, scale = F)
+  qn_data$mc_N170_lat_ang_neu = scale(qn_data$N170_lat_ang_neu, scale = F)
+  
+  qn_data$mc_N170_left_amp_ang = scale(qn_data$N170_left_amp_ang, scale = F)
+  qn_data$mc_N170_left_amp_neu = scale(qn_data$N170_left_amp_neu, scale = F)
+  qn_data$mc_N170_left_amp_hap = scale(qn_data$N170_left_amp_hap, scale = F)
+  qn_data$mc_N170_left_amp_hap_neu = scale(qn_data$N170_left_amp_hap_neu, scale = F)
+  qn_data$mc_N170_left_amp_ang_neu = scale(qn_data$N170_left_amp_ang_neu, scale = F)
+  qn_data$mc_N170_left_lat_ang = scale(qn_data$N170_left_lat_ang, scale = F)
+  qn_data$mc_N170_left_lat_neu = scale(qn_data$N170_left_lat_neu, scale = F)
+  qn_data$mc_N170_left_lat_hap = scale(qn_data$N170_left_lat_hap, scale = F)
+  qn_data$mc_N170_left_lat_hap_neu = scale(qn_data$N170_left_lat_hap_neu, scale = F)
+  qn_data$mc_N170_left_lat_ang_neu = scale(qn_data$N170_left_lat_ang_neu, scale = F)
+  
+  qn_data$mc_N170_right_amp_ang = scale(qn_data$N170_right_amp_ang, scale = F)
+  qn_data$mc_N170_right_amp_neu = scale(qn_data$N170_right_amp_neu, scale = F)
+  qn_data$mc_N170_right_amp_hap = scale(qn_data$N170_right_amp_hap, scale = F)
+  qn_data$mc_N170_right_amp_hap_neu = scale(qn_data$N170_right_amp_hap_neu, scale = F)
+  qn_data$mc_N170_right_amp_ang_neu = scale(qn_data$N170_right_amp_ang_neu, scale = F)
+  qn_data$mc_N170_right_lat_ang = scale(qn_data$N170_right_lat_ang, scale = F)
+  qn_data$mc_N170_right_lat_neu = scale(qn_data$N170_right_lat_neu, scale = F)
+  qn_data$mc_N170_right_lat_hap = scale(qn_data$N170_right_lat_hap, scale = F)
+  qn_data$mc_N170_right_lat_hap_neu = scale(qn_data$N170_right_lat_hap_neu, scale = F)
+  qn_data$mc_N170_right_lat_ang_neu = scale(qn_data$N170_right_lat_ang_neu, scale = F)
+  
+  qn_data$mc_P3_amp_ang = scale(qn_data$P3_amp_ang, scale = F)
+  qn_data$mc_P3_amp_neu = scale(qn_data$P3_amp_neu, scale = F)
+  qn_data$mc_P3_amp_hap = scale(qn_data$P3_amp_hap, scale = F)
+  qn_data$mc_P3_amp_hap_neu = scale(qn_data$P3_amp_hap_neu, scale = F)
+  qn_data$mc_P3_amp_ang_neu = scale(qn_data$P3_amp_ang_neu, scale = F)  
+
+  
+# Save in Rdata format
+  save(qn_data, file = "./data/qn_data.RData")
+
+```
