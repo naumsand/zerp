@@ -1,0 +1,35 @@
+diff_own_other_emotions	
+neutral	diff_own_other_emotions
+instructions	
+diff_emo_doll	
+	
+diff_emo_doll	diff_sad_angry
+maintain_motivation	
+understanding-task	
+understanding-task	
+afraid_of_faces	
+diff_emo_doll	
+diff_emo_doll	
+understand_emotions	
+diff_emo_doll	
+diff_emo_doll	
+understand_emotions	
+diff_emo_doll	
+diff_emo_doll	diff_own_other_emotions
+	
+controls	
+understanding-task	
+understand_emotions	
+diff_emo_doll	
+understand_emotions	
+understanding-task	
+diff_emo_doll	
+diff_emo_doll	
+diff_emo_doll	
+module_1	
+diff_emo_doll	
+diff_sad_angry	
+diff_own_other_emotions	
+	
+neutral	
+understand_emotions	

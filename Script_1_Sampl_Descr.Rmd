@@ -1,0 +1,135 @@
+---
+title: "Sample description"
+output: 
+  rmdformats::material:
+    highlight: kate
+    css: web_style.css
+    thumbnails: false
+    lightbox: true
+    gallery: true
+    cards: true
+    self_contained: no
+    number_sections: no
+    code_folding: hide
+    fig_caption: yes
+---
+
+```{r setup, include = FALSE, message = FALSE, warning = FALSE}
+
+# Set general settings for Markdown file 
+  options(max.print="75")
+
+  knitr::opts_chunk$set(echo=TRUE,
+                 prompt=FALSE,
+                 tidy=TRUE,
+                 comment=NA,
+                 message=FALSE,
+                 warning=FALSE,
+                 results = FALSE,
+  	             fig.align="center")
+  knitr::opts_knit$set(width=75)
+
+# Swipe environment
+  rm(list=ls())
+  
+# Set libraries
+  library(expss)
+  library(gtsummary)
+  library(miceadds)
+  library(stringr)
+  library(summarytools)
+  library(tidyverse)
+  library(XLConnect)
+  
+# Round to 2 digits   
+   options(digits=2)
+   
+# Disable scientific notation in R
+   options(scipen = 999)
+
+```
+
+# Demographics 
+
+## Sample:
+  
+```{r descr_sample, include = FALSE}
+
+# Load questionnaire data
+  load.Rdata(filename="./data/qn_data.Rdata", "qn_data")
+
+# Get total number of participants
+  num_all_part = 76
+  num_all_part_for_stats = nrow(qn_data) 
+  
+# Count ZE/SB instances 
+  num_ze = sum(str_count(qn_data$group, pattern = "ZE"))
+  num_sb = nrow(qn_data) - num_ze
+
+```
+
+<!---  + *N total* = `r num_all_part_for_stats` + *N Zirkus Empathico (ZE)* = `r num_ze`  + *N Squirrel & Baer (SB)* = `r num_sb` -->
+
+<div align="center">
+
+```{r demog_table, results = 'asis', align = "center"}
+
+# http://www.danieldsjoberg.com/gtsummary/
+
+# Select srceening variables
+  qn_data_demog = qn_data %>% select(group, age, sex, SRS_T1, wink_ind, T_Self_Report, CPM, WM, PPVT_perc, train_weeks)
+
+# Apply labels
+  qn_data_demog = apply_labels(qn_data_demog,
+                      age = "Age",
+                      sex = "Sex",
+                      SRS_T1 = "SRS", 
+                      wink_ind = "SES",
+                      PPVT_perc = "PPVT (percentiles)",
+                      T_Self_Report = "App time (min)",
+                      train_weeks = "Training duration (weeks)")
+
+# Prepare table
+  demog_table =
+    tbl_summary(
+      qn_data_demog,
+      by = group, # split table by group
+      missing = "no" # don't list missing data separately
+    ) %>%
+    add_n() %>% # add column with total number of non-missing observations
+    add_p() %>% # test for a difference between groups
+    modify_header(label = "**Variable**") %>% # update the column header
+    bold_labels()
+  
+# Print table 
+  demog_table
+  
+```
+
+</div>
+
+  + Attrition rate: `r 100 - num_all_part_for_stats*100/num_all_part` %
+
+## EEG trials 
+
+```{r anova_EEG_trials}
+
+  trial_count = gather(qn_data, trial, count, hap_trials:neu_trials,factor_key=TRUE)
+
+  trial_count = subset(trial_count, select = c(trial,count))
+
+# Calculate one-way ANOVA to test equality of trial numbers
+  trial.aov = aov(count ~ trial, data = trial_count)
+
+# Extract values to present 
+  trial.aov.sum = summary(trial.aov)
+  trial.aov.sum = data.frame(trial.aov.sum[[1]])
+  
+```
+  
+  + We detected no difference between number of trials per emotion condition: *F* (`r trial.aov.sum$Df[1]`, `r trial.aov.sum$Df[2]`) = `r trial.aov.sum$F.value[1]`, *p* = `r format.pval(pv = trial.aov.sum$Pr..F.[1], digits = 2, eps = 0.001, nsmall = 3)`).
+  + Participants provided an average of: 
+    + Happy trials: *M* = `r mean(qn_data$hap_trials)`; *SD* = `r sd(qn_data$hap_trials)`
+    + Angry trials: *M* = `r mean(qn_data$ang_trials)`; *SD* = `r sd(qn_data$ang_trials)` and
+    + Neutral trials: *M* = `r mean(qn_data$neu_trials)`; *SD* = `r sd(qn_data$neu_trials)`.
+

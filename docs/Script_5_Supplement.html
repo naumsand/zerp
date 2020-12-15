@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+<title>Supplementary Material</title>
+<!-- Material Design fonts -->
+<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700">
+<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script src="site_libs/header-attrs-2.3/header-attrs.js"></script>
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.7/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/magnific-popup-1.1.0/magnific-popup.css" rel="stylesheet" />
+<script src="site_libs/magnific-popup-1.1.0/jquery.magnific-popup.min.js"></script>
+<link href="site_libs/bootstrap_material-0.1/bootstrap-material-design.min.css" rel="stylesheet" />
+<link href="site_libs/bootstrap_material-0.1/ripples.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap_material-0.1/material.min.js"></script>
+<script src="site_libs/bootstrap_material-0.1/ripples.min.js"></script>
+<link href="site_libs/material-0.1/material.css" rel="stylesheet" />
+<script src="site_libs/material-0.1/material.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    background-color: #ffffff;
+    color: #a0a0a0;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #a0a0a0;  padding-left: 4px; }
+div.sourceCode
+  { color: #1f1c1b; background-color: #ffffff; }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span { color: #1f1c1b; } /* Normal */
+code span.al { color: #bf0303; background-color: #f7e6e6; font-weight: bold; } /* Alert */
+code span.an { color: #ca60ca; } /* Annotation */
+code span.at { color: #0057ae; } /* Attribute */
+code span.bn { color: #b08000; } /* BaseN */
+code span.bu { color: #644a9b; font-weight: bold; } /* BuiltIn */
+code span.cf { color: #1f1c1b; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #924c9d; } /* Char */
+code span.cn { color: #aa5500; } /* Constant */
+code span.co { color: #898887; } /* Comment */
+code span.cv { color: #0095ff; } /* CommentVar */
+code span.do { color: #607880; } /* Documentation */
+code span.dt { color: #0057ae; } /* DataType */
+code span.dv { color: #b08000; } /* DecVal */
+code span.er { color: #bf0303; text-decoration: underline; } /* Error */
+code span.ex { color: #0095ff; font-weight: bold; } /* Extension */
+code span.fl { color: #b08000; } /* Float */
+code span.fu { color: #644a9b; } /* Function */
+code span.im { color: #ff5500; } /* Import */
+code span.in { color: #b08000; } /* Information */
+code span.kw { color: #1f1c1b; font-weight: bold; } /* Keyword */
+code span.op { color: #1f1c1b; } /* Operator */
+code span.ot { color: #006e28; } /* Other */
+code span.pp { color: #006e28; } /* Preprocessor */
+code span.re { color: #0057ae; background-color: #e0e9f8; } /* RegionMarker */
+code span.sc { color: #3daee9; } /* SpecialChar */
+code span.ss { color: #ff5500; } /* SpecialString */
+code span.st { color: #bf0303; } /* String */
+code span.va { color: #0057ae; } /* Variable */
+code span.vs { color: #bf0303; } /* VerbatimString */
+code span.wa { color: #bf0303; } /* Warning */
+</style>
+
+<link rel="stylesheet" href="web_style.css" type="text/css" />
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("toc");
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+</head>
+
+<body>
+
+<div class="header-panel shadow z-2">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-3">
+        <div id="header">
+    <h1 class="title">Supplementary Material</h1>
+                </div>
+    </div>
+</div>
+</div>
+</div>
+
+
+<div class="container-fluid main-container">
+    <div class="row">
+      <nav class="col-xs-3 menu">
+        <div id="toc">
+        <ul>
+        <li><a href="#app-evaluation">App evaluation</a></li>
+        <li><a href="#qualitative-questions">Qualitative questions</a></li>
+        </ul>
+        </div>
+        
+        
+        
+      </nav>
+     <div class="pages col-xs-9">
+     <div class="row">
+       <div class="col-xs-10">
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Naumann et al.</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">
+    <span class="glyphicon glyphicon-info-sign"></span>
+     
+    Introduction
+  </a>
+</li>
+<li>
+  <a href="Script_1_Sampl_Descr.html">
+    <span class="glyphicon glyphicon glyphicon glyphicon-education"></span>
+     
+    Sample description
+  </a>
+</li>
+<li>
+  <a href="Script_2_Report_Measures.html">
+    <span class="glyphicon glyphicon-hand-up"></span>
+     
+    Self-/Parental report
+  </a>
+</li>
+<li>
+  <a href="Script_3_ERP_Measures.html">
+    <span class="glyphicon glyphicon-user"></span>
+     
+    ERPs
+  </a>
+</li>
+<li>
+  <a href="Script_4_Brain_Behavior.html">
+    <span class="glyphicon glyphicon-resize-small"></span>
+     
+    Brain-Behavior
+  </a>
+</li>
+<li>
+  <a href="Script_5_Supplement.html">
+    <span class="glyphicon glyphicon glyphicon glyphicon-piggy-bank"></span>
+     
+    Supplementary
+  </a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://osf.io/nas48/">
+    <span class="ai ai ai ai-osf ai-lg"></span>
+     
+  </a>
+</li>
+<li>
+  <a href="mailto:sandra.naumann@hu-berlin.de">
+    <span class="fa fa-envelope fa-lg"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+<link rel="stylesheet" href="https://cdn.rawgit.com/jpswalsh/academicons/master/css/academicons.min.css">
+
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="co"># Load app questionnaire data</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true"></a><span class="kw">load.Rdata</span>(<span class="dt">filename =</span> <span class="st">&quot;./data/app_qn.Rdata&quot;</span>, <span class="st">&quot;app_qn&quot;</span>)</span></code></pre></div>
+<div id="app-evaluation" class="section level1 tabset tabset-pills">
+<h1 class="tabset tabset-pills">App evaluation</h1>
+<div id="acceptance" class="section level2">
+<h2>Acceptance</h2>
+<p><strong>My child had / was…</strong></p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true"></a><span class="co"># Select data for acceptibility questions</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true"></a>app_acc =<span class="st"> </span><span class="kw">as_tibble</span>(app_qn)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true"></a>app_acc =<span class="st"> </span>app_acc <span class="op">%&gt;%</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw">select</span>(Fun<span class="op">:</span>Practiced_without_parent)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true"></a><span class="co"># Recode variable</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true"></a>app_acc =<span class="st"> </span><span class="kw">data.frame</span>(<span class="kw">lapply</span>(app_acc, factor, <span class="dt">ordered =</span> <span class="ot">TRUE</span>, <span class="dt">levels =</span> <span class="dv">1</span><span class="op">:</span><span class="dv">5</span>, <span class="dt">labels =</span> <span class="kw">c</span>(<span class="st">&quot;Do not agree&quot;</span>, </span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true"></a>    <span class="st">&quot;Rather not agree&quot;</span>, <span class="st">&quot;Partly agree&quot;</span>, <span class="st">&quot;Rather agree&quot;</span>, <span class="st">&quot;Agree&quot;</span>)))</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true"></a><span class="co"># Add training info</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true"></a>app_acc<span class="op">$</span>group =<span class="st"> </span>app_qn<span class="op">$</span>App</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true"></a><span class="co"># Separate by training / control group</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true"></a>app_acc_ZE =<span class="st"> </span>app_acc[app_acc<span class="op">$</span>group <span class="op">==</span><span class="st"> &quot;TG&quot;</span>, ]</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true"></a>app_acc_SB =<span class="st"> </span>app_acc[app_acc<span class="op">$</span>group <span class="op">==</span><span class="st"> &quot;CG&quot;</span>, ]</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true"></a>app_acc_ZE =<span class="st"> </span><span class="kw">subset</span>(app_acc_ZE, <span class="dt">select =</span> <span class="op">-</span><span class="kw">c</span>(group))</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true"></a>app_acc_SB =<span class="st"> </span><span class="kw">subset</span>(app_acc_SB, <span class="dt">select =</span> <span class="op">-</span><span class="kw">c</span>(group))</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true"></a></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true"></a><span class="co"># Combine data sets (account for different lengths of data frames)</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true"></a>comb_acc_app =<span class="st"> </span><span class="kw">merge</span>(app_acc_SB, app_acc_ZE, <span class="dt">by =</span> <span class="st">&quot;row.names&quot;</span>, <span class="dt">all =</span> T, <span class="dt">suffixes =</span> <span class="kw">c</span>(<span class="st">&quot;&quot;</span>, </span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true"></a>    <span class="st">&quot;&quot;</span>))</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true"></a>comb_acc_app<span class="op">$</span>Row.names &lt;-<span class="st"> </span><span class="ot">NULL</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true"></a></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true"></a><span class="co"># Plot likert plot</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true"></a><span class="kw">plot_likert</span>(comb_acc_app, <span class="dt">catcount =</span> <span class="dv">5</span>, <span class="dt">values =</span> <span class="ot">FALSE</span>, <span class="dt">wrap.legend.labels =</span> <span class="dv">5</span>, <span class="kw">c</span>(<span class="kw">rep</span>(<span class="st">&quot;Control Group&quot;</span>, </span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true"></a>    <span class="dv">8</span>), <span class="kw">rep</span>(<span class="st">&quot;Training Group&quot;</span>, <span class="dv">8</span>)), <span class="dt">geom.colors =</span> <span class="kw">c</span>(<span class="st">&quot;#040a0b&quot;</span>, <span class="st">&quot;#1a3e43&quot;</span>, <span class="st">&quot;#2b6770&quot;</span>, </span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true"></a>    <span class="st">&quot;#80a4a9&quot;</span>, <span class="st">&quot;#bfd1d4&quot;</span>), <span class="dt">rel_heights =</span> <span class="kw">c</span>(<span class="dv">9</span>, <span class="dv">11</span>), <span class="dt">wrap.labels =</span> <span class="dv">65</span>, <span class="dt">reverse.scale =</span> <span class="ot">TRUE</span>, </span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true"></a>    <span class="dt">show.n =</span> <span class="ot">FALSE</span>, <span class="dt">axis.labels =</span> <span class="kw">c</span>(<span class="st">&quot;fun engaging with the app.&quot;</span>, <span class="st">&quot;motivated to train with the app.&quot;</span>, </span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true"></a>        <span class="st">&quot;frustrated during training.&quot;</span>, <span class="st">&quot;bored during training.&quot;</span>, <span class="st">&quot;wanted to play longer than agreed.&quot;</span>, </span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true"></a>        <span class="st">&quot;motivated by the app&#39;s rewards.&quot;</span>, <span class="st">&quot;difficulty understanding some of the app&#39;s content.&quot;</span>, </span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true"></a>        <span class="st">&quot;trained mostly without me.&quot;</span>))</span></code></pre></div>
+<p><img src="Script_5_Supplement_files/figure-html/app_acc-1.png" width="576" /></p>
+</div>
+<div id="usability" class="section level2">
+<h2>Usability</h2>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true"></a><span class="co"># Select data for acceptibility questions</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true"></a>app_usa =<span class="st"> </span><span class="kw">as_tibble</span>(app_qn)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true"></a>app_usa =<span class="st"> </span>app_usa <span class="op">%&gt;%</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw">select</span>(Use_App_self_explanatory<span class="op">:</span>Use_Training_Stressful)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true"></a><span class="co"># Recode variable</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true"></a>app_usa =<span class="st"> </span><span class="kw">data.frame</span>(<span class="kw">lapply</span>(app_usa, factor, <span class="dt">ordered =</span> <span class="ot">TRUE</span>, <span class="dt">levels =</span> <span class="dv">1</span><span class="op">:</span><span class="dv">5</span>, <span class="dt">labels =</span> <span class="kw">c</span>(<span class="st">&quot;Do not agree&quot;</span>, </span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true"></a>    <span class="st">&quot;Rather not agree&quot;</span>, <span class="st">&quot;Partly agree&quot;</span>, <span class="st">&quot;Rather agree&quot;</span>, <span class="st">&quot;Agree&quot;</span>)))</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true"></a><span class="co"># Add training info</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true"></a>app_usa<span class="op">$</span>group =<span class="st"> </span>app_qn<span class="op">$</span>App</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true"></a><span class="co"># Separate by training / control group</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true"></a>app_usa_ZE =<span class="st"> </span>app_usa[app_usa<span class="op">$</span>group <span class="op">==</span><span class="st"> &quot;TG&quot;</span>, ]</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true"></a>app_usa_SB =<span class="st"> </span>app_usa[app_usa<span class="op">$</span>group <span class="op">==</span><span class="st"> &quot;CG&quot;</span>, ]</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true"></a></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true"></a>app_usa_ZE =<span class="st"> </span><span class="kw">subset</span>(app_usa_ZE, <span class="dt">select =</span> <span class="op">-</span><span class="kw">c</span>(group))</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true"></a>app_usa_SB =<span class="st"> </span><span class="kw">subset</span>(app_usa_SB, <span class="dt">select =</span> <span class="op">-</span><span class="kw">c</span>(group))</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true"></a></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true"></a><span class="co"># Combine data sets (account for different lengths of data frames)</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true"></a>comb_int_use =<span class="st"> </span><span class="kw">merge</span>(app_usa_SB, app_usa_ZE, <span class="dt">by =</span> <span class="st">&quot;row.names&quot;</span>, <span class="dt">all =</span> T, <span class="dt">suffixes =</span> <span class="kw">c</span>(<span class="st">&quot;&quot;</span>, </span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true"></a>    <span class="st">&quot;&quot;</span>))</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true"></a>comb_int_use<span class="op">$</span>Row.names &lt;-<span class="st"> </span><span class="ot">NULL</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true"></a></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true"></a><span class="co"># Plot likert plot</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true"></a><span class="kw">plot_likert</span>(comb_int_use, <span class="dt">catcount =</span> <span class="dv">5</span>, <span class="dt">values =</span> <span class="ot">FALSE</span>, <span class="dt">wrap.legend.labels =</span> <span class="dv">5</span>, <span class="kw">c</span>(<span class="kw">rep</span>(<span class="st">&quot;Control Group&quot;</span>, </span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true"></a>    <span class="dv">5</span>), <span class="kw">rep</span>(<span class="st">&quot;Training Group&quot;</span>, <span class="dv">5</span>)), <span class="dt">geom.colors =</span> <span class="kw">c</span>(<span class="st">&quot;#121117&quot;</span>, <span class="st">&quot;#2e2b3b&quot;</span>, <span class="st">&quot;#5b5675&quot;</span>, </span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true"></a>    <span class="st">&quot;#7c7891&quot;</span>, <span class="st">&quot;#ceccd6&quot;</span>), <span class="dt">rel_heights =</span> <span class="kw">c</span>(<span class="dv">8</span>, <span class="dv">10</span>), <span class="dt">wrap.labels =</span> <span class="dv">65</span>, <span class="dt">reverse.scale =</span> <span class="ot">TRUE</span>, </span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true"></a>    <span class="dt">show.n =</span> <span class="ot">FALSE</span>, <span class="dt">axis.labels =</span> <span class="kw">c</span>(<span class="st">&quot;App was self-explanatory.&quot;</span>, <span class="st">&quot;The training manual was helpful.&quot;</span>, </span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true"></a>        <span class="st">&quot;Training was compatible the daily routines.&quot;</span>, <span class="st">&quot;I felt adequately supervised.&quot;</span>, </span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true"></a>        <span class="st">&quot;I was mentally stressed during the training.&quot;</span>))</span></code></pre></div>
+<p><img src="Script_5_Supplement_files/figure-html/app_usa-1.png" width="576" /></p>
+</div>
+<div id="behavioral-changes-induced-by-the-app-training" class="section level2">
+<h2>Behavioral changes induced by the app training</h2>
+<p><strong>After completion of the training, me as dad/mom found that…</strong></p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true"></a><span class="co"># Select data for acceptibility questions</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true"></a>app_beh =<span class="st"> </span><span class="kw">as_tibble</span>(app_qn)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true"></a>app_beh =<span class="st"> </span>app_beh <span class="op">%&gt;%</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw">select</span>(Behav_Interest_Feelings<span class="op">:</span>Behav_Interest_Languages)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true"></a><span class="co"># Recode variable</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true"></a>app_beh =<span class="st"> </span><span class="kw">data.frame</span>(<span class="kw">lapply</span>(app_beh, factor, <span class="dt">ordered =</span> <span class="ot">TRUE</span>, <span class="dt">levels =</span> <span class="dv">1</span><span class="op">:</span><span class="dv">5</span>, <span class="dt">labels =</span> <span class="kw">c</span>(<span class="st">&quot;Do not agree&quot;</span>, </span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true"></a>    <span class="st">&quot;Rather not agree&quot;</span>, <span class="st">&quot;Partly agree&quot;</span>, <span class="st">&quot;Rather agree&quot;</span>, <span class="st">&quot;Agree&quot;</span>)))</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true"></a><span class="co"># Add training info</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true"></a>app_beh<span class="op">$</span>group =<span class="st"> </span>app_qn<span class="op">$</span>App</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true"></a><span class="co"># Separate by training / control group</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true"></a>app_beh_ZE =<span class="st"> </span>app_beh[app_beh<span class="op">$</span>group <span class="op">==</span><span class="st"> &quot;TG&quot;</span>, ]</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true"></a>app_beh_SB =<span class="st"> </span>app_beh[app_beh<span class="op">$</span>group <span class="op">==</span><span class="st"> &quot;CG&quot;</span>, ]</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true"></a></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true"></a>app_beh_ZE =<span class="st"> </span><span class="kw">subset</span>(app_beh_ZE, <span class="dt">select =</span> <span class="op">-</span><span class="kw">c</span>(group))</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true"></a>app_beh_SB =<span class="st"> </span><span class="kw">subset</span>(app_beh_SB, <span class="dt">select =</span> <span class="op">-</span><span class="kw">c</span>(group))</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true"></a></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true"></a><span class="co"># Combine data sets (account for different lengths of data frames)</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true"></a>comb_int_use =<span class="st"> </span><span class="kw">merge</span>(app_beh_SB, app_beh_ZE, <span class="dt">by =</span> <span class="st">&quot;row.names&quot;</span>, <span class="dt">all =</span> T, <span class="dt">suffixes =</span> <span class="kw">c</span>(<span class="st">&quot;&quot;</span>, </span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true"></a>    <span class="st">&quot;&quot;</span>))</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true"></a>comb_int_use<span class="op">$</span>Row.names &lt;-<span class="st"> </span><span class="ot">NULL</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true"></a></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true"></a><span class="co"># Plot likert plot</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true"></a><span class="kw">plot_likert</span>(comb_int_use, <span class="dt">catcount =</span> <span class="dv">5</span>, <span class="dt">values =</span> <span class="ot">FALSE</span>, <span class="dt">wrap.legend.labels =</span> <span class="dv">5</span>, <span class="kw">c</span>(<span class="kw">rep</span>(<span class="st">&quot;Control Group&quot;</span>, </span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true"></a>    <span class="dv">9</span>), <span class="kw">rep</span>(<span class="st">&quot;Training Group&quot;</span>, <span class="dv">9</span>)), <span class="dt">geom.colors =</span> <span class="kw">c</span>(<span class="st">&quot;#23180d&quot;</span>, <span class="st">&quot;#583c22&quot;</span>, <span class="st">&quot;#9e6c3c&quot;</span>, </span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true"></a>    <span class="st">&quot;#c09369&quot;</span>, <span class="st">&quot;#d8bca1&quot;</span>), <span class="dt">rel_heights =</span> <span class="kw">c</span>(<span class="dv">8</span>, <span class="dv">10</span>), <span class="dt">wrap.labels =</span> <span class="dv">65</span>, <span class="dt">reverse.scale =</span> <span class="ot">TRUE</span>, </span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true"></a>    <span class="dt">show.n =</span> <span class="ot">FALSE</span>, <span class="dt">axis.labels =</span> <span class="kw">c</span>(<span class="st">&quot;my child shows more interest in feelings.&quot;</span>, </span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true"></a>        <span class="st">&quot;my child deals better with its own feelings.&quot;</span>, <span class="st">&quot;my child reacts more appropriately to others&#39;s feelings.&quot;</span>, </span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true"></a>        <span class="st">&quot;my child is more open-minded about his environment.&quot;</span>, <span class="st">&quot;my child spends more time with other children.&quot;</span>, </span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true"></a>        <span class="st">&quot;communication about feelings in our family improved.&quot;</span>, <span class="st">&quot;I have a better relationship with my child.&quot;</span>, </span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true"></a>        <span class="st">&quot;my child uses English words or phrases more often.&quot;</span>, <span class="st">&quot;my child is more interested in other languages.&quot;</span>))</span></code></pre></div>
+<p><img src="Script_5_Supplement_files/figure-html/app_behav-1.png" width="576" /></p>
+</div>
+<div id="app-engagement" class="section level2">
+<h2>App engagement</h2>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true"></a><span class="co"># Select data for app engagement and change to long format</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true"></a>app_eng =<span class="st"> </span><span class="kw">as_tibble</span>(app_qn)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true"></a>app_eng =<span class="st"> </span><span class="kw">subset</span>(app_eng, App <span class="op">==</span><span class="st"> &quot;TG&quot;</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true"></a>app_eng =<span class="st"> </span>app_eng <span class="op">%&gt;%</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw">select</span>(mod_<span class="dv">1</span><span class="op">:</span>mod_<span class="dv">4</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true"></a>app_eng =<span class="st"> </span><span class="kw">gather</span>(app_eng, module, complete, mod_<span class="dv">1</span><span class="op">:</span>mod_<span class="dv">4</span>, <span class="dt">factor_key =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true"></a>app_eng =<span class="st"> </span>app_eng[<span class="kw">complete.cases</span>(app_eng), ]</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true"></a><span class="co"># Plot distribution</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true"></a><span class="kw">ggplot</span>(app_eng, <span class="kw">aes</span>(<span class="dt">x =</span> module, <span class="dt">y =</span> complete)) <span class="op">+</span><span class="st"> </span><span class="kw">geom_violin</span>(<span class="kw">aes</span>(<span class="dt">fill =</span> module, <span class="dt">color =</span> module), </span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true"></a>    <span class="dt">trim =</span> <span class="ot">FALSE</span>, <span class="dt">width =</span> <span class="fl">0.8</span>) <span class="op">+</span><span class="st"> </span><span class="kw">geom_boxplot</span>(<span class="dt">width =</span> <span class="fl">0.1</span>) <span class="op">+</span><span class="st"> </span><span class="co"># geom_jitter(height = 0, width = 0.1)+</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true"></a><span class="kw">scale_x_discrete</span>(<span class="dt">labels =</span> <span class="kw">c</span>(<span class="st">&quot;Own Emotions&quot;</span>, <span class="st">&quot;Emotion recognition&quot;</span>, <span class="st">&quot;Others&#39; Emotions&quot;</span>, </span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true"></a>    <span class="st">&quot;Empathy&quot;</span>)) <span class="op">+</span><span class="st"> </span><span class="kw">scale_y_continuous</span>(<span class="dt">name =</span> <span class="st">&quot;Module completion [%]&quot;</span>, <span class="dt">limits =</span> <span class="kw">c</span>(<span class="dv">0</span>, </span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true"></a>    <span class="dv">100</span>)) <span class="op">+</span><span class="st"> </span><span class="kw">scale_color_manual</span>(<span class="dt">values =</span> <span class="kw">c</span>(<span class="st">&quot;#345102&quot;</span>, <span class="st">&quot;#9ab768&quot;</span>, <span class="st">&quot;#578703&quot;</span>, <span class="st">&quot;#bccf9a&quot;</span>)) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true"></a><span class="st">    </span><span class="kw">scale_fill_manual</span>(<span class="dt">values =</span> <span class="kw">c</span>(<span class="st">&quot;#345102&quot;</span>, <span class="st">&quot;#9ab768&quot;</span>, <span class="st">&quot;#578703&quot;</span>, <span class="st">&quot;#bccf9a&quot;</span>)) <span class="op">+</span><span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;none&quot;</span>, </span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true"></a>    <span class="dt">axis.title.x =</span> <span class="kw">element_blank</span>())</span></code></pre></div>
+<p><img src="Script_5_Supplement_files/figure-html/app_eng-1.png" width="576" /></p>
+<p>The overall completion rate of the training app was 72.88 %.</p>
+</div>
+</div>
+<div id="qualitative-questions" class="section level1 tabset tabset-pills">
+<h1 class="tabset tabset-pills">Qualitative questions</h1>
+<div id="likesdislikes-training" class="section level2">
+<h2>Likes/Dislikes training</h2>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true"></a><span class="co"># http://www.sthda.com/english/wiki/text-mining-and-word-cloud-fundamentals-in-r-5-simple-steps-you-should-know</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true"></a><span class="co"># https://cran.r-project.org/web/packages/ggwordcloud/vignettes/ggwordcloud.html</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true"></a><span class="co"># Read txt files</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true"></a>text_CG_likes =<span class="st"> </span><span class="kw">readLines</span>(<span class="st">&quot;./data/wc_CG_likes.txt&quot;</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true"></a>text_CG_dislikes =<span class="st"> </span><span class="kw">readLines</span>(<span class="st">&quot;./data/wc_CG_dislikes.txt&quot;</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true"></a>text_TG_likes =<span class="st"> </span><span class="kw">readLines</span>(<span class="st">&quot;./data/wc_TG_likes.txt&quot;</span>)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true"></a>text_TG_dislikes =<span class="st"> </span><span class="kw">readLines</span>(<span class="st">&quot;./data/wc_TG_dislikes.txt&quot;</span>)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true"></a><span class="co"># Load data as corpus</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true"></a>CG_likes =<span class="st"> </span><span class="kw">Corpus</span>(<span class="kw">VectorSource</span>(text_CG_likes))</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true"></a>CG_dislikes =<span class="st"> </span><span class="kw">Corpus</span>(<span class="kw">VectorSource</span>(text_CG_dislikes))</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true"></a>TG_likes =<span class="st"> </span><span class="kw">Corpus</span>(<span class="kw">VectorSource</span>(text_TG_likes))</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true"></a>TG_dislikes =<span class="st"> </span><span class="kw">Corpus</span>(<span class="kw">VectorSource</span>(text_TG_dislikes))</span></code></pre></div>
+<p><strong>What did your child like most about training with the app?</strong></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true"></a><span class="co"># Build a term-document matrix</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true"></a>dtm =<span class="st"> </span><span class="kw">TermDocumentMatrix</span>(CG_likes)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true"></a>m =<span class="st"> </span><span class="kw">as.matrix</span>(dtm)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true"></a>v =<span class="st"> </span><span class="kw">sort</span>(<span class="kw">rowSums</span>(m), <span class="dt">decreasing =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true"></a>d_CG_likes =<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">word =</span> <span class="kw">names</span>(v), <span class="dt">freq =</span> v)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true"></a>dtm =<span class="st"> </span><span class="kw">TermDocumentMatrix</span>(TG_likes)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true"></a>m =<span class="st"> </span><span class="kw">as.matrix</span>(dtm)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true"></a>v =<span class="st"> </span><span class="kw">sort</span>(<span class="kw">rowSums</span>(m), <span class="dt">decreasing =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true"></a>d_TG_likes =<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">word =</span> <span class="kw">names</span>(v), <span class="dt">freq =</span> v)</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true"></a></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true"></a><span class="co"># Build word coulds</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true"></a>CG_likes_word =<span class="st"> </span><span class="kw">ggplot</span>(d_CG_likes, <span class="kw">aes</span>(<span class="dt">label =</span> word, <span class="dt">size =</span> freq, <span class="dt">color =</span> freq)) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true"></a><span class="st">    </span><span class="kw">geom_text_wordcloud</span>(<span class="dt">area_corr =</span> <span class="ot">TRUE</span>, <span class="dt">rm_outside =</span> <span class="ot">TRUE</span>) <span class="op">+</span><span class="st"> </span><span class="kw">scale_size_area</span>(<span class="dt">max_size =</span> <span class="dv">22</span>) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true"></a><span class="st">    </span><span class="kw">theme_minimal</span>() <span class="op">+</span><span class="st"> </span><span class="kw">scale_color_gradient</span>(<span class="dt">low =</span> <span class="st">&quot;#041012&quot;</span>, <span class="dt">high =</span> <span class="st">&quot;#5fa7b3&quot;</span>) <span class="op">+</span><span class="st"> </span><span class="kw">ggtitle</span>(<span class="st">&quot;Control group&quot;</span>)</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true"></a></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true"></a>TG_likes_word =<span class="st"> </span><span class="kw">ggplot</span>(d_TG_likes, <span class="kw">aes</span>(<span class="dt">label =</span> word, <span class="dt">size =</span> freq, <span class="dt">color =</span> freq)) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true"></a><span class="st">    </span><span class="kw">geom_text_wordcloud</span>(<span class="dt">area_corr =</span> <span class="ot">TRUE</span>, <span class="dt">rm_outside =</span> <span class="ot">TRUE</span>) <span class="op">+</span><span class="st"> </span><span class="kw">scale_size_area</span>(<span class="dt">max_size =</span> <span class="dv">22</span>) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true"></a><span class="st">    </span><span class="kw">theme_minimal</span>() <span class="op">+</span><span class="st"> </span><span class="kw">scale_color_gradient</span>(<span class="dt">low =</span> <span class="st">&quot;#63430a&quot;</span>, <span class="dt">high =</span> <span class="st">&quot;#c48310&quot;</span>) <span class="op">+</span><span class="st"> </span><span class="kw">ggtitle</span>(<span class="st">&quot;Training group&quot;</span>)</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true"></a></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true"></a><span class="co"># Display plots</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true"></a>fig_like_words =<span class="st"> </span>cowplot<span class="op">::</span><span class="kw">plot_grid</span>(CG_likes_word, TG_likes_word, <span class="dt">nrow =</span> <span class="dv">2</span>, <span class="dt">rel_widths =</span> <span class="kw">c</span>(<span class="dv">1</span>, </span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true"></a>    <span class="dv">1</span>))</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true"></a>fig_like_words</span></code></pre></div>
+<p><img src="Script_5_Supplement_files/figure-html/wordcloud_game_likes-1.png" width="576" /></p>
+<p><br></p>
+<p><strong>What did he/she like less?</strong></p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true"></a><span class="co"># Build a term-document matrix</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true"></a>dtm =<span class="st"> </span><span class="kw">TermDocumentMatrix</span>(CG_dislikes)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true"></a>m =<span class="st"> </span><span class="kw">as.matrix</span>(dtm)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true"></a>v =<span class="st"> </span><span class="kw">sort</span>(<span class="kw">rowSums</span>(m), <span class="dt">decreasing =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true"></a>d_CG_dislikes =<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">word =</span> <span class="kw">names</span>(v), <span class="dt">freq =</span> v)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true"></a>dtm =<span class="st"> </span><span class="kw">TermDocumentMatrix</span>(TG_dislikes)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true"></a>m =<span class="st"> </span><span class="kw">as.matrix</span>(dtm)</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true"></a>v =<span class="st"> </span><span class="kw">sort</span>(<span class="kw">rowSums</span>(m), <span class="dt">decreasing =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true"></a>d_TG_dislikes =<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">word =</span> <span class="kw">names</span>(v), <span class="dt">freq =</span> v)</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true"></a><span class="co"># Build word coulds</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true"></a>CG_dislikes_word =<span class="st"> </span><span class="kw">ggplot</span>(d_CG_dislikes, <span class="kw">aes</span>(<span class="dt">label =</span> word, <span class="dt">size =</span> freq, <span class="dt">color =</span> freq)) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true"></a><span class="st">    </span><span class="kw">geom_text_wordcloud</span>(<span class="dt">area_corr =</span> <span class="ot">TRUE</span>, <span class="dt">rm_outside =</span> <span class="ot">TRUE</span>) <span class="op">+</span><span class="st"> </span><span class="kw">scale_size_area</span>(<span class="dt">max_size =</span> <span class="dv">21</span>) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true"></a><span class="st">    </span><span class="kw">theme_minimal</span>() <span class="op">+</span><span class="st"> </span><span class="kw">scale_color_gradient</span>(<span class="dt">low =</span> <span class="st">&quot;#041012&quot;</span>, <span class="dt">high =</span> <span class="st">&quot;#5fa7b3&quot;</span>) <span class="op">+</span><span class="st"> </span><span class="kw">ggtitle</span>(<span class="st">&quot;Control group&quot;</span>)</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true"></a></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true"></a>TG_dislikes_word =<span class="st"> </span><span class="kw">ggplot</span>(d_TG_dislikes, <span class="kw">aes</span>(<span class="dt">label =</span> word, <span class="dt">size =</span> freq, <span class="dt">color =</span> freq)) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true"></a><span class="st">    </span><span class="kw">geom_text_wordcloud</span>(<span class="dt">area_corr =</span> <span class="ot">TRUE</span>, <span class="dt">rm_outside =</span> <span class="ot">TRUE</span>) <span class="op">+</span><span class="st"> </span><span class="kw">scale_size_area</span>(<span class="dt">max_size =</span> <span class="dv">21</span>) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true"></a><span class="st">    </span><span class="kw">theme_minimal</span>() <span class="op">+</span><span class="st"> </span><span class="kw">scale_color_gradient</span>(<span class="dt">low =</span> <span class="st">&quot;#63430a&quot;</span>, <span class="dt">high =</span> <span class="st">&quot;#c48310&quot;</span>) <span class="op">+</span><span class="st"> </span><span class="kw">ggtitle</span>(<span class="st">&quot;Training group&quot;</span>)</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true"></a></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true"></a><span class="co"># Display plots</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true"></a>fig_like_words =<span class="st"> </span>cowplot<span class="op">::</span><span class="kw">plot_grid</span>(CG_dislikes_word, TG_dislikes_word, <span class="dt">nrow =</span> <span class="dv">2</span>, </span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true"></a>    <span class="dt">rel_widths =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true"></a>fig_like_words</span></code></pre></div>
+<p><img src="Script_5_Supplement_files/figure-html/wordcloud_game_dislikes-1.png" width="576" /></p>
+</div>
+<div id="training-difficulties" class="section level2">
+<h2>Training difficulties</h2>
+<p><br></p>
+<p><strong>What did your child find difficult while exercising? What did he or she possibly not understand?</strong></p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true"></a><span class="co"># Read txt files</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true"></a>text_CG_diff =<span class="st"> </span><span class="kw">readLines</span>(<span class="st">&quot;./data/wc_CG_diff.txt&quot;</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true"></a>text_TG_diff =<span class="st"> </span><span class="kw">readLines</span>(<span class="st">&quot;./data/wc_TG_diff.txt&quot;</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true"></a><span class="co"># Load data as corpus</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true"></a>CG_diff =<span class="st"> </span><span class="kw">Corpus</span>(<span class="kw">VectorSource</span>(text_CG_diff))</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true"></a>TG_diff =<span class="st"> </span><span class="kw">Corpus</span>(<span class="kw">VectorSource</span>(text_TG_diff))</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true"></a><span class="co"># Build a term-document matrix</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true"></a>dtm =<span class="st"> </span><span class="kw">TermDocumentMatrix</span>(CG_diff)</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true"></a>m =<span class="st"> </span><span class="kw">as.matrix</span>(dtm)</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true"></a>v =<span class="st"> </span><span class="kw">sort</span>(<span class="kw">rowSums</span>(m), <span class="dt">decreasing =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true"></a>d_CG_diff =<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">word =</span> <span class="kw">names</span>(v), <span class="dt">freq =</span> v)</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true"></a></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true"></a>dtm =<span class="st"> </span><span class="kw">TermDocumentMatrix</span>(TG_diff)</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true"></a>m =<span class="st"> </span><span class="kw">as.matrix</span>(dtm)</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true"></a>v =<span class="st"> </span><span class="kw">sort</span>(<span class="kw">rowSums</span>(m), <span class="dt">decreasing =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true"></a>d_TG_diff =<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">word =</span> <span class="kw">names</span>(v), <span class="dt">freq =</span> v)</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true"></a></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true"></a><span class="co"># Build word coulds</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true"></a>CG_diff_word =<span class="st"> </span><span class="kw">ggplot</span>(d_CG_diff, <span class="kw">aes</span>(<span class="dt">label =</span> word, <span class="dt">size =</span> freq, <span class="dt">color =</span> freq)) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true"></a><span class="st">    </span><span class="kw">geom_text_wordcloud</span>(<span class="dt">area_corr =</span> <span class="ot">TRUE</span>) <span class="op">+</span><span class="st"> </span><span class="kw">scale_size_area</span>(<span class="dt">max_size =</span> <span class="dv">18</span>) <span class="op">+</span><span class="st"> </span><span class="kw">theme_minimal</span>() <span class="op">+</span><span class="st"> </span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true"></a><span class="st">    </span><span class="kw">scale_color_gradient</span>(<span class="dt">low =</span> <span class="st">&quot;#041012&quot;</span>, <span class="dt">high =</span> <span class="st">&quot;#5fa7b3&quot;</span>) <span class="op">+</span><span class="st"> </span><span class="kw">ggtitle</span>(<span class="st">&quot;Control group&quot;</span>)</span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true"></a></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true"></a>TG_diff_word =<span class="st"> </span><span class="kw">ggplot</span>(d_TG_diff, <span class="kw">aes</span>(<span class="dt">label =</span> word, <span class="dt">size =</span> freq, <span class="dt">color =</span> freq)) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true"></a><span class="st">    </span><span class="kw">geom_text_wordcloud</span>(<span class="dt">area_corr =</span> <span class="ot">TRUE</span>) <span class="op">+</span><span class="st"> </span><span class="kw">scale_size_area</span>(<span class="dt">max_size =</span> <span class="dv">18</span>) <span class="op">+</span><span class="st"> </span><span class="kw">theme_minimal</span>() <span class="op">+</span><span class="st"> </span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true"></a><span class="st">    </span><span class="kw">scale_color_gradient</span>(<span class="dt">low =</span> <span class="st">&quot;#63430a&quot;</span>, <span class="dt">high =</span> <span class="st">&quot;#c48310&quot;</span>) <span class="op">+</span><span class="st"> </span><span class="kw">ggtitle</span>(<span class="st">&quot;Training group&quot;</span>)</span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true"></a></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true"></a><span class="co"># Display plots</span></span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true"></a>fig_diff_words =<span class="st"> </span>cowplot<span class="op">::</span><span class="kw">plot_grid</span>(CG_diff_word, TG_diff_word, <span class="dt">nrow =</span> <span class="dv">2</span>, <span class="dt">rel_widths =</span> <span class="kw">c</span>(<span class="dv">1</span>, </span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true"></a>    <span class="dv">1</span>))</span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true"></a>fig_diff_words</span></code></pre></div>
+<p><img src="Script_5_Supplement_files/figure-html/wordcloud_diff-1.png" width="576" /></p>
+</div>
+<div id="parental-involvement" class="section level2">
+<h2>Parental involvement</h2>
+<p><br></p>
+<p><strong>How was your involvement in your child’s training (e.g. did your child tend to train alone or were you present the whole time, did you tend to observe or did you have to explain a lot)?</strong></p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true"></a><span class="co"># Read txt files</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true"></a>text_CG_involv =<span class="st"> </span><span class="kw">readLines</span>(<span class="st">&quot;./data/wc_CG_involv.txt&quot;</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true"></a>text_TG_involv =<span class="st"> </span><span class="kw">readLines</span>(<span class="st">&quot;./data/wc_TG_involv.txt&quot;</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true"></a><span class="co"># Load data as corpus</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true"></a>CG_involv =<span class="st"> </span><span class="kw">Corpus</span>(<span class="kw">VectorSource</span>(text_CG_involv))</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true"></a>TG_involv =<span class="st"> </span><span class="kw">Corpus</span>(<span class="kw">VectorSource</span>(text_TG_involv))</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true"></a><span class="co"># Build a term-document matrix</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true"></a>dtm =<span class="st"> </span><span class="kw">TermDocumentMatrix</span>(CG_involv)</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true"></a>m =<span class="st"> </span><span class="kw">as.matrix</span>(dtm)</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true"></a>v =<span class="st"> </span><span class="kw">sort</span>(<span class="kw">rowSums</span>(m), <span class="dt">decreasing =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true"></a>d_CG_involv =<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">word =</span> <span class="kw">names</span>(v), <span class="dt">freq =</span> v)</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true"></a></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true"></a>dtm =<span class="st"> </span><span class="kw">TermDocumentMatrix</span>(TG_involv)</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true"></a>m =<span class="st"> </span><span class="kw">as.matrix</span>(dtm)</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true"></a>v =<span class="st"> </span><span class="kw">sort</span>(<span class="kw">rowSums</span>(m), <span class="dt">decreasing =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true"></a>d_TG_involv =<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">word =</span> <span class="kw">names</span>(v), <span class="dt">freq =</span> v)</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true"></a></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true"></a><span class="co"># Build word coulds</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true"></a>CG_involv_word =<span class="st"> </span><span class="kw">ggplot</span>(d_CG_involv, <span class="kw">aes</span>(<span class="dt">label =</span> word, <span class="dt">size =</span> freq, <span class="dt">color =</span> freq)) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true"></a><span class="st">    </span><span class="kw">geom_text_wordcloud</span>(<span class="dt">area_corr =</span> <span class="ot">TRUE</span>, <span class="dt">rm_outside =</span> <span class="ot">TRUE</span>) <span class="op">+</span><span class="st"> </span><span class="kw">scale_size_area</span>(<span class="dt">max_size =</span> <span class="dv">18</span>) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true"></a><span class="st">    </span><span class="kw">theme_minimal</span>() <span class="op">+</span><span class="st"> </span><span class="kw">scale_color_gradient</span>(<span class="dt">low =</span> <span class="st">&quot;#041012&quot;</span>, <span class="dt">high =</span> <span class="st">&quot;#5fa7b3&quot;</span>) <span class="op">+</span><span class="st"> </span><span class="kw">ggtitle</span>(<span class="st">&quot;Control group&quot;</span>)</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true"></a></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true"></a>TG_involv_word =<span class="st"> </span><span class="kw">ggplot</span>(d_TG_involv, <span class="kw">aes</span>(<span class="dt">label =</span> word, <span class="dt">size =</span> freq, <span class="dt">color =</span> freq)) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true"></a><span class="st">    </span><span class="kw">geom_text_wordcloud</span>(<span class="dt">area_corr =</span> <span class="ot">TRUE</span>, <span class="dt">rm_outside =</span> <span class="ot">TRUE</span>) <span class="op">+</span><span class="st"> </span><span class="kw">scale_size_area</span>(<span class="dt">max_size =</span> <span class="dv">18</span>) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true"></a><span class="st">    </span><span class="kw">theme_minimal</span>() <span class="op">+</span><span class="st"> </span><span class="kw">scale_color_gradient</span>(<span class="dt">low =</span> <span class="st">&quot;#63430a&quot;</span>, <span class="dt">high =</span> <span class="st">&quot;#c48310&quot;</span>) <span class="op">+</span><span class="st"> </span><span class="kw">ggtitle</span>(<span class="st">&quot;Training group&quot;</span>)</span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true"></a></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true"></a><span class="co"># Display plots</span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true"></a>fig_involv_words =<span class="st"> </span>cowplot<span class="op">::</span><span class="kw">plot_grid</span>(CG_involv_word, TG_involv_word, <span class="dt">nrow =</span> <span class="dv">2</span>, <span class="dt">rel_widths =</span> <span class="kw">c</span>(<span class="dv">1</span>, </span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true"></a>    <span class="dv">1</span>))</span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true"></a>fig_involv_words</span></code></pre></div>
+<p><img src="Script_5_Supplement_files/figure-html/wordcloud_involv-1.png" width="576" /></p>
+</div>
+<div id="perceived-change" class="section level2">
+<h2>Perceived change</h2>
+<p><br></p>
+<p><strong>Has your child changed in terms of his or her behavior in school/kindergarten/family? If so, please describe how these changes manifest themselves.</strong></p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true"></a><span class="co"># Read txt files</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true"></a>text_CG_chang =<span class="st"> </span><span class="kw">readLines</span>(<span class="st">&quot;./data/wc_CG_chang.txt&quot;</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true"></a>text_TG_chang =<span class="st"> </span><span class="kw">readLines</span>(<span class="st">&quot;./data/wc_TG_chang.txt&quot;</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true"></a><span class="co"># Load data as corpus</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true"></a>CG_chang =<span class="st"> </span><span class="kw">Corpus</span>(<span class="kw">VectorSource</span>(text_CG_chang))</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true"></a>TG_chang =<span class="st"> </span><span class="kw">Corpus</span>(<span class="kw">VectorSource</span>(text_TG_chang))</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true"></a></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true"></a><span class="co"># Build a term-document matrix</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true"></a>dtm =<span class="st"> </span><span class="kw">TermDocumentMatrix</span>(CG_chang)</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true"></a>m =<span class="st"> </span><span class="kw">as.matrix</span>(dtm)</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true"></a>v =<span class="st"> </span><span class="kw">sort</span>(<span class="kw">rowSums</span>(m), <span class="dt">decreasing =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true"></a>d_CG_chang =<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">word =</span> <span class="kw">names</span>(v), <span class="dt">freq =</span> v)</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true"></a></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true"></a>dtm =<span class="st"> </span><span class="kw">TermDocumentMatrix</span>(TG_chang)</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true"></a>m =<span class="st"> </span><span class="kw">as.matrix</span>(dtm)</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true"></a>v =<span class="st"> </span><span class="kw">sort</span>(<span class="kw">rowSums</span>(m), <span class="dt">decreasing =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true"></a>d_TG_chang =<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">word =</span> <span class="kw">names</span>(v), <span class="dt">freq =</span> v)</span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true"></a></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true"></a></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true"></a><span class="co"># Build word coulds</span></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true"></a>CG_chang_word =<span class="st"> </span><span class="kw">ggplot</span>(d_CG_chang, <span class="kw">aes</span>(<span class="dt">label =</span> word, <span class="dt">size =</span> freq, <span class="dt">color =</span> freq)) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true"></a><span class="st">    </span><span class="kw">geom_text_wordcloud</span>(<span class="dt">area_corr =</span> <span class="ot">TRUE</span>, <span class="dt">rm_outside =</span> <span class="ot">TRUE</span>) <span class="op">+</span><span class="st"> </span><span class="kw">scale_size_area</span>(<span class="dt">max_size =</span> <span class="dv">20</span>) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true"></a><span class="st">    </span><span class="kw">theme_minimal</span>() <span class="op">+</span><span class="st"> </span><span class="kw">scale_color_gradient</span>(<span class="dt">low =</span> <span class="st">&quot;#041012&quot;</span>, <span class="dt">high =</span> <span class="st">&quot;#5fa7b3&quot;</span>) <span class="op">+</span><span class="st"> </span><span class="kw">ggtitle</span>(<span class="st">&quot;Control group&quot;</span>)</span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true"></a></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true"></a>TG_chang_word =<span class="st"> </span><span class="kw">ggplot</span>(d_TG_chang, <span class="kw">aes</span>(<span class="dt">label =</span> word, <span class="dt">size =</span> freq, <span class="dt">color =</span> freq)) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true"></a><span class="st">    </span><span class="kw">geom_text_wordcloud</span>(<span class="dt">area_corr =</span> <span class="ot">TRUE</span>, <span class="dt">rm_outside =</span> <span class="ot">TRUE</span>) <span class="op">+</span><span class="st"> </span><span class="kw">scale_size_area</span>(<span class="dt">max_size =</span> <span class="dv">20</span>) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true"></a><span class="st">    </span><span class="kw">theme_minimal</span>() <span class="op">+</span><span class="st"> </span><span class="kw">scale_color_gradient</span>(<span class="dt">low =</span> <span class="st">&quot;#63430a&quot;</span>, <span class="dt">high =</span> <span class="st">&quot;#c48310&quot;</span>) <span class="op">+</span><span class="st"> </span><span class="kw">ggtitle</span>(<span class="st">&quot;Training group&quot;</span>)</span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true"></a></span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true"></a><span class="co"># Display plots</span></span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true"></a>fig_chang_words =<span class="st"> </span>cowplot<span class="op">::</span><span class="kw">plot_grid</span>(CG_chang_word, TG_chang_word, <span class="dt">nrow =</span> <span class="dv">2</span>, <span class="dt">rel_widths =</span> <span class="kw">c</span>(<span class="dv">1</span>, </span>
+<span id="cb11-32"><a href="#cb11-32" aria-hidden="true"></a>    <span class="dv">1</span>))</span>
+<span id="cb11-33"><a href="#cb11-33" aria-hidden="true"></a>fig_chang_words</span></code></pre></div>
+<p><img src="Script_5_Supplement_files/figure-html/wordcloud_change-1.png" width="576" /></p>
+</div>
+<div id="other-comments" class="section level2">
+<h2>Other comments</h2>
+<ul>
+<li>During Corona: Children consumed more media, were alone solely with parents and siblings</li>
+</ul>
+</div>
+</div>
+
+    </div>
+    <div class="col-xs-2">
+        <div class="btn-toolbar">
+    <div class="btn-group">
+    <a href="#" class="btn btn-raised btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="text-muted">Code</span> <span class="text-muted caret"></span></a>
+    <ul class="dropdown-menu" style="min-width: 50px;">
+    <li><a id="rmd-show-all-code" href="#">Show All</a></li>
+    <li><a id="rmd-hide-all-code" href="#">Hide All</a></li>
+    </ul>
+    </div>
+    </div>
+        </div>
+  </div>
+  </div>
+  </div>
+  <div class="row">
+    </div>
+  </div>
+
+<script>
+$(document).ready(function () {
+  // add bootstrap table styles to pandoc tables
+  $('tr.header').parent('thead').parent('table').addClass('table table-striped table-hover');
+
+  
+    $('.pages img')
+ 	  .addClass("image-lb");
+  $('.pages').magnificPopup({
+	      type:'image',
+	      closeOnContentClick: false,
+	      closeBtnInside: false,
+        delegate: 'img',
+	      gallery: {enabled: true },
+          removalDelay: 500,
+          callbacks: {
+              beforeOpen: function() {
+                // just a hack that adds mfp-anim class to markup
+                this.st.image.markup = this.st.image.markup.replace('mfp-figure', 'mfp-figure mfp-with-anim');
+              }
+          },
+          mainClass: 'mfp-move-from-top',
+	      image: {
+	        verticalFit: true,
+            titleSrc: 'alt'
+	      }
+ 	    });
+ 	
+    
+    $('#toc ul li').first().addClass("active");
+    $('#toc ul li').attr("data-target", function() {
+        return($(this).children("a").attr("href"));
+    })
+    $('body .section.level1').first().addClass("active");
+    $('body .section.level1').not('.active').hide();
+    
+    $('#toc a[href*="#"]').click(function() {
+
+      var id = $(this).attr("href");
+      if (id === "#") return;
+      if (id.substring(0, 8) === "#dyntab-") return;
+      toggle_page(id);
+
+      // Menu
+      var menu_entry = $(".menu li[data-target='"+id+"']");
+      menu_entry.addClass("active");
+      $(".menu li").not(menu_entry).removeClass("active"); 
+      
+
+    });
+
+    function toggle_page(id) {
+      $(".page").not(page).removeClass("active").hide();
+      window.page = id;
+      var page = $(window.page);
+      window.location.hash = window.page;
+      //$(this).addClass("active");
+
+      page.show();
+
+      var totop = setInterval(function () {
+        $(".pages").animate({scrollTop: 0}, 0);
+      }, 10);
+
+      setTimeout(function () {
+        page.addClass("active");
+        setTimeout(function () {
+          clearInterval(totop);
+        }, 1000);
+      }, 100);
+
+      window.dispatchEvent(new Event('resize'));
+
+    }
+
+
+    $(".menu li").click(function () {
+
+      toggle_page($(this).data("target"));
+
+      // Menu
+      if (!$(this).data("target")) return;
+      if ($(this).is(".active")) return;
+      $(".menu li").not($(this)).removeClass("active");
+      $(this).addClass("active");
+
+    });
+  
+    
+
+
+    window.page = window.location.hash;
+    if (window.page != "") {
+      $(".menu").find("li[data-target=" + window.page + "]").trigger("click");
+    }
+
+    /* init material bootstrap js */
+    $.material.init();
+});
+</script>
+
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

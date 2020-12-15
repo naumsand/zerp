@@ -1,0 +1,3065 @@
+
+<!-- Set up workspace -->
+
+```{r setup, include = FALSE, message = FALSE, warning = FALSE}
+
+# Set general settings for Markdown file 
+  options(max.print="80")
+
+  knitr::opts_chunk$set(echo=TRUE,
+                 prompt=FALSE,
+                 tidy=TRUE,
+                 comment=NA,
+                 message=FALSE,
+                 warning=FALSE,
+                 results = FALSE,
+  	             fig.align="center")
+  knitr::opts_knit$set(width=80)
+  
+# Swipe environment
+ rm(list=ls())
+  
+# Set libraries
+  library(afex)
+  library(car)
+  library(broom)
+  library(corrplot)
+  library(expss)
+  library(foreign)
+  library(GGally)
+  library(ggpubr)
+  library(kableExtra)
+  library(lavaan)
+  library(lawstat)
+  library(jmv)  
+  library(lme4)
+  library(miceadds)
+  library(pander)
+  library(ppcor)
+  library(psych)
+  library(RColorBrewer)
+  library(rstatix)
+  library(sjPlot)
+  library(sjstats)
+  library(SnowballC)
+  library(stats)
+  library(tadaatoolbox)
+  library(tidyverse)
+  
+# Set functions
+  source("./functions/R_rainclouds.R")
+  source("./functions/summarySE.R")
+  source("./functions/simulateData.R")
+ 
+# Correlation function
+# https://stackoverflow.com/questions/34326906/extracting-and-formatting-results-of-cor-test-on-multiple-pairs-of-columns 
+  corrFunc <- function(var1, var2, data) {
+    result = cor.test(data[,var1], data[,var2])
+    data.frame(var1, var2, result[c("estimate","p.value","statistic")], 
+               stringsAsFactors=FALSE) }
+  
+# Round to 2 digits   
+  options(digits=2)
+   
+# Disable scientific notation in R
+  options(scipen = 999)
+   
+# Set figure color palettes
+  ZE_col = c("black","#D97909")
+  
+# Set figure theme  
+  theme_SN = theme(axis.title.y = element_text(size = 15,
+                                               margin = margin(t = 0, r = 20, b = 0, l = 0)),
+          panel.grid.major.x = element_blank(), panel.grid.minor.x = element_blank(),
+          panel.grid.major.y = element_line(colour = "black", linetype = "dotted", size=0.6),
+          panel.grid.minor.y = element_blank(),
+          panel.border = element_blank(), 
+          #panel.background = element_rect(colour = "black", size = 0.5),
+          text=element_text(size = 15),
+          legend.position = "none")
+    
+
+```
+
+```{r prep_data}
+
+# Load questionnaire data
+  load.Rdata(filename="./data/qn_data.Rdata", "qn_data")
+
+# Transform from wide to long format  
+  qn_data_long = gather(qn_data, time, score, GEM_CE_T1:SRS_T2,
+                              factor_key=TRUE)
+  
+  qn_data_emp = subset(qn_data, mod_4 > 0 | group == "CG")
+  
+# Load app questionnaire data
+  load.Rdata(filename="./data/app_qn.Rdata", "app_qn")
+  
+# Separate dataset for training group
+    qn_data_TG = subset(qn_data, group == "TG")
+    qn_data_CG = subset(qn_data, group == "CG")
+
+```
+
+# Overall training efficacy {.tabset .tabset-pills}
+
+We checked overall training efficacy using different methods. We decided for MANCOVA to go against the inflation of the family-wise error rate (and hence making Type I error).
+
+## MAN(C)OVA 
+
+<!-- Effect size idea in MANOVA:
+
+https://stats.stackexchange.com/questions/240751/why-is-pillais-trace-equal-to-partial-eta-squared-in-a-repeated-measures-manova -->
+
+### Assumption checks {.tabset .tabset-pills}
+
+#### Adequate sample size
+
+  + Need to have more cases in each group than the number of dependent variables to analyze
+  + We have 6 dependent variables and ca. 30 participants per group
+  
+<br>
+  
+#### Independence of the observations
+
+  +  Each participant belongs to only one group (training vs control group)
+  
+<br>
+  
+#### Univariate or multivariate outliers  
+
+  + We can include outliers if the results won't be substantially affected. 
+  + We checked univariate outliers, but did not exclude any of them. 
+  + There were no multivariate outliers in the data, as assessed by Mahalanobis distance (p > 0.001).
+
+```{r man_univ_muniv_out}
+
+# include outlier in analysis anyway if result will not be substantially affected
+# compare result of MANOVA with and without outlier
+
+# Univariate (per dependent variable)
+
+  qn_data %>%
+  group_by(group) %>%
+  identify_outliers(zd_GEM_Total)
+  # no outliers
+
+  qn_data %>%
+  group_by(group) %>%
+  identify_outliers(zd_EMK_EM_P)
+  # 13, 76
+  
+  qn_data %>%
+  group_by(group) %>%
+  identify_outliers(zd_EMK_EM_CH)
+  # 8
+                    
+  qn_data %>%
+  group_by(group) %>%
+  identify_outliers(zd_EMK_EM_comp)
+  # no outliers
+  
+  qn_data %>%
+  group_by(group) %>%
+  identify_outliers(zd_EMK_EK_CH)
+  # no outliers
+  
+  qn_data %>%
+  group_by(group) %>%
+  identify_outliers(zd_EMK_EK_P)
+  # 10, 17, 20, 26, 33, 43, 57
+  
+  qn_data %>%
+  group_by(group) %>%
+  identify_outliers(zd_EMK_EK_comp)
+  # 7
+  
+  qn_data %>%
+  group_by(group) %>%
+  identify_outliers(zd_EMK_PB_CH)
+  # 8
+  
+  qn_data %>%
+  group_by(group) %>%
+  identify_outliers(zd_SDQ_PB)
+  # no outliers
+  
+  qn_data %>%
+  group_by(group) %>%
+  identify_outliers(zd_SDQ_Total)
+  # 5, 57, 76 
+  
+# There were no extreme univariate outliers in the data. 
+
+# Multivariate
+    # refers to data points that have unusual combination of values on dependent variables
+    # mahalanobis distance 
+  
+  qn_data_manov = subset(qn_data, select = c(ID, group, zd_GEM_Total, zd_EMK_EM_CH, zd_EMK_EM_P, zd_EMK_EK_CH, zd_EMK_EK_P, d_EMK_PB_CH, d_SDQ_PB, d_SDQ_Total))
+  
+  qn_data_manov %>%
+  group_by(group) %>%
+  mahalanobis_distance(-ID) %>%
+  filter(is.outlier == TRUE) %>%
+  as.data.frame()
+  
+# There were no multivariate outliers in the data, as assessed by Mahalanobis distance (p > 0.001).
+
+```
+
+<br>
+
+#### Univariate / Multivariate normality 
+
+  + The test of of multivariate normality was significant, hence normality cannot be assumed. 
+  + MANOVA is fairly robust to deviations from normality - we therefore continue with MANOVA testing. 
+
+```{r man_uni_multivar_norm}
+
+# Assumption checks (https://www.datanovia.com/en/lessons/one-way-manova-in-r/)
+
+# Univariate normality
+
+  zd_GEM_Total_norm = ggqqplot(qn_data, "zd_GEM_Total", facet.by = "group",
+         ylab = "zd_GEM_Total", ggtheme = theme_bw())
+
+  zd_EMK_EM_P_norm = ggqqplot(qn_data, "zd_EMK_EM_P", facet.by = "group",
+         ylab = "zd_EMK_EM_P", ggtheme = theme_bw())
+
+  zd_EMK_EM_CH_norm = ggqqplot(qn_data, "zd_EMK_EM_CH", facet.by = "group",
+         ylab = "zd_EMK_EM_CH", ggtheme = theme_bw())
+  
+  zd_EMK_EK_CH_norm = ggqqplot(qn_data, "zd_EMK_EK_CH", facet.by = "group",
+         ylab = "zd_EMK_EK_CH", ggtheme = theme_bw())
+  
+  zd_EMK_EK_P_norm = ggqqplot(qn_data, "zd_EMK_EK_P", facet.by = "group",
+         ylab = "zd_EMK_EK_P", ggtheme = theme_bw())
+  
+  zd_EMK_PB_CH_norm = ggqqplot(qn_data, "zd_EMK_PB_CH", facet.by = "group",
+         ylab = "zd_EMK_PB_CH", ggtheme = theme_bw())
+  
+  zd_SDQ_PB_norm = ggqqplot(qn_data, "zd_SDQ_PB", facet.by = "group",
+         ylab = "zd_SDQ_PB", ggtheme = theme_bw())
+  
+  zd_SDQ_Total_norm = ggqqplot(qn_data, "zd_SDQ_Total", facet.by = "group",
+         ylab = "zd_SDQ_Total", ggtheme = theme_bw())
+  
+  
+# Display plots
+  fig_univ_norm = cowplot::plot_grid(zd_GEM_Total_norm, zd_EMK_EM_P_norm, zd_EMK_EM_CH_norm,
+                                     zd_EMK_EK_CH_norm, zd_EMK_EK_P_norm,
+                                     zd_EMK_PB_CH_norm, zd_SDQ_PB_norm, zd_SDQ_Total_norm, ncol=3, nrow = 3, rel_widths=c(1, 1))
+  fig_univ_norm
+ 
+
+# Multivariate normality   
+
+  qn_data %>%
+  select(zd_GEM_Total, zd_EMK_EM_CH, zd_EMK_EM_P, zd_EMK_EK_CH, zd_EMK_EK_P, d_EMK_PB_CH, d_SDQ_PB, d_SDQ_Total) %>%
+  mshapiro_test()
+  
+# no normality 
+
+```
+
+<br>
+
+#### Multicollinearity
+
+  + A correlation above 0.9 is an indication of multicollinearity.
+  + There was no multicollinearity within the data set. 
+
+```{r man_multicol}
+
+# Absence of multicollinearity (no correlation > r = .9)
+  
+  multicorr_data = qn_data %>% cor_test(zd_GEM_Total, zd_EMK_EM_CH, zd_EMK_EM_P, zd_EMK_EK_CH, zd_EMK_EK_P, d_EMK_PB_CH, d_SDQ_PB, d_SDQ_Total, z_age, z_CPM, z_app_time)
+
+  sum(multicorr_data$cor >= 0.9 & multicorr_data$cor != 1.0)
+  
+# no multicollinearity problems 
+
+```
+
+<br>
+
+#### Linearity
+
+  + Even with linearity between variables, we will run the analysis.
+
+```{r man_lin}
+
+  # Linearity between all outcome variables for each group
+  results = qn_data %>%
+    select(zd_GEM_Total, zd_EMK_EM_CH, zd_EMK_EM_P, zd_EMK_EK_CH, zd_EMK_EK_P, d_EMK_PB_CH, d_SDQ_PB, d_SDQ_Total, group) %>%
+    group_by(group) %>%
+    doo(~ggpairs(.) + theme_bw(), result = "plots")
+  
+  results$plots
+  
+
+```
+
+<br>
+
+#### Homogeneity of variances
+
+  + We assume homogeneity of variances (all Levene test p > .05)
+
+```{r man_hom_var}
+
+# if no homogeneity --> transformation of data possible 
+
+  qn_data %>% 
+    gather(key = "variable", value = "value", zd_GEM_Total, zd_EMK_EM_CH, zd_EMK_EM_P, zd_EMK_EK_CH, zd_EMK_EK_P, d_EMK_PB_CH, d_SDQ_PB, d_SDQ_Total) %>%
+    group_by(variable) %>%
+    levene_test(value ~ group)
+  
+# we have homogeneity of variances 
+
+```
+
+<br>
+
+#### Homogeneity of variance-covariance matrices
+
+  + The test was not statistically significant (i.e., p > 0.001), so the data has not violated the assumption of homogeneity of variance-covariance matrices.
+
+```{r man_hom_var_cov}
+
+# if you have balanced design (i.e., similar group sizes), you do not need to worry about it too much
+
+  box_m(qn_data[, c("zd_GEM_Total", "zd_EMK_EM_P", "zd_EMK_EM_CH", "zd_EMK_EK_CH", "zd_EMK_EK_P", "d_EMK_PB_CH", "d_SDQ_PB", "d_SDQ_Total")], qn_data$group)
+  
+# data has not violated the assumption of homogeneity of variance-covariance matrices.
+
+```
+
+<br>
+
+
+### Multivariate tests {.tabset .tabset-pills}
+
+#### MANOVA with EMK EK / EM composite score
+
+```{r manova_change_score_comp, results = 'asis'}
+
+# Calculate MANCOVA on unstandardized change scores
+#  ze_manc_mv = manova(cbind(d_GEM_Total, d_EMK_EM_comp, d_EMK_EK_comp, d_EMK_PB_CH, d_SDQ_PB, d_SDQ_Total) ~ group, data = qn_data)
+#   
+# Print table 
+#  pander(ze_manc_mv)
+  
+# Calculate MANCOVA on standardized change scores
+  ze_manc_mv = manova(cbind(zd_GEM_Total, zd_EMK_EM_comp, zd_EMK_EK_comp, zd_EMK_PB_CH, zd_SDQ_PB, d_SDQ_Total) ~ group, data = qn_data)
+  
+# Print table 
+  pander(ze_manc_mv)  
+  
+```
+
+#### MANCOVA with EMK EK / EM composite score
+
+```{r mancova_change_score_comp, results = 'asis'}
+
+# Calculate MANCOVA on unstandardized change scores 
+  # ze_manc_mv = as.data.frame(mancova(qn_data,
+  #         deps = vars(d_GEM_Total, d_EMK_EM_comp, d_EMK_EK_comp, d_EMK_PB_CH, d_SDQ_PB, d_SDQ_Total),
+  #         factors = group,
+  #         covs = vars(z_age, z_CPM, z_app_time),
+  #         multivar = list("pillai"))$multivar)
+  
+  
+# Calculate MANCOVA on standardized change scores
+  ze_manc_mv = as.data.frame(mancova(qn_data,
+          deps = vars(zd_GEM_Total, zd_EMK_EM_comp, zd_EMK_EK_comp, zd_EMK_PB_CH, zd_SDQ_PB, zd_SDQ_Total),
+          factors = group,
+          covs = vars(z_age, z_CPM, z_app_time),
+          multivar = list("pillai"))$multivar)  
+  
+# Prepare for printing: Remove and rename columns / values
+  ze_manc_mv = as_tibble(ze_manc_mv)
+  ze_manc_mv$Variable = factor(ze_manc_mv$`term[pillai]`)
+  ze_manc_mv$F = ze_manc_mv$`f[pillai]`
+  ze_manc_mv$df1 = ze_manc_mv$`df1[pillai]`
+  ze_manc_mv$df2 = ze_manc_mv$`df2[pillai]`
+  ze_manc_mv$p = ze_manc_mv$`p[pillai]`
+  
+  ze_manc_mv = subset(ze_manc_mv, select = -c(1:7))
+  ze_manc_mv$Variable = revalue(ze_manc_mv$Variable, c("group"="Training","z_age"="Age","z_CPM"="CPM","z_app_time"="App time"))
+  
+# Print table 
+  pander(ze_manc_mv)
+  
+```
+
+#### MANOVA without EMK EK / EM composite score
+
+```{r manova_change_score_no_comp, results = 'asis'}
+
+# Calculate MANCOVA on unstandardized change scores 
+#  ze_manc_mv = manova(cbind(d_GEM_Total, d_EMK_EM_P, d_EMK_EM_CH, d_EMK_EK_P, d_EMK_EK_CH, d_EMK_PB_CH, d_SDQ_PB, d_SDQ_Total) ~ group, data = qn_data)
+ 
+# Print table 
+#  pander(ze_manc_mv)
+  
+# Calculate MANCOVA on standardized change scores 
+  ze_manc_mv = manova(cbind(zd_GEM_Total, zd_EMK_EM_P, zd_EMK_EM_CH, zd_EMK_EK_P, zd_EMK_EK_CH, zd_EMK_PB_CH, zd_SDQ_PB, zd_SDQ_Total) ~ group, data = qn_data)
+  
+# Print table 
+  pander(ze_manc_mv)  
+  
+```
+
+#### MANCOVA without EMK EK / EM composite score
+
+```{r mancova_change_score_no_comp, results = 'asis'}
+
+# # Calculate MANCOVA on unstandardized change scores 
+#   ze_manc_mv = as.data.frame(mancova(qn_data,
+#           deps = vars(d_GEM_Total, d_EMK_EM_P, d_EMK_EM_CH, d_EMK_EK_P, d_EMK_EK_CH, d_EMK_PB_CH, d_SDQ_PB, d_SDQ_Total),
+#           factors = group,
+#           covs = vars(z_age, z_CPM, z_app_time),
+#           multivar = list("pillai"))$multivar)
+  
+# Calculate MANCOVA on standardized change scores 
+  ze_manc_mv = as.data.frame(mancova(qn_data,
+          deps = vars(zd_GEM_Total, zd_EMK_EM_P, zd_EMK_EM_CH, zd_EMK_EK_P, zd_EMK_EK_CH, zd_EMK_PB_CH, zd_SDQ_PB, zd_SDQ_Total),
+          factors = group,
+          covs = vars(z_CPM, z_app_time),
+          multivar = list("pillai"))$multivar)
+  
+# Prepare for printing: Remove and rename columns / values
+  ze_manc_mv = as_tibble(ze_manc_mv)
+  ze_manc_mv$Variable = factor(ze_manc_mv$`term[pillai]`)
+  ze_manc_mv$Pillai = ze_manc_mv$`stat[pillai]`
+  ze_manc_mv$F = ze_manc_mv$`f[pillai]`
+  ze_manc_mv$df1 = ze_manc_mv$`df1[pillai]`
+  ze_manc_mv$df2 = ze_manc_mv$`df2[pillai]`
+  ze_manc_mv$p = ze_manc_mv$`p[pillai]`
+  
+  ze_manc_mv = subset(ze_manc_mv, select = -c(1:7))
+  ze_manc_mv$Variable = revalue(ze_manc_mv$Variable, c("group"="Training","z_CPM"="CPM","z_app_time"="App time"))
+  
+# Print table 
+  pander(ze_manc_mv)  
+  
+```
+
+<!-- Alternative MANCOVA with time x group interaction -->
+
+```{r mancova_timexgroup, eval = FALSE}
+
+# Transform data set 
+  qn_data_manc = subset(qn_data_long, time == "EMK_EK_CH_T1" | time == "EMK_EK_CH_T2")
+  qn_data_manc = subset(qn_data_manc, select = c(ID, group, z_age, z_CPM, z_app_time, time, score))
+  qn_data_manc$time = revalue(qn_data_manc$time , c("EMK_EK_CH_T1"="T1","EMK_EK_CH_T2"="T2"))
+  names(qn_data_manc)[names(qn_data_manc)=="score"] = "EMK_EK_CH"
+
+  qn_data_manc$GEM_Total = qn_data_long[qn_data_long$time == "GEM_Total_T1" | qn_data_long$time == "GEM_Total_T2",]$score
+  qn_data_manc$EMK_EM_P = qn_data_long[qn_data_long$time == "EMK_EM_P_T1" | qn_data_long$time == "EMK_EM_P_T2",]$score
+  qn_data_manc$EMK_EM_CH = qn_data_long[qn_data_long$time == "EMK_EM_CH_T1" | qn_data_long$time == "EMK_EM_CH_T2",]$score
+  qn_data_manc$EMK_EK_CH = qn_data_long[qn_data_long$time == "EMK_EK_CH_T1" | qn_data_long$time == "EMK_EK_CH_T2",]$score
+  qn_data_manc$EMK_EK_P = qn_data_long[qn_data_long$time == "EMK_EK_P_T1" | qn_data_long$time == "EMK_EK_P_T2",]$score
+  qn_data_manc$EMK_PB_CH = qn_data_long[qn_data_long$time == "EMK_PB_CH_T1" | qn_data_long$time == "EMK_PB_CH_T2",]$score
+  qn_data_manc$SDQ_PB = qn_data_long[qn_data_long$time == "SDQ_PB_T1" | qn_data_long$time == "SDQ_PB_T2",]$score
+  qn_data_manc$SDQ_EP = qn_data_long[qn_data_long$time == "SDQ_Total_T1" | qn_data_long$time == "SDQ_Total_T2",]$score
+  
+  
+  qn_data_manc$EMK_EM_comp =  qn_data_manc$EMK_EM_P + qn_data_manc$EMK_EM_CH
+  qn_data_manc$EMK_EK_comp =  qn_data_manc$EMK_EK_P + qn_data_manc$EMK_EK_CH
+  
+  
+# Calculate MANCOVA on time x group interaction 
+  mancova(qn_data_manc,
+          deps = vars(GEM_Total, EMK_EM_comp, EMK_EK_comp, EMK_PB_CH, SDQ_PB, SDQ_EP),
+          factors = vars(group,time),
+          covs = vars(z_age, z_CPM, z_app_time),
+          multivar = list("pillai"))
+  
+
+  ze_manc_mv = as.data.frame(mancova(qn_data_manc,
+          deps = vars(GEM_Total, EMK_EM_P, EMK_EM_CH, EMK_EK_P, EMK_EK_CH, EMK_PB_CH, SDQ_PB, SDQ_EP),
+          factors = vars(group,time),
+          covs = vars(z_age, z_CPM, z_app_time),
+          multivar = list("pillai"))$multivar)
+  
+  ze_manc_mv  
+
+```
+
+<br>
+
+### Univariate tests {.tabset .tabset-pills}
+
+#### GEM_Total
+
+**ANOVA**
+
+```{r anova_GEM_total, results = 'asis'}
+
+# ANOVA GEM   
+  gem_total_an =  aov_ez("ID", "zd_GEM_Total", qn_data, between = c("group"), factorize = FALSE,
+                         anova_table = list(correction = "none", es = "pes"))
+
+  pander(gem_total_an$anova_table)
+  
+
+```
+
+<br>
+
+**ANCOVA**
+
+```{r ancova_GEM_total, results = 'asis'}
+   
+# ANCOVA GEM 
+  gem_total_anc =  aov_ez("ID", "zd_GEM_Total", qn_data, between = c("group"),
+    covariate = c("z_age","z_app_time","z_CPM", "z_GEM_T1"),
+    observed = c("z_age","z_app_time","z_CPM", "z_GEM_T1"), factorize = FALSE,
+    anova_table = list(correction = "none", es = "pes"))
+  
+   pander(gem_total_anc$anova_table)
+   
+```
+
+#### EMK_EM_CH
+
+**ANOVA**
+
+```{r anova_EMK_EM_CH, results = 'asis'}
+
+# ANOVA EMK_EM_CH
+
+  EMK_EM_CH_an = aov_ez("ID", "zd_EMK_EM_CH", qn_data, between = c("group"), factorize = FALSE,
+                          anova_table = list(correction = "none", es = "pes"))
+    
+  pander(EMK_EM_CH_an$anova_table)
+
+```
+
+
+**ANCOVA**
+
+```{r ancova_EMK_EM_CH, results = 'asis'}
+
+# ANCOVA EMK_EM_CH
+
+  EMK_EM_CH_anc = aov_ez("ID", "zd_EMK_EM_CH", qn_data, between = c("group"),
+      covariate = c("z_age","z_app_time","z_CPM","z_EMK_EM_CH_T1"),
+      observed = c("z_age","z_app_time","z_CPM","z_EMK_EM_CH_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_EM_CH_anc$anova_table)
+  
+```
+
+
+#### EMK_EM_P
+
+**ANOVA**
+
+```{r anova_EMK_EM_P, results = 'asis'}
+
+# ANOVA EMK_EM_P
+
+  EMK_EM_P_an = aov_ez("ID", "zd_EMK_EM_P", qn_data, between = c("group"), factorize = FALSE,
+                          anova_table = list(correction = "none", es = "pes"))
+    
+  pander(EMK_EM_P_an$anova_table)
+
+```
+
+**ANCOVA**
+
+```{r ancova_EMK_EM_P, results = 'asis'}
+
+# ANCOVA EMK_EM_P
+
+  EMK_EM_P_anc = aov_ez("ID", "zd_EMK_EM_P", qn_data, between = c("group"),
+      covariate = c("z_age","z_app_time","z_CPM","z_EMK_EM_P_T1"),
+      observed = c("z_age","z_app_time","z_CPM","z_EMK_EM_P_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_EM_P_anc$anova_table)
+  
+```
+
+
+#### EMK_EM_comp
+
+**ANOVA**
+
+```{r anova_EMK_EM_comp, results = 'asis'}
+
+# ANOVA EMK_comp
+
+  EMK_EM_comp_an = aov_ez("ID", "zd_EMK_EM_comp", qn_data, between = c("group"), factorize = FALSE,
+                          anova_table = list(correction = "none", es = "pes"))
+    
+  pander(EMK_EM_comp_an$anova_table)
+
+```
+
+**ANCOVA**
+
+```{r ancova_emk_em_comp, results = 'asis'}
+
+# ANCOVA EMK_comp
+
+  emk_em_comp_anc = aov_ez("ID", "zd_EMK_EM_comp", qn_data, between = c("group"),
+      covariate = c("z_age","z_app_time","z_CPM"),
+      observed = c("z_age","z_app_time","z_CPM"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(emk_em_comp_anc$anova_table)
+  
+```
+
+
+#### EMK_EK_CH
+
+**ANOVA**
+
+```{r anova_EMK_EK_CH, results = 'asis'}
+
+# ANOVA EMK_EK_CH
+
+  EMK_EK_CH_an = aov_ez("ID", "zd_EMK_EK_CH", qn_data, between = c("group"), factorize = FALSE,
+                          anova_table = list(correction = "none", es = "pes"))
+    
+  pander(EMK_EK_CH_an$anova_table)
+
+```
+
+**ANCOVA**
+
+```{r ancova_EMK_EK_CH, results = 'asis'}
+
+# ANCOVA EMK_EK_CH
+
+  EMK_EK_CH_anc = aov_ez("ID", "zd_EMK_EK_CH", qn_data, between = c("group"),
+      covariate = c("z_age","z_app_time","z_CPM","z_EMK_EK_CH_T1"),
+      observed = c("z_age","z_app_time","z_CPM","z_EMK_EK_CH_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_EK_CH_anc$anova_table)
+  
+```
+
+#### EMK_EK_P
+
+**ANOVA**
+
+```{r anova_EMK_EK_P, results = 'asis'}
+
+# ANOVA EMK_EK_P
+
+  EMK_EK_P_an = aov_ez("ID", "zd_EMK_EK_P", qn_data, between = c("group"), factorize = FALSE,
+                          anova_table = list(correction = "none", es = "pes"))
+    
+  pander(EMK_EK_P_an$anova_table)
+
+```
+
+**ANCOVA**
+
+```{r ancova_EMK_EK_P, results = 'asis'}
+
+# ANCOVA EMK_EK_P
+
+  EMK_EK_P_anc = aov_ez("ID", "zd_EMK_EK_P", qn_data, between = c("group"),
+      covariate = c("z_age","z_app_time","z_CPM","z_EMK_EK_P_T1"),
+      observed = c("z_age","z_app_time","z_CPM","z_EMK_EK_P_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_EK_P_anc$anova_table)
+  
+```
+
+#### EMK_EK_comp
+
+**ANOVA**
+
+```{r anova_EMK_EK_comp, results = 'asis'}
+
+# ANOVA EMK_EK_comp
+
+  EMK_EK_comp_an = aov_ez("ID", "zd_EMK_EK_comp", qn_data, between = c("group"), factorize = FALSE,
+                          anova_table = list(correction = "none", es = "pes"))
+    
+  pander(EMK_EK_comp_an$anova_table)
+
+```
+
+**ANCOVA**
+
+```{r ancova_emk_ek_comp, results = 'asis'}
+
+# ANCOVA EMK_EK_comp
+
+  emk_ek_comp_anc = aov_ez("ID", "zd_EMK_EK_comp", qn_data, between = c("group"),
+      covariate = c("z_age","z_app_time","z_CPM"),
+      observed = c("z_age","z_app_time","z_CPM"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+    
+  
+  pander(emk_ek_comp_anc$anova_table)
+
+```
+
+#### EMK_PB_CH
+
+**ANOVA**
+
+```{r anova_EMK_PB_CH, results = 'asis'}
+ 
+# ANOVA EMK_PB_CH
+ 
+  EMK_PB_CH_an = aov_ez("ID", "zd_EMK_PB_CH", qn_data, between = c("group"), factorize = FALSE,
+                        anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_PB_CH_an$anova_table)
+
+```
+
+**ANCOVA**
+
+```{r ancova_emk_PB_ch, results = 'asis'}
+
+# ANCOVA EMK_PB_CH
+
+  emk_PB_anc = aov_ez("ID", "zd_EMK_PB_CH", qn_data, between = c("group"),
+      covariate = c("z_age","z_app_time","z_CPM","z_EMK_PB_CH_T1"),
+      observed = c("z_age","z_app_time","z_CPM","z_EMK_PB_CH_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+    
+  
+  pander(emk_PB_anc$anova_table)
+
+```
+
+#### SDQ_PB
+
+**ANOVA**
+
+```{r anova_SDQ_PB, results = 'asis'}
+
+# ANOVA SDQ_PB
+
+  SDQ_PB_an = aov_ez("ID", "zd_SDQ_PB", qn_data, between = c("group"), factorize = FALSE,
+                     anova_table = list(correction = "none", es = "pes"))
+  
+  pander(SDQ_PB_an$anova_table)
+
+```
+
+**ANCOVA**
+
+```{r ancova_sdq_PB, results = 'asis'}
+
+# ANCOVA SDQ_PB
+
+  sdq_PB_anc = aov_ez("ID", "zd_SDQ_PB", qn_data, between = c("group"),
+      covariate = c("z_age","z_app_time","z_CPM", "z_SDQ_PB_T1"),
+      observed = c("z_age","z_app_time","z_CPM", "z_SDQ_PB_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+    
+  
+  pander(sdq_PB_anc$anova_table)
+
+```
+
+#### SDQ_Total
+
+**ANOVA**
+
+```{r anova_SDQ_Total, results = 'asis'}
+
+# ANOVA SDQ_Total
+
+  SDQ_Total_an = aov_ez("ID", "zd_SDQ_Total", qn_data, between = c("group"), factorize = FALSE,
+                        anova_table = list(correction = "none", es = "pes"))
+  pander(SDQ_Total_an$anova_table)
+
+```
+
+**ANCOVA**
+
+```{r ancova_sdq_total, results = 'asis'}
+
+# ANCOVA SDQ_Total
+
+  sdq_total_anc = aov_ez("ID", "zd_SDQ_Total", qn_data, between = c("group"),
+      covariate = c("z_age","z_app_time","z_CPM", "z_SDQ_T1"),
+      observed = c("z_age","z_app_time","z_CPM", "z_SDQ_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(sdq_total_anc$anova_table)
+
+```
+
+#### p-value correction
+
+**FDR-correction for ANOVA with composite score**
+
+<!-- Alternative p-value correction with no covariates -->
+
+```{r correct_p_univ_anova_comp, results = TRUE}
+  p_val_training = c(gem_total_an$anova_table$`Pr(>F)`[1], EMK_EM_comp_an$anova_table$`Pr(>F)`[1],
+                     EMK_EK_comp_an$anova_table$`Pr(>F)`[1], EMK_PB_CH_an$anova_table$`Pr(>F)`[1], SDQ_PB_an$anova_table$`Pr(>F)`[1], SDQ_Total_an$anova_table$`Pr(>F)`[1])
+
+  print(p.adjust(p_val_training, method="fdr"))
+```
+
+**FDR-correction for ANCOVA with composite score**
+
+```{r correct_p_univ_ancova_comp, results = TRUE}
+
+  p_val_training = c(gem_total_anc$anova_table$`Pr(>F)`[1], emk_em_comp_anc$anova_table$`Pr(>F)`[1],
+                     emk_ek_comp_anc$anova_table$`Pr(>F)`[1], emk_PB_anc$anova_table$`Pr(>F)`[1], sdq_PB_anc$anova_table$`Pr(>F)`[1], sdq_total_anc$anova_table$`Pr(>F)`[1])
+
+  print(p.adjust(p_val_training, method="fdr"))
+
+```
+
+**FDR-correction for ANOVA without composite score**
+
+<!-- Alternative p-value correction with no covariates -->
+
+```{r correct_p_univ_anova_no_comp, results = TRUE}
+  p_val_training = c(gem_total_an$anova_table$`Pr(>F)`[1], EMK_EM_CH_an$anova_table$`Pr(>F)`[1], EMK_EM_P_an$anova_table$`Pr(>F)`[1],
+                     EMK_EK_CH_an$anova_table$`Pr(>F)`[1], EMK_EK_P_an$anova_table$`Pr(>F)`[1], EMK_PB_CH_an$anova_table$`Pr(>F)`[1],
+                     SDQ_PB_an$anova_table$`Pr(>F)`[1], SDQ_Total_an$anova_table$`Pr(>F)`[1])
+
+  print(p.adjust(p_val_training, method="fdr"))
+
+```
+
+**FDR-correction for ANCOVA without composite score**
+
+```{r correct_p_univ_ancova_no_comp, results = TRUE}
+
+  p_val_training = c(gem_total_anc$anova_table$`Pr(>F)`[1], EMK_EM_P_anc$anova_table$`Pr(>F)`[1], EMK_EM_CH_anc$anova_table$`Pr(>F)`[1],
+                     EMK_EK_P_anc$anova_table$`Pr(>F)`[1], EMK_EK_CH_anc$anova_table$`Pr(>F)`[1], emk_PB_anc$anova_table$`Pr(>F)`[1],
+                     sdq_PB_anc$anova_table$`Pr(>F)`[1], sdq_total_anc$anova_table$`Pr(>F)`[1])
+
+  print(p.adjust(p_val_training, method="fdr"))
+
+```
+
+## Composite scores 
+
+### Simple averaging
+
+  + Inspiration: Song et al. (2017) 
+  + Standardization to z-scores for each variable (mean of 0)
+  + Keeps variances similiar 
+  + The more positive the value, the more gain in competence 
+  + Composite Score here excludes SDQ_Total (opposite scaling)
+
+**ANOVA**
+
+```{r se_comp_score_anova, results = 'asis'}
+
+# Calculate ANOVA
+  se_comp_an =  aov_ez("ID", "comp", qn_data, between = c("group"), factorize = FALSE,
+                       anova_table = list(correction = "none", es = "pes"))
+  
+  pander(se_comp_an$anova_table)
+
+```
+
+**ANCOVA**
+
+```{r se_comp_score_ancova, results = 'asis'}
+
+# Calculate ANCOVA  
+  se_comp_anc =  aov_ez("ID", "comp", qn_data, between = c("group"),
+  covariate = c("z_app_time","z_CPM"),
+  observed = c("z_app_time","z_CPM"), factorize = FALSE,
+  anova_table = list(correction = "none", es = "pes"))
+  
+  pander(se_comp_anc$anova_table)
+
+```
+
+**Visualization**
+
+```{r se_comp_score_boxplot}
+
+# Visualize   
+
+  comp_score_box = ggplot(qn_data, aes(x=group, y=comp, fill = group)) + 
+    geom_boxplot(lwd = 1.5)+
+    scale_fill_manual(values=c("#707070", "#ad6715")) +
+    labs(x = "", y = "Composite score (z-standardized)") +
+    geom_jitter(shape=16, position=position_jitter(0.2), size = 1.9) +
+    theme_bw()+
+    theme(legend.position = "none") +
+    theme_SN
+
+  comp_score_box
+
+```
+
+```{r se_sep_comp_boxplot}
+
+
+qn_data_d_scors = subset(qn_data, select = c(group, zd_GEM_Total, zd_EMK_EM_CH, zd_EMK_EM_P, zd_EMK_EK_CH, zd_EMK_EK_P, zd_EMK_PB_CH, zd_SDQ_PB, zd_SDQ_Total))
+
+qn_data_d_scors_TG = subset(qn_data_d_scors, group == "TG")
+
+qn_data_d_scors_TG = gather(qn_data_d_scors_TG, measure, TG, zd_GEM_Total:zd_SDQ_Total,
+                              factor_key=TRUE)
+
+
+qn_data_d_scors_CG = subset(qn_data_d_scors, group == "CG")
+
+qn_data_d_scors_CG = gather(qn_data_d_scors_CG, measure, CG, zd_GEM_Total:zd_SDQ_Total,
+                              factor_key=TRUE)
+
+
+qn_data_d_scors = cbind(qn_data_d_scors_TG, qn_data_d_scors_CG[,3])
+
+names(qn_data_d_scors)[4] = "CG"
+
+                                             
+ #zd_GEM_Total_lt zd_EMK_EM_P_lt zd_EMK_EK_P_lt zd_SDQ_PB_lt zd_SDQ_Total_lt
+
+# Visualize   
+
+  ggboxplot(qn_data_d_scors, x = "measure", y = c("CG", "TG"), merge = TRUE, palette = c("#707070", "#ad6715"),
+            ylab = "change score [z-standardized]", xlab ="", legend = "none", size = 1,  bxp.errorbar = TRUE, bxp.errorbar.width = 1, width = 0.5) +
+            scale_x_discrete(labels=c("GEM","EM_CH","EM_P", "EK_CH", "EK_P", "PB_CH","SDQ_PB","SDQ_PS")) +
+            theme_SN
+
+```
+
+
+<!-- ### Weighted averaging (PCA)  -->
+
+<!-- PCA helped me to identify an outlier in the TG -->
+
+```{r sel_data, eval = FALSE, include = FALSE}
+  qn_data_d = subset(qn_data, select = c(age, CPM, d_GEM_CE:d_SRS))
+  qn_data_T2 = subset(qn_data, select = c(age, CPM, GEM_Total_T2, EMK_EK_CH_T2, EMK_PB_CH_T2, EMK_EM_CH_T2, EMK_EK_P_T2, EMK_EM_P_T2,
+                                          SDQ_Total_T2, SDQ_PB_T2)) 
+```
+
+```{r pca_v1, results = 'asis', eval = FALSE, include = FALSE}
+
+# https://www.datacamp.com/community/tutorials/pca-analysis-r?utm_source=adwords_ppc&utm_campaignid=898687156&utm_adgroupid=48947256715&utm_device=c&utm_keyword=&utm_matchtype=b&utm_network=g&utm_adpostion=&utm_creative=332602034349&utm_targetid=dsa-429603003980&utm_loc_interest_ms=&utm_loc_physical_ms=9061132&gclid=EAIaIQobChMIhofJh8XM6wIVitd3Ch2RqggLEAAYASAAEgJ15_D_BwE
+
+# de Pauw et al. (2009)
+
+# Calculate PCA
+  qn_data.pca = prcomp(qn_data_T2, center = TRUE,scale. = TRUE)
+
+# Obtain x principal components 
+  # proportion of variance: percentage of total variation in dataset 
+  # summary(qn_data.pca)
+
+# Visualize data 
+ library(ggbiplot)
+  ggbiplot(qn_data.pca, ellipse = TRUE,
+           labels = rownames(qn_data),
+           choices = c(1,2),
+           groups = qn_data$group)
+  
+# axes originate from center point 
+# labels = rownames allows to match participants to data - visble which participants are similiar to one another 
+# groups allows you to cluster for grouping 
+
+```
+
+```{r pca_v2, results = 'asis', eval = FALSE, include = FALSE}
+
+# http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/118-principal-component-analysis-in-r-prcomp-vs-princomp/
+
+library(factoextra)
+
+  qn_data.pca = prcomp(qn_data_d, scale = TRUE)
+
+# Visualize eigenvalues (scree plot) --> percentage of explained variance
+  fviz_eig(qn_data.pca)
+  
+# Graph of individuals   
+fviz_pca_ind(qn_data.pca,
+             col.ind = "cos2", # Color by the quality of representation
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE     # Avoid text overlapping
+             )  
+
+
+# Graph of variables
+fviz_pca_var(qn_data.pca,
+             col.var = "contrib", # Color by contributions to the PC
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = FALSE     # Avoid text overlapping
+             )
+
+# Graph of individuals and variables
+fviz_pca_biplot(qn_data.pca, repel = TRUE,
+                col.var = "#2E9FDF", # Variables color
+                col.ind = "#696969"  # Individuals color
+                )
+
+groups = qn_data$group
+
+
+fviz_pca_ind(qn_data.pca,
+             col.ind = groups, # color by groups
+             palette = c("#00AFBB",  "#FC4E07"),
+             addEllipses = TRUE, # Concentration ellipses
+             ellipse.type = "confidence",
+             legend.title = "Groups",
+             repel = TRUE
+             )
+
+```
+
+# Overall training efficacy empathy module {.tabset .tabset-pills}
+
+We checked overall training efficacy using different methods. We decided for MANCOVA to go against the inflation of the family-wise error rate (and hence making Type I error).
+
+## MAN(C)OVA 
+
+<!-- Effect size idea in MANOVA:
+
+https://stats.stackexchange.com/questions/240751/why-is-pillais-trace-equal-to-partial-eta-squared-in-a-repeated-measures-manova -->
+
+### Assumption checks {.tabset .tabset-pills}
+
+#### Adequate sample size
+
+  + Need to have more cases in each group than the number of dependent variables to analyze
+  + We have 6 dependent variables and ca. 30 participants per group
+  
+<br>
+  
+#### Independence of the observations
+
+  +  Each participant belongs to only one group (training vs control group)
+  
+<br>
+  
+#### Univariate or multivariate outliers  
+
+  + We can include outliers if the results won't be substantially affected. 
+  + We checked univariate outliers, but did not exclude any of them. 
+  + There were no multivariate outliers in the data, as assessed by Mahalanobis distance (p > 0.001).
+
+```{r emp_group_man_univ_muniv_out}
+
+# include outlier in analysis anyway if result will not be substantially affected
+# compare result of MANOVA with and without outlier
+
+# Univariate (per dependent variable)
+
+  qn_data %>%
+  group_by(group) %>%
+  identify_outliers(zd_GEM_Total)
+  # no outliers
+
+  qn_data %>%
+  group_by(group) %>%
+  identify_outliers(zd_EMK_EM_P)
+  # 13, 76
+  
+  qn_data %>%
+  group_by(group) %>%
+  identify_outliers(zd_EMK_EM_CH)
+  # 8
+                    
+  qn_data %>%
+  group_by(group) %>%
+  identify_outliers(zd_EMK_EM_comp)
+  # no outliers
+  
+  qn_data %>%
+  group_by(group) %>%
+  identify_outliers(zd_EMK_EK_CH)
+  # no outliers
+  
+  qn_data %>%
+  group_by(group) %>%
+  identify_outliers(zd_EMK_EK_P)
+  # 10, 17, 20, 26, 33, 43, 57
+  
+  qn_data %>%
+  group_by(group) %>%
+  identify_outliers(zd_EMK_EK_comp)
+  # 7
+  
+  qn_data %>%
+  group_by(group) %>%
+  identify_outliers(zd_EMK_PB_CH)
+  # 8
+  
+  qn_data %>%
+  group_by(group) %>%
+  identify_outliers(zd_SDQ_PB)
+  # no outliers
+  
+  qn_data %>%
+  group_by(group) %>%
+  identify_outliers(zd_SDQ_Total)
+  # 5, 57, 76 
+  
+# There were no extreme univariate outliers in the data. 
+
+# Multivariate
+    # refers to data points that have unusual combination of values on dependent variables
+    # mahalanobis distance 
+  
+  qn_data_manov = subset(qn_data, select = c(ID, group, zd_GEM_Total, zd_EMK_EM_CH, zd_EMK_EM_P, zd_EMK_EK_CH, zd_EMK_EK_P, d_EMK_PB_CH, d_SDQ_PB, d_SDQ_Total))
+  
+  qn_data_manov %>%
+  group_by(group) %>%
+  mahalanobis_distance(-ID) %>%
+  filter(is.outlier == TRUE) %>%
+  as.data.frame()
+  
+# There were no multivariate outliers in the data, as assessed by Mahalanobis distance (p > 0.001).
+
+```
+
+<br>
+
+#### Univariate / Multivariate normality 
+
+  + The test of of multivariate normality was significant, hence normality cannot be assumed. 
+  + MANOVA is fairly robust to deviations from normality - we therefore continue with MANOVA testing. 
+
+```{r emp_group_man_uni_multivar_norm}
+
+# Assumption checks (https://www.datanovia.com/en/lessons/one-way-manova-in-r/)
+
+# Univariate normality
+
+  zd_GEM_Total_norm = ggqqplot(qn_data, "zd_GEM_Total", facet.by = "group",
+         ylab = "zd_GEM_Total", ggtheme = theme_bw())
+
+  zd_EMK_EM_P_norm = ggqqplot(qn_data, "zd_EMK_EM_P", facet.by = "group",
+         ylab = "zd_EMK_EM_P", ggtheme = theme_bw())
+
+  zd_EMK_EM_CH_norm = ggqqplot(qn_data, "zd_EMK_EM_CH", facet.by = "group",
+         ylab = "zd_EMK_EM_CH", ggtheme = theme_bw())
+  
+  zd_EMK_EK_CH_norm = ggqqplot(qn_data, "zd_EMK_EK_CH", facet.by = "group",
+         ylab = "zd_EMK_EK_CH", ggtheme = theme_bw())
+  
+  zd_EMK_EK_P_norm = ggqqplot(qn_data, "zd_EMK_EK_P", facet.by = "group",
+         ylab = "zd_EMK_EK_P", ggtheme = theme_bw())
+  
+  zd_EMK_PB_CH_norm = ggqqplot(qn_data, "zd_EMK_PB_CH", facet.by = "group",
+         ylab = "zd_EMK_PB_CH", ggtheme = theme_bw())
+  
+  zd_SDQ_PB_norm = ggqqplot(qn_data, "zd_SDQ_PB", facet.by = "group",
+         ylab = "zd_SDQ_PB", ggtheme = theme_bw())
+  
+  zd_SDQ_Total_norm = ggqqplot(qn_data, "zd_SDQ_Total", facet.by = "group",
+         ylab = "zd_SDQ_Total", ggtheme = theme_bw())
+  
+  
+# Display plots
+  fig_univ_norm = cowplot::plot_grid(zd_GEM_Total_norm, zd_EMK_EM_P_norm, zd_EMK_EM_CH_norm,
+                                     zd_EMK_EK_CH_norm, zd_EMK_EK_P_norm,
+                                     zd_EMK_PB_CH_norm, zd_SDQ_PB_norm, zd_SDQ_Total_norm, ncol=3, nrow = 3, rel_widths=c(1, 1))
+  fig_univ_norm
+ 
+
+# Multivariate normality   
+
+  qn_data %>%
+  select(zd_GEM_Total, zd_EMK_EM_CH, zd_EMK_EM_P, zd_EMK_EK_CH, zd_EMK_EK_P, d_EMK_PB_CH, d_SDQ_PB, d_SDQ_Total) %>%
+  mshapiro_test()
+  
+# no normality 
+
+```
+
+<br>
+
+#### Multicollinearity
+
+  + A correlation above 0.9 is an indication of multicollinearity.
+  + There was no multicollinearity within the data set. 
+
+```{r emp_group_man_multicol}
+
+# Absence of multicollinearity (no correlation > r = .9)
+  
+  multicorr_data = qn_data %>% cor_test(zd_GEM_Total, zd_EMK_EM_CH, zd_EMK_EM_P, zd_EMK_EK_CH, zd_EMK_EK_P, d_EMK_PB_CH, d_SDQ_PB, d_SDQ_Total, z_age, z_CPM, z_app_time)
+
+  sum(multicorr_data$cor >= 0.9 & multicorr_data$cor != 1.0)
+  
+# no multicollinearity problems 
+
+```
+
+<br>
+
+#### Linearity
+
+  + Even with linearity between variables, we will run the analysis.
+
+```{r emp_group_man_lin}
+
+  # Linearity between all outcome variables for each group
+  results = qn_data %>%
+    select(zd_GEM_Total, zd_EMK_EM_CH, zd_EMK_EM_P, zd_EMK_EK_CH, zd_EMK_EK_P, d_EMK_PB_CH, d_SDQ_PB, d_SDQ_Total, group) %>%
+    group_by(group) %>%
+    doo(~ggpairs(.) + theme_bw(), result = "plots")
+  
+  results$plots
+  
+
+```
+
+<br>
+
+#### Homogeneity of variances
+
+  + We assume homogeneity of variances (all Levene test p > .05)
+
+```{r emp_group_man_hom_var}
+
+# if no homogeneity --> transformation of data possible 
+
+  qn_data %>% 
+    gather(key = "variable", value = "value", zd_GEM_Total, zd_EMK_EM_CH, zd_EMK_EM_P, zd_EMK_EK_CH, zd_EMK_EK_P, d_EMK_PB_CH, d_SDQ_PB, d_SDQ_Total) %>%
+    group_by(variable) %>%
+    levene_test(value ~ group)
+  
+# we have homogeneity of variances 
+
+```
+
+<br>
+
+#### Homogeneity of variance-covariance matrices
+
+  + The test was not statistically significant (i.e., p > 0.001), so the data has not violated the assumption of homogeneity of variance-covariance matrices.
+
+```{r emp_group_man_hom_var_cov}
+
+# if you have balanced design (i.e., similar group sizes), you do not need to worry about it too much
+
+  box_m(qn_data[, c("zd_GEM_Total", "zd_EMK_EM_P", "zd_EMK_EM_CH", "zd_EMK_EK_CH", "zd_EMK_EK_P", "d_EMK_PB_CH", "d_SDQ_PB", "d_SDQ_Total")], qn_data$group)
+  
+# data has not violated the assumption of homogeneity of variance-covariance matrices.
+
+```
+
+<br>
+
+
+### Multivariate tests {.tabset .tabset-pills}
+
+#### MANOVA with EMK EK / EM composite score
+
+```{r emp_group_manova_change_score_comp, results = 'asis'}
+
+# Calculate MANCOVA on unstandardized change scores
+#  ze_manc_mv = manova(cbind(d_GEM_Total, d_EMK_EM_comp, d_EMK_EK_comp, d_EMK_PB_CH, d_SDQ_PB, d_SDQ_Total) ~ group, data = qn_data)
+#   
+# Print table 
+#  pander(ze_manc_mv)
+  
+# Calculate MANCOVA on standardized change scores
+  ze_manc_mv = manova(cbind(zd_GEM_Total, zd_EMK_EM_comp, zd_EMK_EK_comp, zd_EMK_PB_CH, zd_SDQ_PB, d_SDQ_Total) ~ group, data = qn_data_emp)
+  
+# Print table 
+  pander(ze_manc_mv)  
+  
+```
+
+#### MANCOVA with EMK EK / EM composite score
+
+```{r emp_group_mancova_change_score_comp, results = 'asis'}
+
+# Calculate MANCOVA on unstandardized change scores 
+  # ze_manc_mv = as.data.frame(mancova(qn_data_emp_emp,
+  #         deps = vars(d_GEM_Total, d_EMK_EM_comp, d_EMK_EK_comp, d_EMK_PB_CH, d_SDQ_PB, d_SDQ_Total),
+  #         factors = group,
+  #         covs = vars(z_age, z_CPM, z_app_time),
+  #         multivar = list("pillai"))$multivar)
+  
+  
+# Calculate MANCOVA on standardized change scores
+  ze_manc_mv = as.data.frame(mancova(qn_data_emp,
+          deps = vars(zd_GEM_Total, zd_EMK_EM_comp, zd_EMK_EK_comp, zd_EMK_PB_CH, zd_SDQ_PB, zd_SDQ_Total),
+          factors = group,
+          covs = vars(z_age, z_CPM, z_app_time),
+          multivar = list("pillai"))$multivar)  
+  
+# Prepare for printing: Remove and rename columns / values
+  ze_manc_mv = as_tibble(ze_manc_mv)
+  ze_manc_mv$Variable = factor(ze_manc_mv$`term[pillai]`)
+  ze_manc_mv$F = ze_manc_mv$`f[pillai]`
+  ze_manc_mv$df1 = ze_manc_mv$`df1[pillai]`
+  ze_manc_mv$df2 = ze_manc_mv$`df2[pillai]`
+  ze_manc_mv$p = ze_manc_mv$`p[pillai]`
+  
+  ze_manc_mv = subset(ze_manc_mv, select = -c(1:7))
+  ze_manc_mv$Variable = revalue(ze_manc_mv$Variable, c("group"="Training","z_age"="Age","z_CPM"="CPM","z_app_time"="App time"))
+  
+# Print table 
+  pander(ze_manc_mv)
+  
+```
+
+#### MANOVA without EMK EK / EM composite score
+
+```{r emp_group_manova_change_score_no_comp, results = 'asis'}
+
+# Calculate MANCOVA on unstandardized change scores 
+#  ze_manc_mv = manova(cbind(d_GEM_Total, d_EMK_EM_P, d_EMK_EM_CH, d_EMK_EK_P, d_EMK_EK_CH, d_EMK_PB_CH, d_SDQ_PB, d_SDQ_Total) ~ group, data = qn_data)
+ 
+# Print table 
+#  pander(ze_manc_mv)
+  
+# Calculate MANCOVA on standardized change scores 
+  ze_manc_mv = manova(cbind(zd_GEM_Total, zd_EMK_EM_P, zd_EMK_EM_CH, zd_EMK_EK_P, zd_EMK_EK_CH, zd_EMK_PB_CH, zd_SDQ_PB, zd_SDQ_Total) ~ group, data = qn_data_emp)
+  
+# Print table 
+  pander(ze_manc_mv)  
+  
+```
+
+#### MANCOVA without EMK EK / EM composite score
+
+```{r emp_group_mancova_change_score_no_comp, results = 'asis'}
+
+# # Calculate MANCOVA on unstandardized change scores 
+#   ze_manc_mv = as.data.frame(mancova(qn_data_emp,
+#           deps = vars(d_GEM_Total, d_EMK_EM_P, d_EMK_EM_CH, d_EMK_EK_P, d_EMK_EK_CH, d_EMK_PB_CH, d_SDQ_PB, d_SDQ_Total),
+#           factors = group,
+#           covs = vars(z_age, z_CPM, z_app_time),
+#           multivar = list("pillai"))$multivar)
+  
+# Calculate MANCOVA on standardized change scores 
+  ze_manc_mv = as.data.frame(mancova(qn_data_emp,
+          deps = vars(zd_GEM_Total, zd_EMK_EM_P, zd_EMK_EM_CH, zd_EMK_EK_P, zd_EMK_EK_CH, zd_EMK_PB_CH, zd_SDQ_PB, zd_SDQ_Total),
+          factors = group,
+          covs = vars(z_app_time),
+          multivar = list("pillai"))$multivar)
+  
+# Prepare for printing: Remove and rename columns / values
+  ze_manc_mv = as_tibble(ze_manc_mv)
+  ze_manc_mv$Variable = factor(ze_manc_mv$`term[pillai]`)
+  ze_manc_mv$Pillai = ze_manc_mv$`stat[pillai]`
+  ze_manc_mv$F = ze_manc_mv$`f[pillai]`
+  ze_manc_mv$df1 = ze_manc_mv$`df1[pillai]`
+  ze_manc_mv$df2 = ze_manc_mv$`df2[pillai]`
+  ze_manc_mv$p = ze_manc_mv$`p[pillai]`
+  
+  ze_manc_mv = subset(ze_manc_mv, select = -c(1:7))
+  ze_manc_mv$Variable = revalue(ze_manc_mv$Variable, c("group"="Training","z_CPM"="CPM"))
+  
+# Print table 
+  pander(ze_manc_mv)  
+  
+```
+
+<!-- Alternative MANCOVA with time x group interaction -->
+
+```{r emp_group_mancova_timexgroup, eval = FALSE}
+
+# Transform data set 
+  qn_data_manc = subset(qn_data_long, time == "EMK_EK_CH_T1" | time == "EMK_EK_CH_T2")
+  qn_data_manc = subset(qn_data_manc, select = c(ID, group, z_age, z_CPM, z_app_time, time, score))
+  qn_data_manc$time = revalue(qn_data_manc$time , c("EMK_EK_CH_T1"="T1","EMK_EK_CH_T2"="T2"))
+  names(qn_data_manc)[names(qn_data_manc)=="score"] = "EMK_EK_CH"
+
+  qn_data_manc$GEM_Total = qn_data_long[qn_data_long$time == "GEM_Total_T1" | qn_data_long$time == "GEM_Total_T2",]$score
+  qn_data_manc$EMK_EM_P = qn_data_long[qn_data_long$time == "EMK_EM_P_T1" | qn_data_long$time == "EMK_EM_P_T2",]$score
+  qn_data_manc$EMK_EM_CH = qn_data_long[qn_data_long$time == "EMK_EM_CH_T1" | qn_data_long$time == "EMK_EM_CH_T2",]$score
+  qn_data_manc$EMK_EK_CH = qn_data_long[qn_data_long$time == "EMK_EK_CH_T1" | qn_data_long$time == "EMK_EK_CH_T2",]$score
+  qn_data_manc$EMK_EK_P = qn_data_long[qn_data_long$time == "EMK_EK_P_T1" | qn_data_long$time == "EMK_EK_P_T2",]$score
+  qn_data_manc$EMK_PB_CH = qn_data_long[qn_data_long$time == "EMK_PB_CH_T1" | qn_data_long$time == "EMK_PB_CH_T2",]$score
+  qn_data_manc$SDQ_PB = qn_data_long[qn_data_long$time == "SDQ_PB_T1" | qn_data_long$time == "SDQ_PB_T2",]$score
+  qn_data_manc$SDQ_EP = qn_data_long[qn_data_long$time == "SDQ_Total_T1" | qn_data_long$time == "SDQ_Total_T2",]$score
+  
+  
+  qn_data_manc$EMK_EM_comp =  qn_data_manc$EMK_EM_P + qn_data_manc$EMK_EM_CH
+  qn_data_manc$EMK_EK_comp =  qn_data_manc$EMK_EK_P + qn_data_manc$EMK_EK_CH
+  
+  
+# Calculate MANCOVA on time x group interaction 
+  mancova(qn_data_manc,
+          deps = vars(GEM_Total, EMK_EM_comp, EMK_EK_comp, EMK_PB_CH, SDQ_PB, SDQ_EP),
+          factors = vars(group,time),
+          covs = vars(z_age, z_CPM, z_app_time),
+          multivar = list("pillai"))
+  
+
+  ze_manc_mv = as.data.frame(mancova(qn_data_manc,
+          deps = vars(GEM_Total, EMK_EM_P, EMK_EM_CH, EMK_EK_P, EMK_EK_CH, EMK_PB_CH, SDQ_PB, SDQ_EP),
+          factors = vars(group,time),
+          covs = vars(z_age, z_CPM, z_app_time),
+          multivar = list("pillai"))$multivar)
+  
+  ze_manc_mv  
+
+```
+
+<br>
+
+### Univariate tests {.tabset .tabset-pills}
+
+#### GEM_Total
+
+**ANOVA**
+
+```{r emp_group_anova_GEM_total, results = 'asis'}
+
+# ANOVA GEM   
+  gem_total_an =  aov_ez("ID", "zd_GEM_Total", qn_data_emp, between = c("group"), factorize = FALSE,
+                         anova_table = list(correction = "none", es = "pes"))
+
+  pander(gem_total_an$anova_table)
+  
+
+```
+
+<br>
+
+**ANCOVA**
+
+```{r emp_group_ancova_GEM_total, results = 'asis'}
+   
+# ANCOVA GEM 
+  gem_total_anc =  aov_ez("ID", "zd_GEM_Total", qn_data_emp, between = c("group"),
+    covariate = c("z_app_time", "z_GEM_T1"),
+    observed = c("z_app_time", "z_GEM_T1"), factorize = FALSE,
+    anova_table = list(correction = "none", es = "pes"))
+  
+   pander(gem_total_anc$anova_table)
+   
+```
+
+#### EMK_EM_CH
+
+**ANOVA**
+
+```{r emp_group_anova_EMK_EM_CH, results = 'asis'}
+
+# ANOVA EMK_EM_CH
+
+  EMK_EM_CH_an = aov_ez("ID", "zd_EMK_EM_CH", qn_data_emp, between = c("group"), factorize = FALSE,
+                          anova_table = list(correction = "none", es = "pes"))
+    
+  pander(EMK_EM_CH_an$anova_table)
+
+```
+
+
+**ANCOVA**
+
+```{r emp_group_ancova_EMK_EM_CH, results = 'asis'}
+
+# ANCOVA EMK_EM_CH
+
+  EMK_EM_CH_anc = aov_ez("ID", "zd_EMK_EM_CH", qn_data_emp, between = c("group"),
+      covariate = c("z_app_time","z_EMK_EM_CH_T1"),
+      observed = c("z_app_time","z_EMK_EM_CH_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_EM_CH_anc$anova_table)
+  
+```
+
+
+#### EMK_EM_P
+
+**ANOVA**
+
+```{r emp_group_anova_EMK_EM_P, results = 'asis'}
+
+# ANOVA EMK_EM_P
+
+  EMK_EM_P_an = aov_ez("ID", "zd_EMK_EM_P", qn_data_emp, between = c("group"), factorize = FALSE,
+                          anova_table = list(correction = "none", es = "pes"))
+    
+  pander(EMK_EM_P_an$anova_table)
+
+```
+
+**ANCOVA**
+
+```{r emp_group_ancova_EMK_EM_P, results = 'asis'}
+
+# ANCOVA EMK_EM_P
+
+  EMK_EM_P_anc = aov_ez("ID", "zd_EMK_EM_P", qn_data_emp, between = c("group"),
+      covariate = c("z_app_time","z_EMK_EM_P_T1"),
+      observed = c("z_app_time","z_EMK_EM_P_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_EM_P_anc$anova_table)
+  
+```
+
+
+#### EMK_EM_comp
+
+**ANOVA**
+
+```{r emp_group_anova_EMK_EM_comp, results = 'asis'}
+
+# ANOVA EMK_comp
+
+  EMK_EM_comp_an = aov_ez("ID", "zd_EMK_EM_comp", qn_data_emp, between = c("group"), factorize = FALSE,
+                          anova_table = list(correction = "none", es = "pes"))
+    
+  pander(EMK_EM_comp_an$anova_table)
+
+```
+
+**ANCOVA**
+
+```{r emp_group_ancova_emk_em_comp, results = 'asis'}
+
+# ANCOVA EMK_comp
+
+  emk_em_comp_anc = aov_ez("ID", "zd_EMK_EM_comp", qn_data_emp, between = c("group"),
+      covariate = c("z_age","z_app_time","z_CPM"),
+      observed = c("z_age","z_app_time","z_CPM"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(emk_em_comp_anc$anova_table)
+  
+```
+
+
+#### EMK_EK_CH
+
+**ANOVA**
+
+```{r emp_group_anova_EMK_EK_CH, results = 'asis'}
+
+# ANOVA EMK_EK_CH
+
+  EMK_EK_CH_an = aov_ez("ID", "zd_EMK_EK_CH", qn_data_emp, between = c("group"), factorize = FALSE,
+                          anova_table = list(correction = "none", es = "pes"))
+    
+  pander(EMK_EK_CH_an$anova_table)
+
+```
+
+**ANCOVA**
+
+```{r emp_group_ancova_EMK_EK_CH, results = 'asis'}
+
+# ANCOVA EMK_EK_CH
+
+  EMK_EK_CH_anc = aov_ez("ID", "zd_EMK_EK_CH", qn_data_emp, between = c("group"),
+      covariate = c("z_app_time","z_EMK_EK_CH_T1"),
+      observed = c("z_app_time","z_EMK_EK_CH_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_EK_CH_anc$anova_table)
+  
+```
+
+#### EMK_EK_P
+
+**ANOVA**
+
+```{r emp_group_anova_EMK_EK_P, results = 'asis'}
+
+# ANOVA EMK_EK_P
+
+  EMK_EK_P_an = aov_ez("ID", "zd_EMK_EK_P", qn_data_emp, between = c("group"), factorize = FALSE,
+                          anova_table = list(correction = "none", es = "pes"))
+    
+  pander(EMK_EK_P_an$anova_table)
+
+```
+
+**ANCOVA**
+
+```{r emp_group_ancova_EMK_EK_P, results = 'asis'}
+
+# ANCOVA EMK_EK_P
+
+  EMK_EK_P_anc = aov_ez("ID", "zd_EMK_EK_P", qn_data_emp, between = c("group"),
+      covariate = c("z_app_time","z_EMK_EK_P_T1"),
+      observed = c("z_app_time","z_EMK_EK_P_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_EK_P_anc$anova_table)
+  
+```
+
+#### EMK_EK_comp
+
+**ANOVA**
+
+```{r emp_group_anova_EMK_EK_comp, results = 'asis'}
+
+# ANOVA EMK_EK_comp
+
+  EMK_EK_comp_an = aov_ez("ID", "zd_EMK_EK_comp", qn_data_emp, between = c("group"), factorize = FALSE,
+                          anova_table = list(correction = "none", es = "pes"))
+    
+  pander(EMK_EK_comp_an$anova_table)
+
+```
+
+**ANCOVA**
+
+```{r emp_group_ancova_emk_ek_comp, results = 'asis'}
+
+# ANCOVA EMK_EK_comp
+
+  emk_ek_comp_anc = aov_ez("ID", "zd_EMK_EK_comp", qn_data_emp, between = c("group"),
+      covariate = c("z_age","z_app_time","z_CPM"),
+      observed = c("z_age","z_app_time","z_CPM"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+    
+  
+  pander(emk_ek_comp_anc$anova_table)
+
+```
+
+#### EMK_PB_CH
+
+**ANOVA**
+
+```{r emp_group_anova_EMK_PB_CH, results = 'asis'}
+ 
+# ANOVA EMK_PB_CH
+ 
+  EMK_PB_CH_an = aov_ez("ID", "zd_EMK_PB_CH", qn_data_emp, between = c("group"), factorize = FALSE,
+                        anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_PB_CH_an$anova_table)
+
+```
+
+**ANCOVA**
+
+```{r emp_group_ancova_emk_PB_ch, results = 'asis'}
+
+# ANCOVA EMK_PB_CH
+
+  emk_PB_anc = aov_ez("ID", "zd_EMK_PB_CH", qn_data_emp, between = c("group"),
+      covariate = c("z_app_time","z_EMK_PB_CH_T1"),
+      observed = c("z_app_time","z_EMK_PB_CH_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+    
+  
+  pander(emk_PB_anc$anova_table)
+
+```
+
+#### SDQ_PB
+
+**ANOVA**
+
+```{r emp_group_anova_SDQ_PB, results = 'asis'}
+
+# ANOVA SDQ_PB
+
+  SDQ_PB_an = aov_ez("ID", "zd_SDQ_PB", qn_data_emp, between = c("group"), factorize = FALSE,
+                     anova_table = list(correction = "none", es = "pes"))
+  
+  pander(SDQ_PB_an$anova_table)
+
+```
+
+**ANCOVA**
+
+```{r emp_group_ancova_sdq_PB, results = 'asis'}
+
+# ANCOVA SDQ_PB
+
+  sdq_PB_anc = aov_ez("ID", "zd_SDQ_PB", qn_data_emp, between = c("group"),
+      covariate = c("z_app_time","z_SDQ_PB_T1"),
+      observed = c("z_app_time","z_SDQ_PB_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+    
+  
+  pander(sdq_PB_anc$anova_table)
+
+```
+
+#### SDQ_Total
+
+**ANOVA**
+
+```{r emp_group_anova_SDQ_Total, results = 'asis'}
+
+# ANOVA SDQ_Total
+
+  SDQ_Total_an = aov_ez("ID", "zd_SDQ_Total", qn_data_emp, between = c("group"), factorize = FALSE,
+                        anova_table = list(correction = "none", es = "pes"))
+  pander(SDQ_Total_an$anova_table)
+
+```
+
+**ANCOVA**
+
+```{r emp_group_ancova_sdq_total, results = 'asis'}
+
+# ANCOVA SDQ_Total
+
+  sdq_total_anc = aov_ez("ID", "zd_SDQ_Total", qn_data_emp, between = c("group"),
+      covariate = c("z_app_time","z_SDQ_T1"),
+      observed = c("z_app_time","z_SDQ_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(sdq_total_anc$anova_table)
+
+```
+
+#### p-value correction
+
+**FDR-correction for ANOVA with composite score**
+
+<!-- Alternative p-value correction with no covariates -->
+
+```{r emp_group_correct_p_univ_anova_comp, results = TRUE}
+  p_val_training = c(gem_total_an$anova_table$`Pr(>F)`[1], EMK_EM_comp_an$anova_table$`Pr(>F)`[1],
+                     EMK_EK_comp_an$anova_table$`Pr(>F)`[1], EMK_PB_CH_an$anova_table$`Pr(>F)`[1], SDQ_PB_an$anova_table$`Pr(>F)`[1], SDQ_Total_an$anova_table$`Pr(>F)`[1])
+
+  print(p.adjust(p_val_training, method="fdr"))
+```
+
+**FDR-correction for ANCOVA with composite score**
+
+```{r emp_group_orrect_p_univ_ancova_comp, results = TRUE}
+
+  p_val_training = c(gem_total_anc$anova_table$`Pr(>F)`[1], emk_em_comp_anc$anova_table$`Pr(>F)`[1],
+                     emk_ek_comp_anc$anova_table$`Pr(>F)`[1], emk_PB_anc$anova_table$`Pr(>F)`[1], sdq_PB_anc$anova_table$`Pr(>F)`[1], sdq_total_anc$anova_table$`Pr(>F)`[1])
+
+  print(p.adjust(p_val_training, method="fdr"))
+
+```
+
+**FDR-correction for ANOVA without composite score**
+
+<!-- Alternative p-value correction with no covariates -->
+
+```{r emp_group_correct_p_univ_anova_no_comp, results = TRUE}
+  p_val_training = c(gem_total_an$anova_table$`Pr(>F)`[1], EMK_EM_CH_an$anova_table$`Pr(>F)`[1], EMK_EM_P_an$anova_table$`Pr(>F)`[1],
+                     EMK_EK_CH_an$anova_table$`Pr(>F)`[1], EMK_EK_P_an$anova_table$`Pr(>F)`[1], EMK_PB_CH_an$anova_table$`Pr(>F)`[1],
+                     SDQ_PB_an$anova_table$`Pr(>F)`[1], SDQ_Total_an$anova_table$`Pr(>F)`[1])
+
+  print(p.adjust(p_val_training, method="fdr"))
+
+```
+
+**FDR-correction for ANCOVA without composite score**
+
+```{r emp_group_correct_p_univ_ancova_no_comp, results = TRUE}
+
+  p_val_training = c(gem_total_anc$anova_table$`Pr(>F)`[1], EMK_EM_P_anc$anova_table$`Pr(>F)`[1], EMK_EM_CH_anc$anova_table$`Pr(>F)`[1],
+                     EMK_EK_P_anc$anova_table$`Pr(>F)`[1], EMK_EK_CH_anc$anova_table$`Pr(>F)`[1], emk_PB_anc$anova_table$`Pr(>F)`[1],
+                     sdq_PB_anc$anova_table$`Pr(>F)`[1], sdq_total_anc$anova_table$`Pr(>F)`[1])
+
+  print(p.adjust(p_val_training, method="fdr"))
+
+```
+
+## Composite scores 
+
+### Simple averaging
+
+  + Inspiration: Song et al. (2017) 
+  + Standardization to z-scores for each variable (mean of 0)
+  + Keeps variances similiar 
+  + The more positive the value, the more gain in competence 
+  + Composite Score here excludes SDQ_Total (opposite scaling)
+
+**ANOVA**
+
+```{r emp_group_se_comp_score_anova, results = 'asis'}
+
+# Calculate ANOVA
+  se_comp_an =  aov_ez("ID", "comp", qn_data_emp, between = c("group"), factorize = FALSE,
+                       anova_table = list(correction = "none", es = "pes"))
+  
+  pander(se_comp_an$anova_table)
+
+```
+
+**ANCOVA**
+
+```{r emp_group_se_comp_score_ancova, results = 'asis'}
+# Calculate ANCOVA  
+  se_comp_anc =  aov_ez("ID", "comp", qn_data_emp, between = c("group"),
+  covariate = c("z_age","z_app_time","z_CPM"),
+  observed = c("z_age","z_app_time","z_CPM"), factorize = FALSE,
+  anova_table = list(correction = "none", es = "pes"))
+  
+  pander(se_comp_anc$anova_table)
+
+```
+
+**Visualization**
+
+```{r emp_group_se_comp_score_boxplot}
+
+# Visualize   
+
+  comp_score_box = ggplot(qn_data_emp, aes(x=group, y=comp, fill = group)) + 
+    geom_boxplot(lwd = 1.5)+
+    scale_fill_manual(values=c("#707070", "#ad6715")) +
+    labs(x = "", y = "Composite score (z-standardized)") +
+    geom_jitter(shape=16, position=position_jitter(0.2), size = 1.9) +
+    theme_bw()+
+    theme(legend.position = "none") +
+    theme_SN
+
+  comp_score_box
+  
+  
+qn_data_emp$comp_res = resid(lm(comp ~ mc_CPM + mc_app_time, data = qn_data_emp))
+   
+  comp_score_box_res = ggplot(qn_data_emp, aes(x=group, y=comp_res, fill = group)) + 
+    geom_boxplot(lwd = 1.5)+
+    scale_fill_manual(values=c("#707070", "#ad6715")) +
+    labs(x = "", y = "Composite score (z-standardized)") +
+    geom_jitter(shape=16, position=position_jitter(0.2), size = 1.9) +
+    theme_bw()+
+    theme(legend.position = "none") +
+    theme_SN
+
+  comp_score_box_res  
+
+```
+
+```{r emp_group_se_sep_comp_boxplot, eval = FALSE}
+
+qn_data_emp_d_scors = subset(qn_data_emp, select = c(group, zd_GEM_Total, zd_EMK_EM_CH, zd_EMK_EM_P, zd_EMK_EK_CH, zd_EMK_EK_P, zd_EMK_PB_CH, zd_SDQ_PB, zd_SDQ_Total))
+
+qn_data_emp_d_scors_TG = subset(qn_data_emp_d_scors, group == "TG")
+
+qn_data_emp_d_scors_TG = gather(qn_data_emp_d_scors_TG, measure, TG, zd_GEM_Total:zd_SDQ_Total,
+                              factor_key=TRUE)
+
+
+qn_data_emp_d_scors_CG = subset(qn_data_emp_d_scors, group == "CG")
+
+qn_data_emp_d_scors_CG = gather(qn_data_emp_d_scors_CG, measure, CG, zd_GEM_Total:zd_SDQ_Total,
+                              factor_key=TRUE)
+
+
+qn_data_emp_d_scors = cbind(qn_data_emp_d_scors_TG, qn_data_emp_d_scors_CG[,3])
+
+names(qn_data_emp_d_scors)[4] = "CG"
+
+                                             
+ #zd_GEM_Total_lt zd_EMK_EM_P_lt zd_EMK_EK_P_lt zd_SDQ_PB_lt zd_SDQ_Total_lt
+
+# Visualize   
+
+  ggboxplot(qn_data_emp_d_scors, x = "measure", y = c("CG", "TG"), merge = TRUE, palette = c("#707070", "#ad6715"),
+            ylab = "change score [z-standardized]", xlab ="", legend = "none", size = 1,  bxp.errorbar = TRUE, bxp.errorbar.width = 1, width = 0.5) +
+            scale_x_discrete(labels=c("GEM","EM_CH","EM_P", "EK_CH", "EK_P", "PB_CH",
+                                      "SDQ_PB","SDQ_PS")) +
+            theme_SN
+
+```
+
+
+# Primary outcomes {.tabset .tabset-pills}
+
+## Griffith Empathy Measure (GEM)
+
+### Visualization {.tabset .tabset-pills}
+
+#### Group differences
+
+```{r raincloud_plot_GEM}
+
+### GEM CE ###
+
+# Select variable of interest 
+  qn_data_long_GEM_CE = subset(qn_data_long, time == "GEM_CE_T1" | time == "GEM_CE_T2")
+
+# Factor group variable 
+  qn_data_long_GEM_CE$group = factor(qn_data_long_GEM_CE$group)
+  (levels(qn_data_long_GEM_CE$group))
+
+# Factor variable of interest  
+  qn_data_long_GEM_CE$time = factor(qn_data_long_GEM_CE$time)
+  levels(qn_data_long_GEM_CE$time)
+  
+# Calculate means/SD of the data
+  sumrepdat = summarySE(qn_data_long_GEM_CE, measurevar = "score", groupvars=c("group", "time"), na.rm = TRUE)
+
+# Plot effects
+ rc_GEM_CE = ggplot(qn_data_long_GEM_CE, aes(x = time, y = score, fill = group)) +
+  geom_flat_violin(aes(fill = group),position = position_nudge(x = .1, y = 0), adjust = 1.5, trim = FALSE, alpha = .3, colour = NA)+
+  geom_point(aes(x = as.numeric(time)-.15, y = score, colour = group),position = position_jitter(width = .05), size = .9, shape = 20)+
+  geom_boxplot(aes(x = time, y = score, fill = group),outlier.shape = NA, alpha = .5, width = .1, colour = "black")+
+  geom_line(data = sumrepdat, aes(x = as.numeric(time)+.1, y = score_mean, group = group, colour = group), linetype = 3)+
+  geom_point(data = sumrepdat, aes(x = as.numeric(time)+.1, y = score_mean, group = group, colour = group), shape = 18, size = 1.5) +
+  geom_errorbar(data = sumrepdat, aes(x = as.numeric(time)+.1,
+                                      y = score_mean, group = group, colour = group, ymin = score_mean-se, ymax = score_mean+se), width = .05, size = 1)+
+  scale_colour_manual(values = ZE_col)+
+  scale_fill_manual(values = ZE_col)+
+  scale_x_discrete(labels=c("T1","T2"))+
+  scale_y_continuous(name="Score", limits=c(-30, 40)) +
+  theme(legend.position = "bottom", legend.title = element_blank(), axis.title.x = element_blank())+
+  ggtitle("Cognitive Empathy")
+ 
+ 
+### GEM AE ### 
+ 
+# Select variable of interest 
+  qn_data_long_GEM_AE = subset(qn_data_long, time == "GEM_AE_T1" | time == "GEM_AE_T2")
+
+# Factor group variable 
+  qn_data_long_GEM_AE$group = factor(qn_data_long_GEM_AE$group)
+  (levels(qn_data_long_GEM_AE$group))
+
+# Factor variable of interest  
+  qn_data_long_GEM_AE$time = factor(qn_data_long_GEM_AE$time)
+  levels(qn_data_long_GEM_AE$time)
+  
+# Calculate means/SD of the data
+  sumrepdat = summarySE(qn_data_long_GEM_AE, measurevar = "score", groupvars=c("group", "time"), na.rm = TRUE)
+
+# Plot effects
+ rc_GEM_AE = ggplot(qn_data_long_GEM_AE, aes(x = time, y = score, fill = group)) +
+  geom_flat_violin(aes(fill = group),position = position_nudge(x = .1, y = 0), adjust = 1.5, trim = FALSE, alpha = .3, colour = NA)+
+  geom_point(aes(x = as.numeric(time)-.15, y = score, colour = group),position = position_jitter(width = .05), size = .9, shape = 20)+
+  geom_boxplot(aes(x = time, y = score, fill = group),outlier.shape = NA, alpha = .5, width = .1, colour = "black")+
+  geom_line(data = sumrepdat, aes(x = as.numeric(time)+.1, y = score_mean, group = group, colour = group), linetype = 3)+
+  geom_point(data = sumrepdat, aes(x = as.numeric(time)+.1, y = score_mean, group = group, colour = group), shape = 18, size = 1.5) +
+  geom_errorbar(data = sumrepdat, aes(x = as.numeric(time)+.1,
+                                      y = score_mean, group = group, colour = group, ymin = score_mean-se, ymax = score_mean+se), width = .05, size = 1)+
+  scale_colour_manual(values = ZE_col)+
+  scale_fill_manual(values = ZE_col)+
+  scale_x_discrete(labels=c("T1","T2"))+
+  scale_y_continuous(name="Score", limits=c(-30, 40)) +
+  theme(legend.position = "bottom", legend.title = element_blank(), axis.title.x = element_blank())+
+  ggtitle("Affective Empathy")
+ 
+### GEM Total ###  
+ 
+# Select variable of interest 
+  qn_data_long_GEM_Total = subset(qn_data_long, time == "GEM_Total_T1" | time == "GEM_Total_T2")
+
+# Factor group variable 
+  qn_data_long_GEM_Total$group = factor(qn_data_long_GEM_Total$group)
+  (levels(qn_data_long_GEM_Total$group))
+
+# Factor variable of interest  
+  qn_data_long_GEM_Total$time = factor(qn_data_long_GEM_Total$time)
+  levels(qn_data_long_GEM_Total$time)
+  
+# Calculate means/SD of the data
+  sumrepdat = summarySE(qn_data_long_GEM_Total, measurevar = "score", groupvars=c("group", "time"), na.rm = TRUE)
+
+# Plot effects
+ rc_GEM_Total = ggplot(qn_data_long_GEM_Total, aes(x = time, y = score, fill = group)) +
+  geom_flat_violin(aes(fill = group),position = position_nudge(x = .1, y = 0), adjust = 1.5, trim = FALSE, alpha = .3, colour = NA)+
+  geom_point(aes(x = as.numeric(time)-.15, y = score, colour = group),position = position_jitter(width = .05), size = .9, shape = 20)+
+  geom_boxplot(aes(x = time, y = score, fill = group),outlier.shape = NA, alpha = .5, width = .1, colour = "black")+
+  geom_line(data = sumrepdat, aes(x = as.numeric(time)+.1, y = score_mean, group = group, colour = group), linetype = 3)+
+  geom_point(data = sumrepdat, aes(x = as.numeric(time)+.1, y = score_mean, group = group, colour = group), shape = 18, size = 1.5) +
+  geom_errorbar(data = sumrepdat, aes(x = as.numeric(time)+.1,
+                                      y = score_mean, group = group, colour = group, ymin = score_mean-se, ymax = score_mean+se), width = .05, size = 1)+
+  scale_colour_manual(values = ZE_col)+
+  scale_fill_manual(values = ZE_col)+
+  scale_x_discrete(labels=c("T1","T2"))+
+  scale_y_continuous(name="Score", limits=c(-30, 60)) +
+  theme(legend.position = "bottom", legend.title = element_blank(), axis.title.x = element_blank())+
+  ggtitle("GEM Total Score")
+ 
+# Display plots
+  fig_GEM = cowplot::plot_grid(rc_GEM_CE ,rc_GEM_AE, rc_GEM_Total, ncol=3, rel_widths=c(1, 1, 1))
+  fig_GEM 
+ 
+```
+
+#### Individual trajectories
+
+```{r GEM_change_stat}
+
+  CG_decr = sum(qn_data$d_GEM_Total[qn_data$group == "CG"] < 0  )
+  CG_incr = sum(qn_data$d_GEM_Total[qn_data$group == "CG"] > 0  )
+  CG_eq = sum(qn_data$d_GEM_Total[qn_data$group == "CG"] == 0  )
+  
+  TG_decr = sum(qn_data$d_GEM_Total[qn_data$group == "TG"] < 0  )
+  TG_incr = sum(qn_data$d_GEM_Total[qn_data$group == "TG"] > 0  )
+  TG_eq = sum(qn_data$d_GEM_Total[qn_data$group == "TG"] == 0  )
+
+```
+ 
+  + TG: `r TG_incr` participants showed an increase; `r TG_decr` participants showed a decrease; `r TG_eq` participants showed no change
+  + CG: `r CG_incr` participants showed an increase; `r CG_decr` participants showed a decrease; `r CG_eq` participants showed no change
+
+```{r indiv_traj_GEM}
+
+# https://medialab.github.io/iwanthue/
+
+# Define IDs as character variable 
+  qn_data_long_GEM_Total$ID = as.character(qn_data_long_GEM_Total$ID)
+
+# Separate by groups
+  qn_data_long_GEM_Total_CG = subset(qn_data_long_GEM_Total, group == "CG")
+
+# Line plot with multiple groups
+  CG_GEM_traj = ggplot(data = qn_data_long_GEM_Total_CG,
+         aes(x = time, y = score, group = ID)) +
+    geom_line(aes(color=ID)) +
+    geom_point(aes(color=ID)) +
+    ggtitle("CG") +
+    scale_x_discrete( labels = c("T1","T2")) +
+    scale_color_manual(values=c("#40c067","#b762df","#6ebf41","#7c4cc4","#2d9d30","#a335a2",
+                                "#a8be3a","#3b56cb","#c6b13d","#7573ef","#789226","#3a71dc",
+                                "#de8b21","#594eae","#e3a846","#6c8aec","#de6725","#4585d5",
+                                "#b92d1a","#34c78e","#e55fc6","#478125","#9b76da","#7bb766",
+                                "#e4458b","#4cd2c3","#e13c5e","#41c2d1","#e8583c","#58b8e3",
+                                "#a0461c","#5199cf","#9e8020","#d685e0","#3b7e3d","#b6317e",
+                                "#6ebf92","#7d4694","#a3ae68","#6859a7","#c27236","#4565a2",
+                                "#eb986b","#24978d","#b33e3f","#429369","#ab549d","#2a6a45",
+                                "#e473aa","#646f2b","#bf9de6","#7f5724","#9194d7","#9b7c42",
+                                "#89629d","#d0ab6f","#d78fc2","#b36853","#aa5b81","#e6716e",
+                                "#8b445c","#e18993","#af3e5c"))
+  
+  
+# Separate by groups
+  qn_data_long_GEM_Total_TG = subset(qn_data_long_GEM_Total, group == "TG")
+
+# Line plot with multiple groups
+  TG_GEM_traj = ggplot(data = qn_data_long_GEM_Total_TG,
+         aes(x = time, y = score, group = ID)) +
+    geom_line(aes(color=ID)) +
+    geom_point(aes(color=ID)) +
+    ggtitle("TG") +
+    scale_x_discrete( labels = c("T1","T2")) +
+    scale_color_manual(values=c("#a0461c","#5199cf","#9e8020","#d685e0","#3b7e3d","#b6317e",
+                                "#6ebf92","#7d4694","#a3ae68","#6859a7","#c27236","#4565a2",
+                                "#eb986b","#24978d","#b33e3f","#429369","#ab549d","#2a6a45",
+                                "#e473aa","#646f2b","#bf9de6","#7f5724","#9194d7","#9b7c42",
+                                "#89629d","#d0ab6f","#d78fc2","#b36853","#aa5b81","#e6716e",
+                                "#8b445c","#e18993","#af3e5c"))
+  
+# Display plots
+  fig_GEM_traj = cowplot::plot_grid(CG_GEM_traj, TG_GEM_traj, ncol=2, rel_widths=c(1, 1))
+  fig_GEM_traj 
+
+```
+
+### T1 Group-Differences {.tabset .tabset-pills}
+
+#### GEM CE
+
+```{r GEM_CE_T1_diff, results = 'asis'}
+
+  tadaa_t.test(data = qn_data , response = GEM_CE_T1, group = group, print = "markdown")
+
+```
+
+#### GEM AE
+
+```{r GEM_AE_T1_diff, results = 'asis'}
+
+  tadaa_t.test(data = qn_data , response = GEM_AE_T1, group = group, print = "markdown")
+
+```
+
+#### GEM Total
+
+```{r GEM_Total_T1_diff, results = 'asis'}
+
+  tadaa_t.test(data = qn_data , response = GEM_Total_T1, group = group, print = "markdown")
+
+```
+
+
+## EMK Empathy
+
+### Visualization {.tabset .tabset-pills}
+
+#### Group differences
+
+```{r raincloud_plot_EMK_EM}
+
+### EMK CH EM ###
+
+# Select variable of interest 
+  qn_data_long_EMK_EM_CH = subset(qn_data_long, time == "EMK_EM_CH_T1" | time == "EMK_EM_CH_T2")
+
+# Factor group variable 
+  qn_data_long_EMK_EM_CH$group = factor(qn_data_long_EMK_EM_CH$group)
+  (levels(qn_data_long_EMK_EM_CH$group))
+
+# Factor variable of interest  
+  qn_data_long_EMK_EM_CH$time = factor(qn_data_long_EMK_EM_CH$time)
+  levels(qn_data_long_EMK_EM_CH$time)
+  
+# Calculate means/SD of the data
+  sumrepdat = summarySE(qn_data_long_EMK_EM_CH, measurevar = "score", groupvars=c("group", "time"), na.rm = TRUE)
+
+# Plot effects
+ rc_EMK_EM_CH = ggplot(qn_data_long_EMK_EM_CH, aes(x = time, y = score, fill = group)) +
+  geom_flat_violin(aes(fill = group),position = position_nudge(x = .1, y = 0), adjust = 1.5, trim = FALSE, alpha = .3, colour = NA)+
+  geom_point(aes(x = as.numeric(time)-.15, y = score, colour = group),position = position_jitter(width = .05), size = .9, shape = 20)+
+  geom_boxplot(aes(x = time, y = score, fill = group),outlier.shape = NA, alpha = .5, width = .1, colour = "black")+
+  geom_line(data = sumrepdat, aes(x = as.numeric(time)+.1, y = score_mean, group = group, colour = group), linetype = 3)+
+  geom_point(data = sumrepdat, aes(x = as.numeric(time)+.1, y = score_mean, group = group, colour = group), shape = 18, size = 1.5) +
+  geom_errorbar(data = sumrepdat, aes(x = as.numeric(time)+.1,
+                                      y = score_mean, group = group, colour = group, ymin = score_mean-se, ymax = score_mean+se), width = .05, size = 1)+
+  scale_colour_manual(values = ZE_col)+
+  scale_fill_manual(values = ZE_col)+
+  scale_x_discrete(labels=c("T1","T2"))+
+ # scale_y_continuous(name="Score", limits=c(-5, 4)) +
+  theme(legend.position = "bottom", legend.title = element_blank(), axis.title.x = element_blank())+
+  ggtitle("EMK EM Child")
+ 
+ 
+### EMK P EM ### 
+ 
+# Select variable of interest 
+  qn_data_long_EMK_EM_P = subset(qn_data_long, time == "EMK_EM_P_T1" | time == "EMK_EM_P_T2")
+
+# Factor group variable 
+  qn_data_long_EMK_EM_P$group = factor(qn_data_long_EMK_EM_P$group)
+  (levels(qn_data_long_EMK_EM_P$group))
+
+# Factor variable of interest  
+  qn_data_long_EMK_EM_P$time = factor(qn_data_long_EMK_EM_P$time)
+  levels(qn_data_long_EMK_EM_P$time)
+  
+# Calculate means/SD of the data
+  sumrepdat = summarySE(qn_data_long_EMK_EM_P, measurevar = "score", groupvars=c("group", "time"), na.rm = TRUE)
+
+# Plot effects
+ rc_EMK_EM_P = ggplot(qn_data_long_EMK_EM_P, aes(x = time, y = score, fill = group)) +
+  geom_flat_violin(aes(fill = group),position = position_nudge(x = .1, y = 0), adjust = 1.5, trim = FALSE, alpha = .3, colour = NA)+
+  geom_point(aes(x = as.numeric(time)-.15, y = score, colour = group),position = position_jitter(width = .05), size = .9, shape = 20)+
+  geom_boxplot(aes(x = time, y = score, fill = group),outlier.shape = NA, alpha = .5, width = .1, colour = "black")+
+  geom_line(data = sumrepdat, aes(x = as.numeric(time)+.1, y = score_mean, group = group, colour = group), linetype = 3)+
+  geom_point(data = sumrepdat, aes(x = as.numeric(time)+.1, y = score_mean, group = group, colour = group), shape = 18, size = 1.5) +
+  geom_errorbar(data = sumrepdat, aes(x = as.numeric(time)+.1,
+                                      y = score_mean, group = group, colour = group, ymin = score_mean-se, ymax = score_mean+se), width = .05, size = 1)+
+  scale_colour_manual(values = ZE_col)+
+  scale_fill_manual(values = ZE_col)+
+  scale_x_discrete(labels=c("T1","T2"))+
+#  scale_y_continuous(name="Score", limits=c(-5, 4)) +
+  theme(legend.position = "bottom", legend.title = element_blank(), axis.title.x = element_blank())+
+  ggtitle("EMK EM Parent")
+
+### EMK EW composite score ### 
+ 
+  qn_data_long_EMK_EM_comp = qn_data_long_EMK_EM_P
+  
+  qn_data_long_EMK_EM_comp$comp = qn_data_long_EMK_EM_comp$score + qn_data_long_EMK_EM_CH$score
+ 
+# Factor group variable 
+  qn_data_long_EMK_EM_comp$group = factor(qn_data_long_EMK_EM_comp$group)
+  (levels(qn_data_long_EMK_EM_comp$group))
+
+# Factor variable of interest  
+  qn_data_long_EMK_EM_comp$time = factor(qn_data_long_EMK_EM_comp$time)
+  levels(qn_data_long_EMK_EM_comp$time)
+  
+# Calculate means/SD of the data
+  sumrepdat = summarySE(qn_data_long_EMK_EM_comp, measurevar = "comp", groupvars=c("group", "time"), na.rm = TRUE)
+
+# Plot effects
+ rc_EMK_EM_comp = ggplot(qn_data_long_EMK_EM_comp, aes(x = time, y = comp, fill = group)) +
+  geom_flat_violin(aes(fill = group),position = position_nudge(x = .1, y = 0), adjust = 1.5, trim = FALSE, alpha = .3, colour = NA)+
+  geom_point(aes(x = as.numeric(time)-.15, y = comp, colour = group),position = position_jitter(width = .05), size = .9, shape = 20)+
+  geom_boxplot(aes(x = time, y = comp, fill = group),outlier.shape = NA, alpha = .5, width = .1, colour = "black")+
+  geom_line(data = sumrepdat, aes(x = as.numeric(time)+.1, y = comp_mean, group = group, colour = group), linetype = 3)+
+  geom_point(data = sumrepdat, aes(x = as.numeric(time)+.1, y = comp_mean, group = group, colour = group), shape = 18, size = 1.5) +
+  geom_errorbar(data = sumrepdat, aes(x = as.numeric(time)+.1,
+                                      y = comp_mean, group = group, colour = group, ymin = comp_mean-se, ymax = comp_mean+se), width = .05, size = 1)+
+  scale_colour_manual(values = ZE_col)+
+  scale_fill_manual(values = ZE_col)+
+  scale_x_discrete(labels=c("T1","T2"))+
+ # scale_y_continuous(name="comp", limits=c(-5, 4)) +
+  theme(legend.position = "bottom", legend.title = element_blank(), axis.title.x = element_blank())+
+  ggtitle("EMK EM Composite") 
+ 
+# Display plots
+  fig_EMK_EM = cowplot::plot_grid(rc_EMK_EM_P, rc_EMK_EM_CH, rc_EMK_EM_comp, ncol=3, rel_widths=c(1, 1, 1))
+  fig_EMK_EM 
+
+```
+
+#### Individual trajectories
+
+**EMK EM CH**
+
+```{r EMK_EM_CH_change_stat}
+
+  CG_decr = sum(qn_data$d_EMK_EM_CH[qn_data$group == "CG"] < 0  )
+  CG_incr = sum(qn_data$d_EMK_EM_CH[qn_data$group == "CG"] > 0  )
+  CG_eq = sum(qn_data$d_EMK_EM_CH[qn_data$group == "CG"] == 0  )
+  
+  TG_decr = sum(qn_data$d_EMK_EM_CH[qn_data$group == "TG"] < 0  )
+  TG_incr = sum(qn_data$d_EMK_EM_CH[qn_data$group == "TG"] > 0  )
+  TG_eq = sum(qn_data$d_EMK_EM_CH[qn_data$group == "TG"] == 0  )
+
+```
+ 
+  + TG: `r TG_incr` participants showed an increase; `r TG_decr` participants showed a decrease; `r TG_eq` participants showed no change
+  + CG: `r CG_incr` participants showed an increase; `r CG_decr` participants showed a decrease; `r CG_eq` participants showed no change
+
+```{r indiv_traj_EMK_EM_CH}
+
+# https://medialab.github.io/iwanthue/
+
+# Define IDs as character variable 
+  qn_data_long_EMK_EM_CH$ID = as.character(qn_data_long_EMK_EM_CH$ID)
+
+# Separate by groups
+  qn_data_long_EMK_EM_CH_CG = subset(qn_data_long_EMK_EM_CH, group == "CG")
+
+# Line plot with multiple groups
+  CG_EMK_EM_CH_traj = ggplot(data = qn_data_long_EMK_EM_CH_CG,
+         aes(x = time, y = score, group = ID)) +
+    geom_line(aes(color=ID)) +
+    geom_point(aes(color=ID)) +
+    ggtitle("CG") +
+    scale_x_discrete( labels = c("T1","T2")) +
+    scale_color_manual(values=c("#40c067","#b762df","#6ebf41","#7c4cc4","#2d9d30","#a335a2",
+                                "#a8be3a","#3b56cb","#c6b13d","#7573ef","#789226","#3a71dc",
+                                "#de8b21","#594eae","#e3a846","#6c8aec","#de6725","#4585d5",
+                                "#b92d1a","#34c78e","#e55fc6","#478125","#9b76da","#7bb766",
+                                "#e4458b","#4cd2c3","#e13c5e","#41c2d1","#e8583c","#58b8e3",
+                                "#a0461c","#5199cf","#9e8020","#d685e0","#3b7e3d","#b6317e",
+                                "#6ebf92","#7d4694","#a3ae68","#6859a7","#c27236","#4565a2",
+                                "#eb986b","#24978d","#b33e3f","#429369","#ab549d","#2a6a45",
+                                "#e473aa","#646f2b","#bf9de6","#7f5724","#9194d7","#9b7c42",
+                                "#89629d","#d0ab6f","#d78fc2","#b36853","#aa5b81","#e6716e",
+                                "#8b445c","#e18993","#af3e5c"))
+  
+  
+# Separate by groups
+  qn_data_long_EMK_EM_CH_TG = subset(qn_data_long_EMK_EM_CH, group == "TG")
+
+# Line plot with multiple groups
+  TG_EMK_EM_CH_traj = ggplot(data = qn_data_long_EMK_EM_CH_TG,
+         aes(x = time, y = score, group = ID)) +
+    geom_line(aes(color=ID)) +
+    geom_point(aes(color=ID)) +
+    ggtitle("TG") +
+    scale_x_discrete( labels = c("T1","T2")) +
+    scale_color_manual(values=c("#a0461c","#5199cf","#9e8020","#d685e0","#3b7e3d","#b6317e",
+                                "#6ebf92","#7d4694","#a3ae68","#6859a7","#c27236","#4565a2",
+                                "#eb986b","#24978d","#b33e3f","#429369","#ab549d","#2a6a45",
+                                "#e473aa","#646f2b","#bf9de6","#7f5724","#9194d7","#9b7c42",
+                                "#89629d","#d0ab6f","#d78fc2","#b36853","#aa5b81","#e6716e",
+                                "#8b445c","#e18993","#af3e5c"))
+  
+# Display plots
+  fig_EMK_EM_CH_traj = cowplot::plot_grid(CG_EMK_EM_CH_traj, TG_EMK_EM_CH_traj, ncol=2, rel_widths=c(1, 1))
+  fig_EMK_EM_CH_traj 
+
+```
+
+**EMK EM P**
+
+```{r EMK_EM_P_change_stat}
+
+  CG_decr = sum(qn_data$d_EMK_EM_P[qn_data$group == "CG"] < 0  )
+  CG_incr = sum(qn_data$d_EMK_EM_P[qn_data$group == "CG"] > 0  )
+  CG_eq = sum(qn_data$d_EMK_EM_P[qn_data$group == "CG"] == 0  )
+  
+  TG_decr = sum(qn_data$d_EMK_EM_P[qn_data$group == "TG"] < 0  )
+  TG_incr = sum(qn_data$d_EMK_EM_P[qn_data$group == "TG"] > 0  )
+  TG_eq = sum(qn_data$d_EMK_EM_P[qn_data$group == "TG"] == 0  )
+
+```
+ 
+  + TG: `r TG_incr` participants showed an increase; `r TG_decr` participants showed a decrease; `r TG_eq` participants showed no change
+  + CG: `r CG_incr` participants showed an increase; `r CG_decr` participants showed a decrease; `r CG_eq` participants showed no change
+
+  + TG interesting trajectories: 
+    + Sharpest decreases: 47, 59
+    
+  + CG interesting trajectories: 
+    + Sharpest increase: 22
+
+```{r indiv_traj_EMK_EM_P}
+
+# https://medialab.github.io/iwanthue/
+
+# Define IDs as character variable 
+  qn_data_long_EMK_EM_P$ID = as.character(qn_data_long_EMK_EM_P$ID)
+
+# Separate by groups
+  qn_data_long_EMK_EM_P_CG = subset(qn_data_long_EMK_EM_P, group == "CG")
+
+# Line plot with multiple groups
+  CG_EMK_EM_P_traj = ggplot(data = qn_data_long_EMK_EM_P_CG,
+         aes(x = time, y = score, group = ID)) +
+    geom_line(aes(color=ID)) +
+    geom_point(aes(color=ID)) +
+    ggtitle("CG") +
+    scale_x_discrete( labels = c("T1","T2")) +
+    scale_color_manual(values=c("#40c067","#b762df","#6ebf41","#7c4cc4","#2d9d30","#a335a2",
+                                "#a8be3a","#3b56cb","#c6b13d","#7573ef","#789226","#3a71dc",
+                                "#de8b21","#594eae","#e3a846","#6c8aec","#de6725","#4585d5",
+                                "#b92d1a","#34c78e","#e55fc6","#478125","#9b76da","#7bb766",
+                                "#e4458b","#4cd2c3","#e13c5e","#41c2d1","#e8583c","#58b8e3",
+                                "#a0461c","#5199cf","#9e8020","#d685e0","#3b7e3d","#b6317e",
+                                "#6ebf92","#7d4694","#a3ae68","#6859a7","#c27236","#4565a2",
+                                "#eb986b","#24978d","#b33e3f","#429369","#ab549d","#2a6a45",
+                                "#e473aa","#646f2b","#bf9de6","#7f5724","#9194d7","#9b7c42",
+                                "#89629d","#d0ab6f","#d78fc2","#b36853","#aa5b81","#e6716e",
+                                "#8b445c","#e18993","#af3e5c"))
+  
+  
+# Separate by groups
+  qn_data_long_EMK_EM_P_TG = subset(qn_data_long_EMK_EM_P, group == "TG")
+
+# Line plot with multiple groups
+  TG_EMK_EM_P_traj = ggplot(data = qn_data_long_EMK_EM_P_TG,
+         aes(x = time, y = score, group = ID)) +
+    geom_line(aes(color=ID)) +
+    geom_point(aes(color=ID)) +
+    ggtitle("TG") +
+    scale_x_discrete( labels = c("T1","T2")) +
+    scale_color_manual(values=c("#a0461c","#5199cf","#9e8020","#d685e0","#3b7e3d","#b6317e",
+                                "#6ebf92","#7d4694","#a3ae68","#6859a7","#c27236","#4565a2",
+                                "#eb986b","#24978d","#b33e3f","#429369","#ab549d","#2a6a45",
+                                "#e473aa","#646f2b","#bf9de6","#7f5724","#9194d7","#9b7c42",
+                                "#89629d","#d0ab6f","#d78fc2","#b36853","#aa5b81","#e6716e",
+                                "#8b445c","#e18993","#af3e5c"))
+  
+# Display plots
+  fig_EMK_EM_P_traj = cowplot::plot_grid(CG_EMK_EM_P_traj, TG_EMK_EM_P_traj, ncol=2, rel_widths=c(1, 1))
+  fig_EMK_EM_P_traj 
+
+```
+
+
+### T1 Group-Differences {.tabset .tabset-pills}
+
+#### EMK empathy child assessment 
+
+```{r EMK_CH_EM_T1_diff, results = 'asis'}
+
+  tadaa_t.test(data = qn_data , response = EMK_EM_CH_T1, group = group, print = "markdown")
+
+```
+
+#### EMK empathy parental questionnaire
+
+```{r EMK_P_EM_T1_diff, results = 'asis'}
+
+  tadaa_t.test(data = qn_data , response = EMK_EM_P_T1, group = group, print = "markdown")
+
+```
+
+
+# Secondary outcomes {.tabset .tabset-pills}
+
+## EMK Emotion knowledge
+
+### Visualization {.tabset .tabset-pills}
+
+#### Group differences
+
+```{r raincloud_plot_EMK_PE}
+
+### EMK CH PE ###
+
+# Select variable of interest 
+  qn_data_long_EMK_EK_CH = subset(qn_data_long, time == "EMK_EK_CH_T1" | time == "EMK_EK_CH_T2")
+
+# Factor group variable 
+  qn_data_long_EMK_EK_CH$group = factor(qn_data_long_EMK_EK_CH$group)
+  (levels(qn_data_long_EMK_EK_CH$group))
+
+# Factor variable of interest  
+  qn_data_long_EMK_EK_CH$time = factor(qn_data_long_EMK_EK_CH$time)
+  levels(qn_data_long_EMK_EK_CH$time)
+  
+# Calculate means/SD of the data
+  sumrepdat = summarySE(qn_data_long_EMK_EK_CH, measurevar = "score", groupvars=c("group", "time"), na.rm = TRUE)
+
+# Plot effects
+ rc_EMK_EK_CH = ggplot(qn_data_long_EMK_EK_CH, aes(x = time, y = score, fill = group)) +
+  geom_flat_violin(aes(fill = group),position = position_nudge(x = .1, y = 0), adjust = 1.5, trim = FALSE, alpha = .3, colour = NA)+
+  geom_point(aes(x = as.numeric(time)-.15, y = score, colour = group),position = position_jitter(width = .05), size = .9, shape = 20)+
+  geom_boxplot(aes(x = time, y = score, fill = group),outlier.shape = NA, alpha = .5, width = .1, colour = "black")+
+  geom_line(data = sumrepdat, aes(x = as.numeric(time)+.1, y = score_mean, group = group, colour = group), linetype = 3)+
+  geom_point(data = sumrepdat, aes(x = as.numeric(time)+.1, y = score_mean, group = group, colour = group), shape = 18, size = 1.5) +
+  geom_errorbar(data = sumrepdat, aes(x = as.numeric(time)+.1,
+                                      y = score_mean, group = group, colour = group, ymin = score_mean-se, ymax = score_mean+se), width = .05, size = 1)+
+  scale_colour_manual(values = ZE_col)+
+  scale_fill_manual(values = ZE_col)+
+  scale_x_discrete(labels=c("T1","T2"))+
+ # scale_y_continuous(name="Score", limits=c(-5, 4)) +
+  theme(legend.position = "bottom", legend.title = element_blank(), axis.title.x = element_blank())+
+  ggtitle("EMK EK Child")
+ 
+### EMK P EW ### 
+ 
+# Select variable of interest 
+  qn_data_long_EMK_EK_P = subset(qn_data_long, time == "EMK_EK_P_T1" | time == "EMK_EK_P_T2")
+
+# Factor group variable 
+  qn_data_long_EMK_EK_P$group = factor(qn_data_long_EMK_EK_P$group)
+  (levels(qn_data_long_EMK_EK_P$group))
+
+# Factor variable of interest  
+  qn_data_long_EMK_EK_P$time = factor(qn_data_long_EMK_EK_P$time)
+  levels(qn_data_long_EMK_EK_P$time)
+  
+# Calculate means/SD of the data
+  sumrepdat = summarySE(qn_data_long_EMK_EK_P, measurevar = "score", groupvars=c("group", "time"), na.rm = TRUE)
+
+# Plot effects
+ rc_EMK_EK_P = ggplot(qn_data_long_EMK_EK_P, aes(x = time, y = score, fill = group)) +
+  geom_flat_violin(aes(fill = group),position = position_nudge(x = .1, y = 0), adjust = 1.5, trim = FALSE, alpha = .3, colour = NA)+
+  geom_point(aes(x = as.numeric(time)-.15, y = score, colour = group),position = position_jitter(width = .05), size = .9, shape = 20)+
+  geom_boxplot(aes(x = time, y = score, fill = group),outlier.shape = NA, alpha = .5, width = .1, colour = "black")+
+  geom_line(data = sumrepdat, aes(x = as.numeric(time)+.1, y = score_mean, group = group, colour = group), linetype = 3)+
+  geom_point(data = sumrepdat, aes(x = as.numeric(time)+.1, y = score_mean, group = group, colour = group), shape = 18, size = 1.5) +
+  geom_errorbar(data = sumrepdat, aes(x = as.numeric(time)+.1,
+                                      y = score_mean, group = group, colour = group, ymin = score_mean-se, ymax = score_mean+se), width = .05, size = 1)+
+  scale_colour_manual(values = ZE_col)+
+  scale_fill_manual(values = ZE_col)+
+  scale_x_discrete(labels=c("T1","T2"))+
+ # scale_y_continuous(name="Score", limits=c(-5, 4)) +
+  theme(legend.position = "bottom", legend.title = element_blank(), axis.title.x = element_blank())+
+  ggtitle("EMK EK Parent")
+ 
+### EMK EW composite score ### 
+ 
+  qn_data_long_EMK_EK_comp = qn_data_long_EMK_EK_P
+  
+  qn_data_long_EMK_EK_comp$comp = qn_data_long_EMK_EK_comp$score + qn_data_long_EMK_EK_CH$score
+ 
+# Factor group variable 
+  qn_data_long_EMK_EK_comp$group = factor(qn_data_long_EMK_EK_comp$group)
+  (levels(qn_data_long_EMK_EK_comp$group))
+
+# Factor variable of interest  
+  qn_data_long_EMK_EK_comp$time = factor(qn_data_long_EMK_EK_comp$time)
+  levels(qn_data_long_EMK_EK_comp$time)
+  
+# Calculate means/SD of the data
+  sumrepdat = summarySE(qn_data_long_EMK_EK_comp, measurevar = "comp", groupvars=c("group", "time"), na.rm = TRUE)
+
+# Plot effects
+ rc_EMK_EK_comp = ggplot(qn_data_long_EMK_EK_comp, aes(x = time, y = comp, fill = group)) +
+  geom_flat_violin(aes(fill = group),position = position_nudge(x = .1, y = 0), adjust = 1.5, trim = FALSE, alpha = .3, colour = NA)+
+  geom_point(aes(x = as.numeric(time)-.15, y = comp, colour = group),position = position_jitter(width = .05), size = .9, shape = 20)+
+  geom_boxplot(aes(x = time, y = comp, fill = group),outlier.shape = NA, alpha = .5, width = .1, colour = "black")+
+  geom_line(data = sumrepdat, aes(x = as.numeric(time)+.1, y = comp_mean, group = group, colour = group), linetype = 3)+
+  geom_point(data = sumrepdat, aes(x = as.numeric(time)+.1, y = comp_mean, group = group, colour = group), shape = 18, size = 1.5) +
+  geom_errorbar(data = sumrepdat, aes(x = as.numeric(time)+.1,
+                                      y = comp_mean, group = group, colour = group, ymin = comp_mean-se, ymax = comp_mean+se), width = .05, size = 1)+
+  scale_colour_manual(values = ZE_col)+
+  scale_fill_manual(values = ZE_col)+
+  scale_x_discrete(labels=c("T1","T2"))+
+ # scale_y_continuous(name="comp", limits=c(-5, 4)) +
+  theme(legend.position = "bottom", legend.title = element_blank(), axis.title.x = element_blank())+
+  ggtitle("EMK EK Composite") 
+ 
+# Display plots
+  fig_EMK_EK = cowplot::plot_grid(rc_EMK_EK_P, rc_EMK_EK_CH, rc_EMK_EK_comp, ncol=3, rel_widths=c(1, 1, 1))
+  fig_EMK_EK 
+
+```
+
+#### Individual trajectories
+
+**EMK PE CH**
+
+```{r EMK_EK_CH_change_stat}
+
+  CG_decr = sum(qn_data$d_EMK_EK_CH[qn_data$group == "CG"] < 0  )
+  CG_incr = sum(qn_data$d_EMK_EK_CH[qn_data$group == "CG"] > 0  )
+  CG_eq = sum(qn_data$d_EMK_EK_CH[qn_data$group == "CG"] == 0  )
+  
+  TG_decr = sum(qn_data$d_EMK_EK_CH[qn_data$group == "TG"] < 0  )
+  TG_incr = sum(qn_data$d_EMK_EK_CH[qn_data$group == "TG"] > 0  )
+  TG_eq = sum(qn_data$d_EMK_EK_CH[qn_data$group == "TG"] == 0  )
+
+```
+
+  + TG: `r TG_incr` participants showed an increase; `r TG_decr` participants showed a decrease; `r TG_eq` participants showed no change
+  + CG: `r CG_incr` participants showed an increase; `r CG_decr` participants showed a decrease; `r CG_eq` participants showed no change
+
+```{r indiv_traj_EMK_EK_CH}
+
+# https://medialab.github.io/iwanthue/
+
+# Define IDs as character variable 
+  qn_data_long_EMK_EK_CH$ID = as.character(qn_data_long_EMK_EK_CH$ID)
+
+# Separate by groups
+  qn_data_long_EMK_EK_CH_CG = subset(qn_data_long_EMK_EK_CH, group == "CG")
+
+# Line plot with multiple groups
+  CG_EMK_EK_CH_traj = ggplot(data = qn_data_long_EMK_EK_CH_CG,
+         aes(x = time, y = score, group = ID)) +
+    geom_line(aes(color=ID)) +
+    geom_point(aes(color=ID)) +
+    ggtitle("CG") +
+    scale_x_discrete( labels = c("T1","T2")) +
+    scale_color_manual(values=c("#40c067","#b762df","#6ebf41","#7c4cc4","#2d9d30","#a335a2",
+                                "#a8be3a","#3b56cb","#c6b13d","#7573ef","#789226","#3a71dc",
+                                "#de8b21","#594eae","#e3a846","#6c8aec","#de6725","#4585d5",
+                                "#b92d1a","#34c78e","#e55fc6","#478125","#9b76da","#7bb766",
+                                "#e4458b","#4cd2c3","#e13c5e","#41c2d1","#e8583c","#58b8e3",
+                                "#a0461c","#5199cf","#9e8020","#d685e0","#3b7e3d","#b6317e",
+                                "#6ebf92","#7d4694","#a3ae68","#6859a7","#c27236","#4565a2",
+                                "#eb986b","#24978d","#b33e3f","#429369","#ab549d","#2a6a45",
+                                "#e473aa","#646f2b","#bf9de6","#7f5724","#9194d7","#9b7c42",
+                                "#89629d","#d0ab6f","#d78fc2","#b36853","#aa5b81","#e6716e",
+                                "#8b445c","#e18993","#af3e5c"))
+  
+  
+# Separate by groups
+  qn_data_long_EMK_EK_CH_TG = subset(qn_data_long_EMK_EK_CH, group == "TG")
+
+# Line plot with multiple groups
+  TG_EMK_EK_CH_traj = ggplot(data = qn_data_long_EMK_EK_CH_TG,
+         aes(x = time, y = score, group = ID)) +
+    geom_line(aes(color=ID)) +
+    geom_point(aes(color=ID)) +
+    ggtitle("TG") +
+    scale_x_discrete( labels = c("T1","T2")) +
+    scale_color_manual(values=c("#a0461c","#5199cf","#9e8020","#d685e0","#3b7e3d","#b6317e",
+                                "#6ebf92","#7d4694","#a3ae68","#6859a7","#c27236","#4565a2",
+                                "#eb986b","#24978d","#b33e3f","#429369","#ab549d","#2a6a45",
+                                "#e473aa","#646f2b","#bf9de6","#7f5724","#9194d7","#9b7c42",
+                                "#89629d","#d0ab6f","#d78fc2","#b36853","#aa5b81","#e6716e",
+                                "#8b445c","#e18993","#af3e5c"))
+  
+# Display plots
+  fig_EMK_EK_CH_traj = cowplot::plot_grid(CG_EMK_EK_CH_traj, TG_EMK_EK_CH_traj, ncol=2, rel_widths=c(1, 1))
+  fig_EMK_EK_CH_traj 
+
+```
+
+**EMK EW P**
+
+```{r EMK_EK_P_change_stat}
+
+  CG_decr = sum(qn_data$d_EMK_EK_P[qn_data$group == "CG"] < 0  )
+  CG_incr = sum(qn_data$d_EMK_EK_P[qn_data$group == "CG"] > 0  )
+  CG_eq = sum(qn_data$d_EMK_EK_P[qn_data$group == "CG"] == 0  )
+  
+  TG_decr = sum(qn_data$d_EMK_EK_P[qn_data$group == "TG"] < 0  )
+  TG_incr = sum(qn_data$d_EMK_EK_P[qn_data$group == "TG"] > 0  )
+  TG_eq = sum(qn_data$d_EMK_EK_P[qn_data$group == "TG"] == 0  )
+  
+    qn_data$EMK_EK_CH_T2[qn_data$ID == 39]
+
+```
+ 
+  + TG: `r TG_incr` participants showed an increase; `r TG_decr` participants showed a decrease; `r TG_eq` participants showed no change
+  + CG: `r CG_incr` participants showed an increase; `r CG_decr` participants showed a decrease; `r CG_eq` participants showed no change
+
+  + Majority of participants showed no change 
+
+```{r indiv_traj_EMK_EK_P}
+
+# https://medialab.github.io/iwanthue/
+
+# Define IDs as character variable 
+  qn_data_long_EMK_EK_P$ID = as.character(qn_data_long_EMK_EK_P$ID)
+
+# Separate by groups
+  qn_data_long_EMK_EK_P_CG = subset(qn_data_long_EMK_EK_P, group == "CG")
+
+# Line plot with multiple groups
+  CG_EMK_EK_P_traj = ggplot(data = qn_data_long_EMK_EK_P_CG,
+         aes(x = time, y = score, group = ID)) +
+    geom_line(aes(color=ID)) +
+    geom_point(aes(color=ID)) +
+    ggtitle("CG") +
+    scale_x_discrete( labels = c("T1","T2")) +
+    scale_color_manual(values=c("#40c067","#b762df","#6ebf41","#7c4cc4","#2d9d30","#a335a2",
+                                "#a8be3a","#3b56cb","#c6b13d","#7573ef","#789226","#3a71dc",
+                                "#de8b21","#594eae","#e3a846","#6c8aec","#de6725","#4585d5",
+                                "#b92d1a","#34c78e","#e55fc6","#478125","#9b76da","#7bb766",
+                                "#e4458b","#4cd2c3","#e13c5e","#41c2d1","#e8583c","#58b8e3",
+                                "#a0461c","#5199cf","#9e8020","#d685e0","#3b7e3d","#b6317e",
+                                "#6ebf92","#7d4694","#a3ae68","#6859a7","#c27236","#4565a2",
+                                "#eb986b","#24978d","#b33e3f","#429369","#ab549d","#2a6a45",
+                                "#e473aa","#646f2b","#bf9de6","#7f5724","#9194d7","#9b7c42",
+                                "#89629d","#d0ab6f","#d78fc2","#b36853","#aa5b81","#e6716e",
+                                "#8b445c","#e18993","#af3e5c"))
+  
+  
+# Separate by groups
+  qn_data_long_EMK_EK_P_TG = subset(qn_data_long_EMK_EK_P, group == "TG")
+
+# Line plot with multiple groups
+  TG_EMK_EK_P_traj = ggplot(data = qn_data_long_EMK_EK_P_TG,
+         aes(x = time, y = score, group = ID)) +
+    geom_line(aes(color=ID)) +
+    geom_point(aes(color=ID)) +
+    ggtitle("TG") +
+    scale_x_discrete( labels = c("T1","T2")) +
+    scale_color_manual(values=c("#a0461c","#5199cf","#9e8020","#d685e0","#3b7e3d","#b6317e",
+                                "#6ebf92","#7d4694","#a3ae68","#6859a7","#c27236","#4565a2",
+                                "#eb986b","#24978d","#b33e3f","#429369","#ab549d","#2a6a45",
+                                "#e473aa","#646f2b","#bf9de6","#7f5724","#9194d7","#9b7c42",
+                                "#89629d","#d0ab6f","#d78fc2","#b36853","#aa5b81","#e6716e",
+                                "#8b445c","#e18993","#af3e5c"))
+  
+# Display plots
+  fig_EMK_EK_P_traj = cowplot::plot_grid(CG_EMK_EK_P_traj, TG_EMK_EK_P_traj, ncol=2, rel_widths=c(1, 1))
+  fig_EMK_EK_P_traj 
+
+```
+
+
+### T1 Group-Differences {.tabset .tabset-pills}
+
+#### EMK emotion knowledge child assessment 
+
+```{r EMK_CH_EK_T1_diff, results = 'asis'}
+
+  tadaa_t.test(data = qn_data , response = EMK_EK_CH_T1, group = group, print = "markdown")
+
+```
+
+#### EMK emotion knowledge parental questionnare 
+
+```{r EMK_EK_P_T1_diff, results = 'asis'}
+
+  tadaa_t.test(data = qn_data , response = EMK_EK_P_T1, group = group, print = "markdown")
+
+```
+
+## EMK Prosocial behavior
+
+### Visualization {.tabset .tabset-pills}
+
+#### Group differences
+
+```{r raincloud_plot_EMK_PB_CH}
+
+### EMK CH PV ###
+
+# Select variable of interest 
+  qn_data_long_EMK_PB_CH = subset(qn_data_long, time == "EMK_PB_CH_T1" | time == "EMK_PB_CH_T2")
+
+# Factor group variable 
+  qn_data_long_EMK_PB_CH$group = factor(qn_data_long_EMK_PB_CH$group)
+  (levels(qn_data_long_EMK_PB_CH$group))
+
+# Factor variable of interest  
+  qn_data_long_EMK_PB_CH$time = factor(qn_data_long_EMK_PB_CH$time)
+  levels(qn_data_long_EMK_PB_CH$time)
+  
+# Calculate means/SD of the data
+  sumrepdat = summarySE(qn_data_long_EMK_PB_CH, measurevar = "score", groupvars=c("group", "time"), na.rm = TRUE)
+
+# Plot effects   
+ rc_EMK_PB_CH = ggplot(qn_data_long_EMK_PB_CH, aes(x = time, y = score, fill = group)) +
+  geom_flat_violin(aes(fill = group),position = position_nudge(x = .1, y = 0), adjust = 1.5, trim = FALSE, alpha = .3, colour = NA)+
+  geom_point(aes(x = as.numeric(time)-.15, y = score, colour = group),position = position_jitter(width = .05), size = .9, shape = 20)+
+  geom_boxplot(aes(x = time, y = score, fill = group),outlier.shape = NA, alpha = .5, width = .1, colour = "black")+
+  geom_line(data = sumrepdat, aes(x = as.numeric(time)+.1, y = score_mean, group = group, colour = group), linetype = 3)+
+  geom_point(data = sumrepdat, aes(x = as.numeric(time)+.1, y = score_mean, group = group, colour = group), shape = 18, size = 1.5) +
+  geom_errorbar(data = sumrepdat, aes(x = as.numeric(time)+.1,
+                                      y = score_mean, group = group, colour = group, ymin = score_mean-se, ymax = score_mean+se), width = .05, size = 1)+
+  scale_colour_manual(values = ZE_col)+
+  scale_fill_manual(values = ZE_col)+
+  scale_x_discrete(labels=c("T1","T2"))+
+ # scale_y_continuous(name="Score", limits=c(-5, 4)) +
+  theme(legend.position = "bottom", legend.title = element_blank(), axis.title.x = element_blank())+
+  ggtitle("EMK PB Child")
+  
+  
+# Display plots
+  fig_EMK_PB_CH  = cowplot::plot_grid(rc_EMK_PB_CH, ncol=3, rel_widths=c(1, 1))
+  fig_EMK_PB_CH   
+
+```
+
+#### Individual trajectories
+
+```{r EMK_PB_CH_change_stat}
+
+  CG_decr = sum(qn_data$d_EMK_PB_CH[qn_data$group == "CG"] < 0  )
+  CG_incr = sum(qn_data$d_EMK_PB_CH[qn_data$group == "CG"] > 0  )
+  CG_eq = sum(qn_data$d_EMK_PB_CH[qn_data$group == "CG"] == 0  )
+  
+  TG_decr = sum(qn_data$d_EMK_PB_CH[qn_data$group == "TG"] < 0  )
+  TG_incr = sum(qn_data$d_EMK_PB_CH[qn_data$group == "TG"] > 0  )
+  TG_eq = sum(qn_data$d_EMK_PB_CH[qn_data$group == "TG"] == 0  )
+
+```
+ 
+  + TG: `r TG_incr` participants showed an increase; `r TG_decr` participants showed a decrease; `r TG_eq` participants showed no change
+  + CG: `r CG_incr` participants showed an increase; `r CG_decr` participants showed a decrease; `r CG_eq` participants showed no change
+
+```{r indiv_traj_EMK_PB_CH}
+
+# https://medialab.github.io/iwanthue/
+
+# Define IDs as character variable 
+  qn_data_long_EMK_PB_CH$ID = as.character(qn_data_long_EMK_PB_CH$ID)
+
+# Separate by groups
+  qn_data_long_EMK_PB_CH_CG = subset(qn_data_long_EMK_PB_CH, group == "CG")
+
+# Line plot with multiple groups
+  CG_EMK_PB_CH_traj = ggplot(data = qn_data_long_EMK_PB_CH_CG,
+         aes(x = time, y = score, group = ID)) +
+    geom_line(aes(color=ID)) +
+    geom_point(aes(color=ID)) +
+    ggtitle("CG") +
+    scale_x_discrete( labels = c("T1","T2")) +
+    scale_color_manual(values=c("#40c067","#b762df","#6ebf41","#7c4cc4","#2d9d30","#a335a2",
+                                "#a8be3a","#3b56cb","#c6b13d","#7573ef","#789226","#3a71dc",
+                                "#de8b21","#594eae","#e3a846","#6c8aec","#de6725","#4585d5",
+                                "#b92d1a","#34c78e","#e55fc6","#478125","#9b76da","#7bb766",
+                                "#e4458b","#4cd2c3","#e13c5e","#41c2d1","#e8583c","#58b8e3",
+                                "#a0461c","#5199cf","#9e8020","#d685e0","#3b7e3d","#b6317e",
+                                "#6ebf92","#7d4694","#a3ae68","#6859a7","#c27236","#4565a2",
+                                "#eb986b","#24978d","#b33e3f","#429369","#ab549d","#2a6a45",
+                                "#e473aa","#646f2b","#bf9de6","#7f5724","#9194d7","#9b7c42",
+                                "#89629d","#d0ab6f","#d78fc2","#b36853","#aa5b81","#e6716e",
+                                "#8b445c","#e18993","#af3e5c"))
+  
+  
+# Separate by groups
+  qn_data_long_EMK_PB_CH_TG = subset(qn_data_long_EMK_PB_CH, group == "TG")
+
+# Line plot with multiple groups
+  TG_EMK_PB_CH_traj = ggplot(data = qn_data_long_EMK_PB_CH_TG,
+         aes(x = time, y = score, group = ID)) +
+    geom_line(aes(color=ID)) +
+    geom_point(aes(color=ID)) +
+    ggtitle("TG") +
+    scale_x_discrete( labels = c("T1","T2")) +
+    scale_color_manual(values=c("#a0461c","#5199cf","#9e8020","#d685e0","#3b7e3d","#b6317e",
+                                "#6ebf92","#7d4694","#a3ae68","#6859a7","#c27236","#4565a2",
+                                "#eb986b","#24978d","#b33e3f","#429369","#ab549d","#2a6a45",
+                                "#e473aa","#646f2b","#bf9de6","#7f5724","#9194d7","#9b7c42",
+                                "#89629d","#d0ab6f","#d78fc2","#b36853","#aa5b81","#e6716e",
+                                "#8b445c","#e18993","#af3e5c"))
+  
+# Display plots
+  fig_EMK_PB_CH_traj = cowplot::plot_grid(CG_EMK_PB_CH_traj, TG_EMK_PB_CH_traj, ncol=2, rel_widths=c(1, 1))
+  fig_EMK_PB_CH_traj 
+
+```
+
+### T1 Group-Differences {.tabset .tabset-pills}
+
+```{r EMK_PB_CH_T1_diff, results = 'asis'}
+
+  tadaa_t.test(data = qn_data , response = EMK_PB_CH_T1, group = group, print = "markdown")
+
+```
+
+## SDQ
+
+### Visualization {.tabset .tabset-pills}
+
+#### Group differences
+
+```{r raincloud_plot_SDQ}
+
+### SDQ Prosocial behavior ###
+
+# Select variable of interest 
+  qn_data_long_SDQ_PB = subset(qn_data_long, time == "SDQ_PB_T1" | time == "SDQ_PB_T2")
+
+# Factor group variable 
+  qn_data_long_SDQ_PB$group = factor(qn_data_long_SDQ_PB$group)
+  (levels(qn_data_long_SDQ_PB$group))
+
+# Factor variable of interest  
+  qn_data_long_SDQ_PB$time = factor(qn_data_long_SDQ_PB$time)
+  levels(qn_data_long_SDQ_PB$time)
+  
+# Calculate means/SD of the data
+  sumrepdat = summarySE(qn_data_long_SDQ_PB, measurevar = "score", groupvars=c("group", "time"), na.rm = TRUE)
+
+# Plot effects
+ rc_SDQ_PB = ggplot(qn_data_long_SDQ_PB, aes(x = time, y = score, fill = group)) +
+  geom_flat_violin(aes(fill = group),position = position_nudge(x = .1, y = 0), adjust = 1.5, trim = FALSE, alpha = .3, colour = NA)+
+  geom_point(aes(x = as.numeric(time)-.15, y = score, colour = group),position = position_jitter(width = .05), size = .9, shape = 20)+
+  geom_boxplot(aes(x = time, y = score, fill = group),outlier.shape = NA, alpha = .5, width = .1, colour = "black")+
+  geom_line(data = sumrepdat, aes(x = as.numeric(time)+.1, y = score_mean, group = group, colour = group), linetype = 3)+
+  geom_point(data = sumrepdat, aes(x = as.numeric(time)+.1, y = score_mean, group = group, colour = group), shape = 18, size = 1.5) +
+  geom_errorbar(data = sumrepdat, aes(x = as.numeric(time)+.1,
+                                      y = score_mean, group = group, colour = group, ymin = score_mean-se, ymax = score_mean+se), width = .05, size = 1)+
+  scale_colour_manual(values = ZE_col)+
+  scale_fill_manual(values = ZE_col)+
+  scale_x_discrete(labels=c("T1","T2"))+
+ # scale_y_continuous(name="Score", limits=c(-5, 4)) +
+  theme(legend.position = "bottom", legend.title = element_blank(), axis.title.x = element_blank())+
+  ggtitle("SDQ PB")
+ 
+### SDQ Problem Score ###  
+  
+# Select variable of interest 
+  qn_data_long_SDQ_Total = subset(qn_data_long, time == "SDQ_Total_T1" | time == "SDQ_Total_T2")
+
+# Factor group variable 
+  qn_data_long_SDQ_Total$group = factor(qn_data_long_SDQ_Total$group)
+  (levels(qn_data_long_SDQ_Total$group))
+
+# Factor variable of interest  
+  qn_data_long_SDQ_Total$time = factor(qn_data_long_SDQ_Total$time)
+  levels(qn_data_long_SDQ_Total$time)
+  
+# Calculate means/SD of the data
+  sumrepdat = summarySE(qn_data_long_SDQ_Total, measurevar = "score", groupvars=c("group", "time"), na.rm = TRUE)
+
+# Plot effects
+ rc_SDQ_Total = ggplot(qn_data_long_SDQ_Total, aes(x = time, y = score, fill = group)) +
+  geom_flat_violin(aes(fill = group),position = position_nudge(x = .1, y = 0), adjust = 1.5, trim = FALSE, alpha = .3, colour = NA)+
+  geom_point(aes(x = as.numeric(time)-.15, y = score, colour = group),position = position_jitter(width = .05), size = .9, shape = 20)+
+  geom_boxplot(aes(x = time, y = score, fill = group),outlier.shape = NA, alpha = .5, width = .1, colour = "black")+
+  geom_line(data = sumrepdat, aes(x = as.numeric(time)+.1, y = score_mean, group = group, colour = group), linetype = 3)+
+  geom_point(data = sumrepdat, aes(x = as.numeric(time)+.1, y = score_mean, group = group, colour = group), shape = 18, size = 1.5) +
+  geom_errorbar(data = sumrepdat, aes(x = as.numeric(time)+.1,
+                                      y = score_mean, group = group, colour = group, ymin = score_mean-se, ymax = score_mean+se), width = .05, size = 1)+
+  scale_colour_manual(values = ZE_col)+
+  scale_fill_manual(values = ZE_col)+
+  scale_x_discrete(labels=c("T1","T2"))+
+ # scale_y_continuous(name="Score", limits=c(-5, 4)) +
+  theme(legend.position = "bottom", legend.title = element_blank(), axis.title.x = element_blank())+
+  ggtitle("SDQ Total score")
+ 
+# Display plots
+  fig_SDQ = cowplot::plot_grid(rc_SDQ_PB, rc_SDQ_Total, ncol=2, rel_widths=c(1, 1, 1))
+  fig_SDQ  
+
+```
+
+#### Individual trajectories
+
+**SDQ Total**
+
+```{r SDQ_Total_change_stat}
+
+  CG_decr = sum(qn_data$d_SDQ_Total[qn_data$group == "CG"] < 0  )
+  CG_incr = sum(qn_data$d_SDQ_Total[qn_data$group == "CG"] > 0  )
+  CG_eq = sum(qn_data$d_SDQ_Total[qn_data$group == "CG"] == 0  )
+  
+  TG_decr = sum(qn_data$d_SDQ_Total[qn_data$group == "TG"] < 0  )
+  TG_incr = sum(qn_data$d_SDQ_Total[qn_data$group == "TG"] > 0  )
+  TG_eq = sum(qn_data$d_SDQ_Total[qn_data$group == "TG"] == 0  )
+
+```
+ 
+  + TG: `r TG_incr` participants showed an increase; `r TG_decr` participants showed a decrease; `r TG_eq` participants showed no change
+  + CG: `r CG_incr` participants showed an increase; `r CG_decr` participants showed a decrease; `r CG_eq` participants showed no change
+
+```{r indiv_traj_SDQ_Total}
+
+# https://medialab.github.io/iwanthue/
+
+# Define IDs as character variable 
+  qn_data_long_SDQ_Total$ID = as.character(qn_data_long_SDQ_Total$ID)
+
+# Separate by groups
+  qn_data_long_SDQ_Total_CG = subset(qn_data_long_SDQ_Total, group == "CG")
+
+# Line plot with multiple groups
+  CG_SDQ_Total_traj = ggplot(data = qn_data_long_SDQ_Total_CG,
+         aes(x = time, y = score, group = ID)) +
+    geom_line(aes(color=ID)) +
+    geom_point(aes(color=ID)) +
+    ggtitle("CG") +
+    scale_x_discrete( labels = c("T1","T2")) +
+    scale_color_manual(values=c("#40c067","#b762df","#6ebf41","#7c4cc4","#2d9d30","#a335a2",
+                                "#a8be3a","#3b56cb","#c6b13d","#7573ef","#789226","#3a71dc",
+                                "#de8b21","#594eae","#e3a846","#6c8aec","#de6725","#4585d5",
+                                "#b92d1a","#34c78e","#e55fc6","#478125","#9b76da","#7bb766",
+                                "#e4458b","#4cd2c3","#e13c5e","#41c2d1","#e8583c","#58b8e3",
+                                "#a0461c","#5199cf","#9e8020","#d685e0","#3b7e3d","#b6317e",
+                                "#6ebf92","#7d4694","#a3ae68","#6859a7","#c27236","#4565a2",
+                                "#eb986b","#24978d","#b33e3f","#429369","#ab549d","#2a6a45",
+                                "#e473aa","#646f2b","#bf9de6","#7f5724","#9194d7","#9b7c42",
+                                "#89629d","#d0ab6f","#d78fc2","#b36853","#aa5b81","#e6716e",
+                                "#8b445c","#e18993","#af3e5c"))
+  
+  
+# Separate by groups
+  qn_data_long_SDQ_Total_TG = subset(qn_data_long_SDQ_Total, group == "TG")
+
+# Line plot with multiple groups
+  TG_SDQ_Total_traj = ggplot(data = qn_data_long_SDQ_Total_TG,
+         aes(x = time, y = score, group = ID)) +
+    geom_line(aes(color=ID)) +
+    geom_point(aes(color=ID)) +
+    ggtitle("TG") +
+    scale_x_discrete( labels = c("T1","T2")) +
+    scale_color_manual(values=c("#a0461c","#5199cf","#9e8020","#d685e0","#3b7e3d","#b6317e",
+                                "#6ebf92","#7d4694","#a3ae68","#6859a7","#c27236","#4565a2",
+                                "#eb986b","#24978d","#b33e3f","#429369","#ab549d","#2a6a45",
+                                "#e473aa","#646f2b","#bf9de6","#7f5724","#9194d7","#9b7c42",
+                                "#89629d","#d0ab6f","#d78fc2","#b36853","#aa5b81","#e6716e",
+                                "#8b445c","#e18993","#af3e5c"))
+  
+# Display plots
+  fig_SDQ_Total_traj = cowplot::plot_grid(CG_SDQ_Total_traj, TG_SDQ_Total_traj, ncol=2, rel_widths=c(1, 1))
+  fig_SDQ_Total_traj 
+
+```
+
+**SDQ PV**
+
+```{r SDQ_PB_change_stat}
+
+  CG_decr = sum(qn_data$d_SDQ_PB[qn_data$group == "CG"] < 0  )
+  CG_incr = sum(qn_data$d_SDQ_PB[qn_data$group == "CG"] > 0  )
+  CG_eq = sum(qn_data$d_SDQ_PB[qn_data$group == "CG"] == 0  )
+  
+  TG_decr = sum(qn_data$d_SDQ_PB[qn_data$group == "TG"] < 0  )
+  TG_incr = sum(qn_data$d_SDQ_PB[qn_data$group == "TG"] > 0  )
+  TG_eq = sum(qn_data$d_SDQ_PB[qn_data$group == "TG"] == 0  )
+
+```
+
+  + TG: `r TG_incr` participants showed an increase; `r TG_decr` participants showed a decrease; `r TG_eq` participants showed no change
+  + CG: `r CG_incr` participants showed an increase; `r CG_decr` participants showed a decrease; `r CG_eq` participants showed no change
+  + Pattern very similiar between groups 
+  
+
+
+```{r indiv_traj_SDQ_PB}
+
+# https://medialab.github.io/iwanthue/
+
+# Define IDs as character variable 
+  qn_data_long_SDQ_PB$ID = as.character(qn_data_long_SDQ_PB$ID)
+
+# Separate by groups
+  qn_data_long_SDQ_PB_CG = subset(qn_data_long_SDQ_PB, group == "CG")
+
+# Line plot with multiple groups
+  CG_SDQ_PB_traj = ggplot(data = qn_data_long_SDQ_PB_CG,
+         aes(x = time, y = score, group = ID)) +
+    geom_line(aes(color=ID)) +
+    geom_point(aes(color=ID)) +
+    ggtitle("CG") +
+    scale_x_discrete( labels = c("T1","T2")) +
+    scale_color_manual(values=c("#40c067","#b762df","#6ebf41","#7c4cc4","#2d9d30","#a335a2",
+                                "#a8be3a","#3b56cb","#c6b13d","#7573ef","#789226","#3a71dc",
+                                "#de8b21","#594eae","#e3a846","#6c8aec","#de6725","#4585d5",
+                                "#b92d1a","#34c78e","#e55fc6","#478125","#9b76da","#7bb766",
+                                "#e4458b","#4cd2c3","#e13c5e","#41c2d1","#e8583c","#58b8e3",
+                                "#a0461c","#5199cf","#9e8020","#d685e0","#3b7e3d","#b6317e",
+                                "#6ebf92","#7d4694","#a3ae68","#6859a7","#c27236","#4565a2",
+                                "#eb986b","#24978d","#b33e3f","#429369","#ab549d","#2a6a45",
+                                "#e473aa","#646f2b","#bf9de6","#7f5724","#9194d7","#9b7c42",
+                                "#89629d","#d0ab6f","#d78fc2","#b36853","#aa5b81","#e6716e",
+                                "#8b445c","#e18993","#af3e5c"))
+  
+  
+# Separate by groups
+  qn_data_long_SDQ_PB_TG = subset(qn_data_long_SDQ_PB, group == "TG")
+
+# Line plot with multiple groups
+  TG_SDQ_PB_traj = ggplot(data = qn_data_long_SDQ_PB_TG,
+         aes(x = time, y = score, group = ID)) +
+    geom_line(aes(color=ID)) +
+    geom_point(aes(color=ID)) +
+    ggtitle("TG") +
+    scale_x_discrete( labels = c("T1","T2")) +
+    scale_color_manual(values=c("#a0461c","#5199cf","#9e8020","#d685e0","#3b7e3d","#b6317e",
+                                "#6ebf92","#7d4694","#a3ae68","#6859a7","#c27236","#4565a2",
+                                "#eb986b","#24978d","#b33e3f","#429369","#ab549d","#2a6a45",
+                                "#e473aa","#646f2b","#bf9de6","#7f5724","#9194d7","#9b7c42",
+                                "#89629d","#d0ab6f","#d78fc2","#b36853","#aa5b81","#e6716e",
+                                "#8b445c","#e18993","#af3e5c"))
+  
+# Display plots
+  fig_SDQ_PB_traj = cowplot::plot_grid(CG_SDQ_PB_traj, TG_SDQ_PB_traj, ncol=2, rel_widths=c(1, 1))
+  fig_SDQ_PB_traj 
+
+```
+
+
+### T1 Group-Differences {.tabset .tabset-pills}
+
+#### SDQ Prosocial behavior
+
+```{r SDQ_PB_T1_diff, results = 'asis'}
+
+  tadaa_t.test(data = qn_data , response = SDQ_PB_T1, group = group, print = "markdown")
+
+```
+
+#### SDQ Emotional problems
+
+```{r SDQ_EP_T1_diff, results = 'asis'}
+
+  tadaa_t.test(data = qn_data , response = SDQ_EP_T1, group = group, print = "markdown")
+
+```
+
+
+#### SDQ Problem score
+
+```{r SDQ_Total_T1_diff, results = 'asis'}
+
+  tadaa_t.test(data = qn_data , response = SDQ_Total_T1, group = group, print = "markdown")
+
+```
+
+
+
+## SRS 
+
+```{r raincloud_plot_SRS}
+
+### EMK CH PV ###
+
+# Select variable of interest 
+  qn_data_long_SRS = subset(qn_data_long, time == "SRS_T1" | time == "SRS_T2")
+
+# Factor group variable 
+  qn_data_long_SRS$group = factor(qn_data_long_SRS$group)
+  (levels(qn_data_long_SRS$group))
+
+# Factor variable of interest  
+  qn_data_long_SRS$time = factor(qn_data_long_SRS$time)
+  levels(qn_data_long_SRS$time)
+  
+# Calculate means/SD of the data
+  sumrepdat = summarySE(qn_data_long_SRS, measurevar = "score", groupvars=c("group", "time"), na.rm = TRUE)
+
+# Plot effects
+ rc_SRS = ggplot(qn_data_long_SRS, aes(x = time, y = score, fill = group)) +
+  geom_flat_violin(aes(fill = group),position = position_nudge(x = .1, y = 0), adjust = 1.5, trim = FALSE, alpha = .3, colour = NA)+
+  geom_point(aes(x = as.numeric(time)-.15, y = score, colour = group),position = position_jitter(width = .05), size = .9, shape = 20)+
+  geom_boxplot(aes(x = time, y = score, fill = group),outlier.shape = NA, alpha = .5, width = .1, colour = "black")+
+  geom_line(data = sumrepdat, aes(x = as.numeric(time)+.1, y = score_mean, group = group, colour = group), linetype = 3)+
+  geom_point(data = sumrepdat, aes(x = as.numeric(time)+.1, y = score_mean, group = group, colour = group), shape = 18, size = 1.5) +
+  geom_errorbar(data = sumrepdat, aes(x = as.numeric(time)+.1,
+                                      y = score_mean, group = group, colour = group, ymin = score_mean-se, ymax = score_mean+se), width = .05, size = 1)+
+  scale_colour_manual(values = ZE_col)+
+  scale_fill_manual(values = ZE_col)+
+  scale_x_discrete(labels=c("T1","T2"))+
+ # scale_y_continuous(name="Score", limits=c(-5, 4)) +
+  theme(legend.position = "bottom", legend.title = element_blank(), axis.title.x = element_blank())+
+  ggtitle("Social Reactivity Scale")
+ 
+ 
+ rc_SRS
+
+```
+
+### T1 Group-Differences
+
+```{r SRS_T1_diff, results = 'asis'}
+
+  tadaa_t.test(data = qn_data , response = SRS_T1, group = group, print = "markdown")
+
+```
+
