@@ -29,11 +29,16 @@ output:
   knitr::opts_knit$set(width=75)
   
 # Load packages
+  library(afex)
   library(ggwordcloud)
+  library(jmv)
   library(kableExtra)
   library(miceadds)
+  library(pander)
+  library(plyr)
   library(rmdformats)
   library(sjPlot)
+  library(tadaatoolbox)
   library(tidyverse)
   library(tm)
   library(wordcloud)
@@ -41,35 +46,212 @@ output:
   
 # Swipe environment
   rm(list=ls())
+  
+  
+# Set figure theme  
+  theme_SN = theme(axis.title.y = element_text(size = 15,
+                                               margin = margin(t = 0, r = 20, b = 0, l = 0)),
+          panel.grid.major.x = element_blank(), panel.grid.minor.x = element_blank(),
+          panel.grid.major.y = element_line(colour = "black", linetype = "dotted", size=0.6),
+          panel.grid.minor.y = element_blank(),
+          panel.border = element_blank(),
+          text=element_text(size = 15),
+          legend.position = "none")
 
 ```
 
 
-```{r}
+```{r load_data}
 # Load app questionnaire data
   load.Rdata(filename="./data/app_qn.Rdata", "app_qn")
+  load.Rdata(filename="./data/qn_data.Rdata", "qn_data")
 ```
 
-# App evaluation {.tabset .tabset-pills}
+# Training effects with training time  {.tabset .tabset-pills}
+
+
+## Overall training effect
+
+```{r manova_with_training_time, results = 'asis'}
+
+# Calculate MANCOVA on standardized change scores 
+  ze_manc = as.data.frame(mancova(qn_data,
+          deps = vars(zd_GEM_Total, zd_EMK_EM_P, zd_EMK_EM_CH,
+                      zd_EMK_EK_P, zd_EMK_EK_CH, zd_EMK_PB_CH, zd_SDQ_PB, zd_SDQ_Total),
+          factors = group,
+          covs = vars(z_training_time),
+          multivar = list("pillai"))$multivar)
+  
+# Prepare for printing: Remove and rename columns / values
+  ze_manc = as_tibble(ze_manc)
+  ze_manc$Variable = factor(ze_manc$`term[pillai]`)
+  ze_manc$Pillai = ze_manc$`stat[pillai]`
+  ze_manc$F = ze_manc$`f[pillai]`
+  ze_manc$df1 = ze_manc$`df1[pillai]`
+  ze_manc$df2 = ze_manc$`df2[pillai]`
+  ze_manc$p = ze_manc$`p[pillai]`
+  
+  ze_manc = subset(ze_manc, select = -c(1:7))
+  ze_manc$Variable = revalue(ze_manc$Variable, c("group"="Training","z_training_time"="Training time"))
+  
+# Print table 
+  pander(ze_manc)  
+  
+```
+
+
+## Primary outcome: Empathy
+
+### GEM: Griffith Empathy Measure
+
+```{r ancova_GEM_with_training time, results = 'asis'}
+   
+# ANCOVA GEM
+  gem_total_anc =  aov_ez("ID", "zd_GEM_Total", qn_data, between = c("group"),
+    covariate = c("z_training_time", "z_GEM_T1"),
+    observed = c("z_training_time", "z_GEM_T1"), factorize = FALSE,
+    anova_table = list(correction = "none", es = "pes"))
+
+   pander(gem_total_anc$anova_table)
+
+```
+
+
+### EMK 3-6 EM CH 
+
+```{r ancova_EMK_EM_CH_with_training_time, results = 'asis'}
+
+# ANCOVA EMK_EM_CH
+
+  EMK_EM_CH_anc = aov_ez("ID", "zd_EMK_EM_CH", qn_data, between = c("group"),
+      covariate = c("z_training_time","z_EMK_EM_CH_T1"),
+      observed = c("z_training_time","z_EMK_EM_CH_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_EM_CH_anc$anova_table)
+  
+```
+
+###  EMK 3-6 EM P 
+
+```{r ancova_EMK_EM_P_with_training_time, results = 'asis'}
+
+# ANCOVA EMK_EM_P
+
+  EMK_EM_P_anc = aov_ez("ID", "zd_EMK_EM_P", qn_data, between = c("group"),
+      covariate = c("z_training_time","z_EMK_EM_P_T1"),
+      observed = c("z_training_time","z_EMK_EM_P_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_EM_P_anc$anova_table)
+  
+```
+
+## Secondary outcome: Emotion recognition
+
+### EMK 3-6 ER CH
+
+```{r ancova_EMK_ER_CH_with_training_time, results = 'asis'}
+
+# ANCOVA EMK_EK_CH
+
+  EMK_EK_CH_anc = aov_ez("ID", "zd_EMK_EK_CH", qn_data, between = c("group"),
+      covariate = c("z_training_time","z_EMK_EK_CH_T1"),
+      observed = c("z_training_time","z_EMK_EK_CH_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_EK_CH_anc$anova_table)
+  
+```
+
+### EMK 3-6 ER P
+
+
+```{r ancova_EMK_ER_P_with training time, results = 'asis'}
+
+# ANCOVA EMK_EK_P
+
+  EMK_EK_P_anc = aov_ez("ID", "zd_EMK_EK_P", qn_data, between = c("group"),
+      covariate = c("z_training_time","z_EMK_EK_P_T1"),
+      observed = c("z_training_time","z_EMK_EK_P_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_EK_P_anc$anova_table)
+  
+```
+
+
+
+## Secondary outcome: Prosocial behavior
+
+### EMK 3-6 PB CH
+
+```{r ancova_emk_PB_ch_with_training_time, results = 'asis'}
+
+# ANCOVA EMK_PB_CH
+
+  emk_PB_anc = aov_ez("ID", "zd_EMK_PB_CH", qn_data, between = c("group"),
+      covariate = c("z_training_time","z_EMK_PB_CH_T1"),
+      observed = c("z_training_time","z_EMK_PB_CH_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+
+
+pander(emk_PB_anc$anova_table)  
+
+```
+
+
+### SDQ PB
+
+```{r ancova_sdq_PB_with_training_time, results = 'asis'}
+
+  sdq_PB_an = aov_ez("ID", "zd_SDQ_PB", qn_data, between = c("group"),
+      covariate = c("z_training_time","z_SDQ_PB_T1"),
+      observed = c("z_training_time","z_SDQ_PB_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(sdq_PB_an$anova_table)  
+
+```
+
+
+### SDQ BP
+
+
+```{r ancova_sdq_total, results = 'asis'}
+
+# ANCOVA SDQ_Total
+
+  sdq_total_anc = aov_ez("ID", "zd_SDQ_Total", qn_data, between = c("group"),
+      covariate = c("z_training_time", "z_SDQ_T1"),
+      observed = c("z_training_time", "z_SDQ_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(sdq_total_anc$anova_table)
+
+
+```
+
+
+# Additional fidelity measures {.tabset .tabset-pills}
 
 ## Acceptance
 
 **My child had / was...**
 
-```{r app_acc}
+```{r app_acc, results = "asis"}
 
 # Select data for acceptibility questions
   app_acc = as_tibble(app_qn)
   app_acc = app_acc %>% dplyr::select(Fun:Practiced_without_parent)
   
-
 # Recode variable 
   app_acc  = data.frame(lapply(app_acc , factor, ordered=TRUE, 
                           levels=1:5, 
                           labels=c("Do not agree", "Rather not agree", "Partly agree","Rather agree","Agree")))
   
 # Add training info
-  app_acc$group = app_qn$App
+  app_acc$group = app_qn$App  
 
 # Separate by training / control group
   app_acc_ZE = app_acc[app_acc$group == "TG",]
@@ -84,7 +266,7 @@ output:
 
 # Plot likert plot
   plot_likert(comb_acc_app, catcount = 5, values = FALSE, wrap.legend.labels = 5, 
-                c(rep("Control Group", 8), rep("Training Group", 8)),
+                c(rep("Controls", 8), rep("Zirkus Empathico", 8)),
                 geom.colors = c("#040a0b","#1a3e43","#2b6770","#80a4a9","#bfd1d4"),
                 rel_heights = c(9, 11),
                 wrap.labels = 65,
@@ -98,129 +280,6 @@ output:
                                 "trained mostly without me."))
 
 ```
-
-## Usability 
-
-```{r app_usa}
-
-# Select data for acceptibility questions
-  app_usa = as_tibble(app_qn)
-  app_usa = app_usa %>% dplyr::select(Use_App_self_explanatory:Use_Training_Stressful)
-
-# Recode variable 
-  app_usa  = data.frame(lapply(app_usa , factor, ordered=TRUE, 
-                          levels=1:5, 
-                          labels=c("Do not agree", "Rather not agree", "Partly agree","Rather agree","Agree")))
-  
-# Add training info
-  app_usa$group = app_qn$App
-
-# Separate by training / control group
-  app_usa_ZE = app_usa[app_usa$group == "TG",]
-  app_usa_SB = app_usa[app_usa$group == "CG",]
-  
-  app_usa_ZE = subset(app_usa_ZE, select = -c(group))
-  app_usa_SB = subset(app_usa_SB, select = -c(group))
-
-# Combine data sets (account for different lengths of data frames)
-  comb_int_use = merge(app_usa_SB, app_usa_ZE, by = "row.names", all = T, suffixes = c("",""))
-  comb_int_use$Row.names <- NULL
-
-# Plot likert plot
-  plot_likert(comb_int_use, catcount = 5, values = FALSE, wrap.legend.labels = 5, 
-                c(rep("Control Group", 5), rep("Training Group", 5)),
-                geom.colors = c("#121117","#2e2b3b","#5b5675","#7c7891","#ceccd6"),
-                rel_heights = c(8, 10),
-                wrap.labels = 65,
-                reverse.scale = TRUE,
-                show.n = FALSE,
-                axis.labels = c("App was self-explanatory.", "The training manual was helpful.",
-                                "Training was compatible the daily routines.", "I felt adequately supervised.",
-                                "I was mentally stressed during the training."))
-
-```
-
-## Behavioral changes induced by the app training
-
-**After completion of the training, me as dad/mom found that...**
-
-```{r app_behav}
-
-# Select data for acceptibility questions
-  app_beh = as_tibble(app_qn)
-  app_beh = app_beh %>% dplyr::select(Behav_Interest_Feelings:Behav_Interest_Languages)
-  
-
-# Recode variable 
-  app_beh  = data.frame(lapply(app_beh , factor, ordered=TRUE, 
-                          levels=1:5, 
-                          labels=c("Do not agree", "Rather not agree", "Partly agree","Rather agree","Agree")))
-  
-# Add training info
-  app_beh$group = app_qn$App
-
-# Separate by training / control group
-  app_beh_ZE = app_beh[app_beh$group == "TG",]
-  app_beh_SB = app_beh[app_beh$group == "CG",]
-  
-  app_beh_ZE = subset(app_beh_ZE, select = -c(group))
-  app_beh_SB = subset(app_beh_SB, select = -c(group))
-
-# Combine data sets (account for different lengths of data frames)
-  comb_int_use = merge(app_beh_SB, app_beh_ZE, by = "row.names", all = T, suffixes = c("",""))
-  comb_int_use$Row.names <- NULL
-
-# Plot likert plot
-  plot_likert(comb_int_use, catcount = 5, values = FALSE, wrap.legend.labels = 5, 
-                c(rep("Control Group", 9), rep("Training Group", 9)),
-                geom.colors = c("#23180d","#583c22","#9e6c3c","#c09369","#d8bca1"),
-                rel_heights = c(8, 10),
-                wrap.labels = 65,
-                reverse.scale = TRUE,
-                show.n = FALSE,
-                axis.labels = c("my child shows more interest in feelings.", "my child deals better with its own feelings.",
-                                "my child reacts more appropriately to others's feelings.", "my child is more open-minded about his environment.",
-                                "my child spends more time with other children.","communication about feelings in our family improved.",
-                                "I have a better relationship with my child.","my child uses English words or phrases more often.","my child is more interested in other languages."))
-
-```
-
-
-## App engagement
-
-```{r app_eng, fig.width = 6, fig.height = 3}
-
-# Select data for app engagement and change to long format 
-  app_eng = as_tibble(app_qn)
-  app_eng = subset(app_eng, App == "TG")
-  app_eng = app_eng %>% dplyr::select(mod_1:mod_4)
-  
-  app_eng = gather(app_eng, module, complete, mod_1:mod_4,
-                              factor_key=TRUE)
-  
-  app_eng = app_eng[complete.cases(app_eng), ]
-
-# Plot distribution 
-  ggplot(app_eng, aes(x = module, y = complete)) +
-  geom_violin(aes(fill = module, color = module), trim = FALSE, width = 0.8) + 
-  geom_boxplot(width = 0.1) +
- # geom_jitter(height = 0, width = 0.1)+
-  scale_x_discrete(labels = c("Own Emotions","Emotion recognition", "Others' Emotions","Empathy")) +
-  scale_y_continuous(name="Module completion [%]", limits=c(0, 100))+
-  scale_color_manual(values = c("#345102", "#9ab768", "#578703","#bccf9a"))+
-  scale_fill_manual(values = c("#345102", "#9ab768", "#578703","#bccf9a"))+
-  theme(legend.position = "none", axis.title.x = element_blank())
-  
-```
-
-
-The overall completion rate of the training app was `r mean(app_eng$complete)` %.
-
-
-
-# Qualitative questions {.tabset .tabset-pills}
-
-## Likes/Dislikes training
 
 ```{r wordcloud_prep}
 
@@ -241,7 +300,7 @@ The overall completion rate of the training app was `r mean(app_eng$complete)` %
 
 ```
 
-**What did your child like most about training with the app?**
+**What did your child like most about digital training?**
 
 ```{r wordcloud_game_likes}
 
@@ -262,14 +321,14 @@ The overall completion rate of the training app was `r mean(app_eng$complete)` %
     scale_size_area(max_size = 22) +
     theme_minimal() +
     scale_color_gradient(low = "#041012", high = "#5fa7b3")+
-    ggtitle ("Control group")
+    ggtitle ("Controls")
 
   TG_likes_word = ggplot(d_TG_likes, aes(label = word, size = freq, color = freq)) +
     geom_text_wordcloud(area_corr = TRUE,  rm_outside = TRUE) +
     scale_size_area(max_size = 22) +
     theme_minimal() +
     scale_color_gradient(low = "#63430a", high = "#c48310")+
-    ggtitle ("Training group")
+    ggtitle ("Zirkus Empathico")
 
 # Display plots
   fig_like_words = cowplot::plot_grid(CG_likes_word, TG_likes_word, nrow = 2, rel_widths=c(1, 1))
@@ -300,14 +359,14 @@ The overall completion rate of the training app was `r mean(app_eng$complete)` %
     scale_size_area(max_size = 21) +
     theme_minimal() +
     scale_color_gradient(low = "#041012", high = "#5fa7b3")+
-    ggtitle ("Control group")
+    ggtitle ("Controls")
 
   TG_dislikes_word = ggplot(d_TG_dislikes, aes(label = word, size = freq, color = freq)) +
     geom_text_wordcloud(area_corr = TRUE, rm_outside = TRUE) +
     scale_size_area(max_size = 21) +
     theme_minimal() +
     scale_color_gradient(low = "#63430a", high = "#c48310")+
-    ggtitle ("Training group")
+    ggtitle ("Zirkus Empathico")
 
 # Display plots
   fig_like_words = cowplot::plot_grid(CG_dislikes_word, TG_dislikes_word, nrow = 2, rel_widths=c(1, 1))
@@ -319,9 +378,6 @@ The overall completion rate of the training app was `r mean(app_eng$complete)` %
 
 ```
 
-## Training difficulties
-
-<br>
 
 **What did your child find difficult while exercising? What did he or she possibly not understand?**
 
@@ -352,20 +408,154 @@ The overall completion rate of the training app was `r mean(app_eng$complete)` %
     scale_size_area(max_size = 18) +
     theme_minimal() +
     scale_color_gradient(low = "#041012", high = "#5fa7b3")+
-    ggtitle ("Control group")
+    ggtitle ("Controls")
 
   TG_diff_word = ggplot(d_TG_diff, aes(label = word, size = freq, color = freq)) +
     geom_text_wordcloud(area_corr = TRUE) +
     scale_size_area(max_size = 18) +
     theme_minimal() +
     scale_color_gradient(low = "#63430a", high = "#c48310")+
-    ggtitle ("Training group")
+    ggtitle ("Zirkus Empathico")
 
 # Display plots
   fig_diff_words = cowplot::plot_grid(CG_diff_word, TG_diff_word, nrow = 2, rel_widths=c(1, 1))
   fig_diff_words 
 
 ```
+
+## Usability 
+
+```{r app_usa}
+
+# Select data for acceptibility questions
+  app_usa = as_tibble(app_qn)
+  app_usa = app_usa %>% dplyr::select(Use_App_self_explanatory:Use_Training_Stressful)
+  
+
+# Recode variable 
+  app_usa  = data.frame(lapply(app_usa , factor, ordered=TRUE, 
+                          levels=1:5, 
+                          labels=c("Do not agree", "Rather not agree", "Partly agree","Rather agree","Agree")))
+  
+# Add training info
+  app_usa$group = app_qn$App  
+  
+
+# Separate by training / control group
+  app_usa_ZE = app_usa[app_usa$group == "TG",]
+  app_usa_SB = app_usa[app_usa$group == "CG",]
+  
+  app_usa_ZE = subset(app_usa_ZE, select = -c(group))
+  app_usa_SB = subset(app_usa_SB, select = -c(group))
+
+# Combine data sets (account for different lengths of data frames)
+  comb_int_use = merge(app_usa_SB, app_usa_ZE, by = "row.names", all = T, suffixes = c("",""))
+  comb_int_use$Row.names <- NULL
+
+# Plot likert plot
+  plot_likert(comb_int_use, catcount = 5, values = FALSE, wrap.legend.labels = 5, 
+                c(rep("Controls", 5), rep("Zirkus Empathico", 5)),
+                geom.colors = c("#121117","#2e2b3b","#5b5675","#7c7891","#ceccd6"),
+                rel_heights = c(8, 10),
+                wrap.labels = 65,
+                reverse.scale = TRUE,
+                show.n = FALSE,
+                axis.labels = c("App was self-explanatory.", "The training manual was helpful.",
+                                "Training was compatible the daily routines.", "I felt adequately supervised.",
+                                "I was mentally stressed during the training."))
+
+```
+
+## Perceived change after training
+
+**After completion of the training, me as dad/mom found that...**
+
+```{r app_behav}
+
+# Select data for acceptibility questions
+  app_beh = as_tibble(app_qn)
+  app_beh = app_beh %>% dplyr::select(Behav_Interest_Feelings:Behav_Interest_Languages)
+
+# Recode variable 
+  app_beh  = data.frame(lapply(app_beh , factor, ordered=TRUE, 
+                          levels=1:5, 
+                          labels=c("Do not agree", "Rather not agree", "Partly agree","Rather agree","Agree")))
+
+# Add training info
+  app_beh$group = app_qn$App
+
+# Separate by training / control group
+  app_beh_ZE = app_beh[app_beh$group == "TG",]
+  app_beh_SB = app_beh[app_beh$group == "CG",]
+  
+  app_beh_ZE = subset(app_beh_ZE, select = -c(group))
+  app_beh_SB = subset(app_beh_SB, select = -c(group))
+
+# Combine data sets (account for different lengths of data frames)
+  comb_int_use = merge(app_beh_SB, app_beh_ZE, by = "row.names", all = T, suffixes = c("",""))
+  comb_int_use$Row.names <- NULL
+
+# Plot likert plot
+  plot_likert(comb_int_use, catcount = 5, values = FALSE, wrap.legend.labels = 5, 
+                c(rep("Controls", 9), rep("Zirkus Empathico", 9)),
+                geom.colors = c("#23180d","#583c22","#9e6c3c","#c09369","#d8bca1"),
+                rel_heights = c(8, 10),
+                wrap.labels = 65,
+                reverse.scale = TRUE,
+                show.n = FALSE,
+                axis.labels = c("my child shows more interest in feelings.", "my child deals better with its own feelings.",
+                                "my child reacts more appropriately to others's feelings.", "my child is more open-minded about his environment.",
+                                "my child spends more time with other children.","communication about feelings in our family improved.",
+                                "I have a better relationship with my child.","my child uses English words or phrases more often.","my child is more interested in other languages."))
+
+```
+
+
+**Has your child changed in terms of his or her behavior in school/kindergarten/family? If so, please describe how these changes manifested themselves.**
+
+```{r wordcloud_change}
+
+# Read txt files
+  text_CG_chang = readLines("./data/wc_CG_chang.txt")
+  text_TG_chang = readLines("./data/wc_TG_chang.txt")
+  
+# Load data as corpus
+  CG_chang = Corpus(VectorSource(text_CG_chang))
+  TG_chang = Corpus(VectorSource(text_TG_chang))
+
+# Build a term-document matrix
+  dtm = TermDocumentMatrix(CG_chang)
+  m = as.matrix(dtm)
+  v = sort(rowSums(m),decreasing=TRUE)
+  d_CG_chang = data.frame(word = names(v),freq=v)
+  
+  dtm = TermDocumentMatrix(TG_chang)
+  m = as.matrix(dtm)
+  v = sort(rowSums(m),decreasing=TRUE)
+  d_TG_chang = data.frame(word = names(v),freq=v)
+  
+  
+# Build word coulds
+  CG_chang_word = ggplot(d_CG_chang, aes(label = word, size = freq, color = freq))+
+    geom_text_wordcloud(area_corr = TRUE, rm_outside = TRUE) +
+    scale_size_area(max_size = 20) +
+    theme_minimal() +
+    scale_color_gradient(low = "#041012", high = "#5fa7b3")+
+    ggtitle ("Controls")
+
+  TG_chang_word = ggplot(d_TG_chang, aes(label = word, size = freq, color = freq)) +
+    geom_text_wordcloud(area_corr = TRUE, rm_outside = TRUE) +
+    scale_size_area(max_size = 20) +
+    theme_minimal() +
+    scale_color_gradient(low = "#63430a", high = "#c48310")+
+    ggtitle ("Zirkus Empathico")
+
+# Display plots
+  fig_chang_words = cowplot::plot_grid(CG_chang_word, TG_chang_word, nrow = 2, rel_widths=c(1, 1))
+  fig_chang_words   
+
+```
+
 
 ## Parental involvement
 
@@ -400,14 +590,14 @@ The overall completion rate of the training app was `r mean(app_eng$complete)` %
     scale_size_area(max_size = 18) +
     theme_minimal() +
     scale_color_gradient(low = "#041012", high = "#5fa7b3")+
-    ggtitle ("Control group")
+    ggtitle ("Controls")
 
   TG_involv_word = ggplot(d_TG_involv, aes(label = word, size = freq, color = freq)) +
     geom_text_wordcloud(area_corr = TRUE, rm_outside = TRUE) +
     scale_size_area(max_size = 18) +
     theme_minimal() +
     scale_color_gradient(low = "#63430a", high = "#c48310")+
-    ggtitle ("Training group")
+    ggtitle ("Zirkus Empathico")
 
 # Display plots
   fig_involv_words = cowplot::plot_grid(CG_involv_word, TG_involv_word, nrow = 2, rel_widths=c(1, 1))
@@ -415,56 +605,5 @@ The overall completion rate of the training app was `r mean(app_eng$complete)` %
 
 ```
 
-## Perceived change
 
-<br>
-
-**Has your child changed in terms of his or her behavior in school/kindergarten/family? If so, please describe how these changes manifest themselves.**
-
-```{r wordcloud_change}
-
-# Read txt files
-  text_CG_chang = readLines("./data/wc_CG_chang.txt")
-  text_TG_chang = readLines("./data/wc_TG_chang.txt")
-  
-# Load data as corpus
-  CG_chang = Corpus(VectorSource(text_CG_chang))
-  TG_chang = Corpus(VectorSource(text_TG_chang))
-
-# Build a term-document matrix
-  dtm = TermDocumentMatrix(CG_chang)
-  m = as.matrix(dtm)
-  v = sort(rowSums(m),decreasing=TRUE)
-  d_CG_chang = data.frame(word = names(v),freq=v)
-  
-  dtm = TermDocumentMatrix(TG_chang)
-  m = as.matrix(dtm)
-  v = sort(rowSums(m),decreasing=TRUE)
-  d_TG_chang = data.frame(word = names(v),freq=v)
-  
-  
-# Build word coulds
-  CG_chang_word = ggplot(d_CG_chang, aes(label = word, size = freq, color = freq))+
-    geom_text_wordcloud(area_corr = TRUE, rm_outside = TRUE) +
-    scale_size_area(max_size = 20) +
-    theme_minimal() +
-    scale_color_gradient(low = "#041012", high = "#5fa7b3")+
-    ggtitle ("Control group")
-
-  TG_chang_word = ggplot(d_TG_chang, aes(label = word, size = freq, color = freq)) +
-    geom_text_wordcloud(area_corr = TRUE, rm_outside = TRUE) +
-    scale_size_area(max_size = 20) +
-    theme_minimal() +
-    scale_color_gradient(low = "#63430a", high = "#c48310")+
-    ggtitle ("Training group")
-
-# Display plots
-  fig_chang_words = cowplot::plot_grid(CG_chang_word, TG_chang_word, nrow = 2, rel_widths=c(1, 1))
-  fig_chang_words   
-
-```
-
-## Other comments
-
-  + During Corona: Children consumed more media, were alone solely with parents and siblings
 

@@ -10,21 +10,21 @@ navbar:
     - text: "Sample description"
       icon: glyphicon glyphicon-education
       href: Script_1_Sampl_Descr.html
-    - text: "Self-/Parental report"
+    - text: "Child-/Parental measures"
       icon: glyphicon-hand-up
       href: Script_2_Report_Measures.html
     - text: "ERPs"
       icon: glyphicon-user
-      href: Script_3_ERP_Measures.html
-    - text: "Brain-Behavior"
+      href: Script_3_ERPs.html
+    - text: "Correlational analysis"
       icon: glyphicon-resize-small
       href: Script_4_Brain_Behavior.html
-    - text: "Supplementary"
+    - text: "Supplement"
       icon: glyphicon glyphicon-piggy-bank
       href: Script_5_Supplement.html
   right:
     - icon: ai ai-osf ai-lg
-      href: https://osf.io/nas48/ 
+      href: https://osf.io/vzgtb/ 
     - icon: fa-envelope fa-lg
       href: mailto:sandra.naumann@hu-berlin.de
       
