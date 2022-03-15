@@ -1,0 +1,508 @@
+---
+title: "ERP measures"
+output: 
+  rmdformats::material:
+    highlight: kate
+    css: web_style.css
+    thumbnails: false
+    lightbox: true
+    gallery: true
+    cards: true
+    self_contained: no
+    number_sections: no
+    code_folding: hide
+    fig_caption: yes
+---
+
+<!-- Set up workspace -->
+
+```{r setup, include = FALSE, message = FALSE, warning = FALSE}
+
+# Set general settings for Markdown file 
+  options(max.print="75")
+
+  knitr::opts_chunk$set(echo = TRUE,
+                 prompt = FALSE,
+                 tidy = TRUE,
+                 comment = NA,
+                 message = FALSE,
+                 warning = FALSE,
+                 results = FALSE,
+  	             fig.align = "center")
+  knitr::opts_knit$set(width = 75)
+# Swipe environment
+  rm(list=ls())
+  
+# Set libraries
+  library(afex)
+  library(car)
+  library(cowplot)
+  library(eegUtils)
+  library(emmeans) 
+  library(ggplot2)
+  library(lme4)
+  library(MASS)
+  library(miceadds)
+  library(pander)
+  library(ppcor)
+  library(sjmisc)
+  library(sjPlot)
+  library(tidyverse)
+  
+# Round to 2 digits   
+  options(digits=2)
+  
+# Disable scientific notation in R
+  options(scipen = 999)
+    
+# Set figure color palettes
+  ZE_ERP_col = c("#59A2F0","#949E4C","grey32") # angry, happy, neutral
+  
+  
+# Correlation function
+# https://stackoverflow.com/questions/34326906/extracting-and-formatting-results-of-cor-test-on-multiple-pairs-of-columns 
+  corrFunc <- function(var1, var2, data) {
+    result = cor.test(data[,var1], data[,var2])
+    data.frame(var1, var2, result[c("estimate","p.value","statistic")], 
+               stringsAsFactors=FALSE) }
+  
+  
+# Do graphs?
+  graph = 1
+  
+# Do linear mixed models? (lmm)
+  lmm = 0
+
+```
+
+```{r load_data, include = FALSE}
+
+# Load questionnaire data
+  load.Rdata(filename="./data/qn_data.Rdata", "qn_data")
+
+# Grand averaged (ga) data for head plots
+  ga_emo_wide = read.delim("./data/PFV_emo_topo.txt", header = TRUE, sep = " ", dec = ".")
+  topo_emo_cg = read.delim("./data/PFV_emo_topo_cg.txt", header = TRUE, sep = " ", dec = ".")
+  topo_emo_tg = read.delim("./data/PFV_emo_topo_tg.txt", header = TRUE, sep = " ", dec = ".")
+    
+# Load ERP visualization data
+  load.Rdata(filename="./data/erp_vis_data.Rdata", "erp_vis_data")  
+  
+# Separate data
+  P1_P3_traj = subset(erp_vis_data, ERP = "P1_P3")
+  N170_l_traj = subset(erp_vis_data, ERP = "N170l")
+  N170_r_traj = subset(erp_vis_data, ERP = "N170r")
+  
+# P1 amplitude
+  P1_amp_all_emo = subset(qn_data, select = c(ID, group, mc_CPM, mc_training_time, P1_amp_hap, P1_amp_neu, P1_amp_ang))
+  P1_amp_all_emo = gather(P1_amp_all_emo, emotion, amplitude, P1_amp_hap:P1_amp_ang, factor_key=TRUE)
+  P1_amp_all_emo$emotion = factor(P1_amp_all_emo$emotion) 
+    
+   
+# N170 amplitude across hemispheres
+    N170_amp_all_emo = subset(qn_data, select = c(ID, mc_CPM, mc_training_time, group, N170_amp_hap, N170_amp_neu, N170_amp_ang))
+    N170_amp_all_emo = gather(N170_amp_all_emo, emotion, amplitude, N170_amp_hap:N170_amp_ang, factor_key=TRUE)
+    N170_amp_all_emo$emotion = factor(N170_amp_all_emo$emotion)  
+  
+# P3 amplitude
+    P3_amp_all_emo = subset(qn_data, select = c(ID, group, mc_CPM, mc_training_time, P3_amp_hap, P3_amp_neu, P3_amp_ang))
+    P3_amp_all_emo = gather(P3_amp_all_emo, emotion, amplitude, P3_amp_hap:P3_amp_ang, factor_key=TRUE)
+    P3_amp_all_emo$emotion = factor(P3_amp_all_emo$emotion) 
+ 
+```
+
+# EEG processing 
+
+```{r anova_EEG_trials}
+
+  trial_count = gather(qn_data, trial, count, hap_trials:neu_trials,factor_key=TRUE)
+
+  trial_count = subset(trial_count, select = c(trial,count))
+
+# Calculate one-way ANOVA to test equality of trial numbers
+  trial.aov = aov(count ~ trial, data = trial_count)
+
+# Extract values to present 
+  trial.aov.sum = summary(trial.aov)
+  trial.aov.sum = data.frame(trial.aov.sum[[1]])
+  
+```
+  
+  + We detected no difference between number of trials per emotion condition: *F* (`r trial.aov.sum$Df[1]`, `r trial.aov.sum$Df[2]`) = `r trial.aov.sum$F.value[1]`, *p* = `r format.pval(pv = trial.aov.sum$Pr..F.[1], digits = 2, eps = 0.001, nsmall = 3)`).
+  + Participants provided an average of: 
+    + Happy trials: *M* = `r mean(qn_data$hap_trials)`; *SD* = `r sd(qn_data$hap_trials)`
+    + Angry trials: *M* = `r mean(qn_data$ang_trials)`; *SD* = `r sd(qn_data$ang_trials)` and
+    + Neutral trials: *M* = `r mean(qn_data$neu_trials)`; *SD* = `r sd(qn_data$neu_trials)`.
+
+# ERP measures  
+
+
+For the analysis of the P1, N170 and P3 at T2, we computed separate analyses of variance (ANOVAs) with ERP amplitude as dependent variable, training as between factor, and facial expressions (happy vs. angry vs. neutral) as within factor. 
+
+ERP trajectories and associated topographies are displayed here:
+
+```{r plot_topo_erps}
+
+# Topoplots P1 - Emotion effects
+  ga_topo_long = gather(ga_emo_wide, electrode, amplitude, Fp1:Oz,factor_key=TRUE)
+
+# Rename A1/A2
+  names(ga_topo_long)[names(ga_topo_long) == "A1"] = "TP9"
+  names(ga_topo_long)[names(ga_topo_long) == "A2"] = "TP10"
+  
+# Plot topoplots for happy
+  Topo_Emo_Hap = subset(ga_topo_long, emo == 1)
+  
+# Plot topoplots for neutral
+  Topo_Emo_Neu = subset(ga_topo_long, emo == 3)
+
+# Plot topoplots for angry
+  Topo_Emo_Ang = subset(ga_topo_long, emo == 2)
+  
+# Calculate difference score angry-neutral
+  Topo_Diff_Ang_Neu = data.frame(time = Topo_Emo_Hap[,1],
+                                  electrode = Topo_Emo_Hap[,3], amplitude = Topo_Emo_Ang$amplitude - Topo_Emo_Neu$amplitude)
+  
+  
+# Calculate difference score happy-neutral
+  Topo_Diff_Hap_Neu = data.frame(time = Topo_Emo_Hap[,1],
+                                  electrode = Topo_Emo_Hap[,3], amplitude = Topo_Emo_Hap$amplitude - Topo_Emo_Neu$amplitude)  
+  
+  
+# Calculate difference score happy-angry
+  Topo_Diff_Hap_Ang = data.frame(time = Topo_Emo_Hap[,1],
+                                  electrode = Topo_Emo_Hap[,3], amplitude = Topo_Emo_Hap$amplitude - Topo_Emo_Ang$amplitude)    
+  
+## P1s   
+
+# Select time windows
+  Topo_Diff_Ang_Neu_P1 = subset(Topo_Diff_Ang_Neu, time >= 90 & time <= 130)
+  Topo_Diff_Hap_Neu_P1 = subset(Topo_Diff_Hap_Neu, time >= 90 & time <= 130)
+  Topo_Diff_Hap_Ang_P1 = subset(Topo_Diff_Hap_Ang, time >= 90 & time <= 130)
+
+# Add electrode information  
+  Topo_Diff_Ang_Neu_P1 = electrode_locations(Topo_Diff_Ang_Neu_P1, electrode = "electrode",  drop = FALSE, montage = NULL)
+  Topo_Diff_Hap_Neu_P1 = electrode_locations(Topo_Diff_Hap_Neu_P1, electrode = "electrode",  drop = FALSE, montage = NULL)
+  Topo_Diff_Hap_Ang_P1 = electrode_locations(Topo_Diff_Hap_Ang_P1, electrode = "electrode",  drop = FALSE, montage = NULL)
+
+# Draw topographies
+  topo_diff_ang_neu_P1 = ggplot(Topo_Diff_Ang_Neu_P1, aes(x = x, y = y, fill = amplitude, label = electrode)) +
+                    ggtitle("angry \u2013 neutral")+
+                    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5,
+                              head_size = 0.9) +
+                    scale_fill_distiller(palette = "RdBu" , limits = c(-1.5,2.5)) +
+                    theme_void() +
+                    coord_equal() +
+                    labs(fill = expression(paste("Amplitude (", mu,"V)")))+
+                    theme(legend.position = "none", plot.title = element_text(size = 8, face = "bold", hjust = 0.5))
+  
+
+# Draw topographies
+  topo_diff_hap_neu_P1 = ggplot(Topo_Diff_Hap_Neu_P1, aes(x = x, y = y, fill = amplitude, label = electrode)) +
+                   ggtitle("  happy \u2013 neutral")+
+                    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5,
+                              head_size = 0.9) +
+                    scale_fill_distiller(palette = "RdBu" , limits = c(-1.5,2.5)) +
+                    theme_void() +
+                    coord_equal() +
+                    labs(fill = expression(paste("Amplitude (", mu,"V)")))+
+                    theme(legend.position = "none", plot.title = element_text(size = 8, face = "bold", hjust = 0.5))  
+
+  
+# Draw topographies
+  topo_diff_hap_ang_P1 = ggplot(Topo_Diff_Hap_Ang_P1, aes(x = x, y = y, fill = amplitude, label = electrode)) +
+                   ggtitle("  happy \u2013 angry")+
+                    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5,
+                              head_size = 0.9) +
+                    scale_fill_distiller(palette = "RdBu" , limits = c(-1.5,2.5)) +
+                    theme_void() +
+                    coord_equal() +
+                    labs(fill = expression(paste("Amplitude (", mu,"V)")))+
+                    theme(legend.position = "none", plot.title = element_text(size = 8, face = "bold", hjust = 0.5))     
+
+
+# Display plots
+  fig_topo_P1_emo = cowplot::plot_grid(topo_diff_hap_neu_P1, topo_diff_ang_neu_P1, topo_diff_hap_ang_P1, ncol=3, rel_widths=c(1, 1, 1))
+  
+############
+  
+# Topoplots P3 - Group x Emotion effects
+
+# Control group    
+  ga_topo_long_cg = gather(topo_emo_cg, electrode, amplitude, Fp1:Oz,factor_key=TRUE)
+
+# Rename A1/A2
+  names(ga_topo_long_cg)[names(ga_topo_long_cg) == "A1"] = "TP9"
+  names(ga_topo_long_cg)[names(ga_topo_long_cg) == "A2"] = "TP10"
+  
+# Plot topoplots for happy
+  Topo_Emo_Hap_CG = subset(ga_topo_long_cg, emo == 1)
+  
+# Plot topoplots for neutral
+  Topo_Emo_Neu_CG = subset(ga_topo_long_cg, emo == 3)
+
+# Plot topoplots for angry
+  Topo_Emo_Ang_CG = subset(ga_topo_long_cg, emo == 2)
+  
+# Calculate difference score angry-neutral
+  Topo_Diff_Ang_Neu_CG = data.frame(time = Topo_Emo_Hap_CG[,1],
+                                  electrode = Topo_Emo_Hap_CG[,3], amplitude = Topo_Emo_Ang_CG$amplitude - Topo_Emo_Neu_CG$amplitude)
+  
+  
+# Calculate difference score happy-neutral
+  Topo_Diff_Hap_Neu_CG = data.frame(time = Topo_Emo_Hap_CG[,1],
+                                  electrode = Topo_Emo_Hap_CG[,3], amplitude = Topo_Emo_Hap_CG$amplitude - Topo_Emo_Neu_CG$amplitude)  
+  
+  
+# Calculate difference score happy-angry
+  Topo_Diff_Hap_Ang_CG = data.frame(time = Topo_Emo_Hap_CG[,1],
+                                  electrode = Topo_Emo_Hap_CG[,3], amplitude = Topo_Emo_Hap_CG$amplitude - Topo_Emo_Ang_CG$amplitude)    
+
+# Select time windows
+  Topo_Diff_Ang_Neu_CG_P3 = subset(Topo_Diff_Ang_Neu_CG, time >= 300 & time <= 500)
+  Topo_Diff_Hap_Neu_CG_P3 = subset(Topo_Diff_Hap_Neu_CG, time >= 300 & time <= 500)
+  Topo_Diff_Hap_Ang_CG_P3 = subset(Topo_Diff_Hap_Ang_CG, time >= 300 & time <= 500)
+
+# Add electrode information  
+  Topo_Diff_Ang_Neu_CG_P3 = electrode_locations(Topo_Diff_Ang_Neu_CG_P3, electrode = "electrode",  drop = FALSE, montage = NULL)
+  Topo_Diff_Hap_Neu_CG_P3 = electrode_locations(Topo_Diff_Hap_Neu_CG_P3, electrode = "electrode",  drop = FALSE, montage = NULL)
+  Topo_Diff_Hap_Ang_CG_P3 = electrode_locations(Topo_Diff_Hap_Ang_CG_P3, electrode = "electrode",  drop = FALSE, montage = NULL)
+
+# Draw topographies
+  Topo_Diff_Ang_Neu_CG_P3_plot = ggplot(Topo_Diff_Ang_Neu_CG_P3, aes(x = x, y = y, fill = amplitude, label = electrode)) +
+                    ggtitle("angry \u2013 neutral")+
+                    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5,
+                              head_size = 0.9) +
+                    scale_fill_distiller(palette = "RdBu" , limits = c(-3.5,2.5)) +
+                    theme_void() +
+                    coord_equal() +
+                    labs(fill = expression(paste("Amplitude (", mu,"V)")))+
+                    theme(legend.position = "none", plot.title = element_text(size = 8, face = "bold", hjust = 0.5))
+  
+
+# Draw topographies
+  Topo_Diff_Hap_Neu_CG_P3_plot = ggplot(Topo_Diff_Hap_Neu_CG_P3, aes(x = x, y = y, fill = amplitude, label = electrode)) +
+                   ggtitle("  happy \u2013 neutral")+
+                    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5,
+                              head_size = 0.9) +
+                    scale_fill_distiller(palette = "RdBu" , limits = c(-3.5,2.5)) +
+                    theme_void() +
+                    coord_equal() +
+                    labs(fill = expression(paste("Amplitude (", mu,"V)")))+
+                    theme(legend.position = "none", plot.title = element_text(size = 8, face = "bold", hjust = 0.5))  
+
+
+# Training group    
+  ga_topo_long_tg = gather(topo_emo_tg, electrode, amplitude, Fp1:Oz,factor_key=TRUE)
+
+# Rename A1/A2
+  names(ga_topo_long_tg)[names(ga_topo_long_tg) == "A1"] = "TP9"
+  names(ga_topo_long_tg)[names(ga_topo_long_tg) == "A2"] = "TP10"
+  
+# Plot topoplots for happy
+  Topo_Emo_Hap_TG = subset(ga_topo_long_tg, emo == 1)
+  
+# Plot topoplots for neutral
+  Topo_Emo_Neu_TG = subset(ga_topo_long_tg, emo == 3)
+
+# Plot topoplots for angry
+  Topo_Emo_Ang_TG = subset(ga_topo_long_tg, emo == 2)
+  
+# Calculate difference score angry-neutral
+  Topo_Diff_Ang_Neu_TG = data.frame(time = Topo_Emo_Hap_TG[,1],
+                                  electrode = Topo_Emo_Hap_TG[,3], amplitude = Topo_Emo_Ang_TG$amplitude - Topo_Emo_Neu_TG$amplitude)
+  
+  
+# Calculate difference score happy-neutral
+  Topo_Diff_Hap_Neu_TG = data.frame(time = Topo_Emo_Hap_TG[,1],
+                                  electrode = Topo_Emo_Hap_TG[,3], amplitude = Topo_Emo_Hap_TG$amplitude - Topo_Emo_Neu_TG$amplitude)  
+  
+  
+# Calculate difference score happy-angry
+  Topo_Diff_Hap_Ang_TG = data.frame(time = Topo_Emo_Hap_TG[,1],
+                                  electrode = Topo_Emo_Hap_TG[,3], amplitude = Topo_Emo_Hap_TG$amplitude - Topo_Emo_Ang_TG$amplitude)    
+
+# Select time windows
+  Topo_Diff_Ang_Neu_TG_P3 = subset(Topo_Diff_Ang_Neu_TG, time >= 300 & time <= 500)
+  Topo_Diff_Hap_Neu_TG_P3 = subset(Topo_Diff_Hap_Neu_TG, time >= 300 & time <= 500)
+  Topo_Diff_Hap_Ang_TG_P3 = subset(Topo_Diff_Hap_Ang_TG, time >= 300 & time <= 500)
+
+# Add electrode information  
+  Topo_Diff_Ang_Neu_TG_P3 = electrode_locations(Topo_Diff_Ang_Neu_TG_P3, electrode = "electrode",  drop = FALSE, montage = NULL)
+  Topo_Diff_Hap_Neu_TG_P3 = electrode_locations(Topo_Diff_Hap_Neu_TG_P3, electrode = "electrode",  drop = FALSE, montage = NULL)
+  Topo_Diff_Hap_Ang_TG_P3 = electrode_locations(Topo_Diff_Hap_Ang_TG_P3, electrode = "electrode",  drop = FALSE, montage = NULL)
+
+# Draw topographies
+  Topo_Diff_Ang_Neu_TG_P3_plot = ggplot(Topo_Diff_Ang_Neu_TG_P3, aes(x = x, y = y, fill = amplitude, label = electrode)) +
+                    ggtitle("angry \u2013 neutral")+
+                    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5,
+                              head_size = 0.9) +
+                    scale_fill_distiller(palette = "RdBu" , limits = c(-3.5,2.5)) +
+                    theme_void() +
+                    coord_equal() +
+                    labs(fill = expression(paste("Amplitude (", mu,"V)")))+
+                    theme(legend.position = "none", plot.title = element_text(size = 8, face = "bold", hjust = 0.5))
+  
+
+# Draw topographies
+  Topo_Diff_Hap_Neu_TG_P3_plot = ggplot(Topo_Diff_Hap_Neu_TG_P3, aes(x = x, y = y, fill = amplitude, label = electrode)) +
+                   ggtitle("  happy \u2013 neutral")+
+                    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5,
+                              head_size = 0.9) +
+                    scale_fill_distiller(palette = "RdBu" , limits = c(-3.5,2.5)) +
+                    theme_void() +
+                    coord_equal() +
+                    labs(fill = expression(paste("Amplitude (", mu,"V)")))+
+                    theme(legend.position = "none", plot.title = element_text(size = 8, face = "bold", hjust = 0.5)) 
+  
+  
+# Display plots
+  fig_topo_P3_emo_CG = cowplot::plot_grid(Topo_Diff_Hap_Neu_CG_P3_plot, Topo_Diff_Ang_Neu_CG_P3_plot, nrow=1)
+  
+  fig_topo_P3_emo_TG = cowplot::plot_grid(Topo_Diff_Hap_Neu_TG_P3_plot, Topo_Diff_Ang_Neu_TG_P3_plot, nrow=1)
+  
+# ERP - Plot differences between training and control group
+
+  group.labs = c("Controls", "Zirkus Empathico", "")
+  names(group.labs) = c("CG", "TG")
+
+  ERP_group = ggplot(P1_P3_traj ,aes(time,amplitude))+
+    theme(panel.background = element_blank(),panel.border = element_rect(colour = "grey", fill=NA, size=2),
+           axis.title.y = element_text(size = 10, margin = margin(t = 0, r = 5, b = 0, l = 0)),
+          axis.title.x = element_text(size = 10, margin = margin(t = 0, r = 0, b = 0, l = 0)),
+          legend.key = element_rect(fill = "white"))+ 
+    stat_summary(fun.y = mean,geom = "line", size = 1, linetype = "solid",aes(colour = cond))+
+    scale_colour_manual(values = ZE_ERP_col)+
+    #ggtitle("P1 & P3") +
+    theme(legend.position="right", strip.background = element_rect(color="darkgrey", fill="white", size=1, linetype="solid"),
+          strip.text.x = element_text(size = 10, face = "bold")) +
+    labs(x = "\nTime [ms]",y = expression(paste("Amplitude [", mu,"V]")),colour = "") +
+    coord_cartesian(ylim=c(-3,8),xlim=c(-100,600)) +
+    scale_y_continuous(breaks=seq(-3,8,2))+
+    scale_x_continuous(breaks=seq(-100,600,200))+
+    geom_vline(xintercept = 0,linetype = "dashed",colour="grey" )+
+    geom_hline(yintercept = 0,linetype = "dashed",colour="grey")+
+    annotate("rect", xmin = 90, xmax = 130, ymin = -4, ymax = 9, alpha = .2)+
+    annotate("rect", xmin = 180, xmax = 220, ymin = -4, ymax = 9, alpha = .2)+
+    annotate("rect", xmin = 300, xmax = 500, ymin = -4, ymax = 9, alpha = .2)+
+    facet_wrap(~group, labeller = labeller(group = group.labs), ncol = 2)
+  
+  
+# Get legend
+  Topo_Diff_leg = ggplot(Topo_Diff_Hap_Neu_TG_P3, aes(x = x, y = y, fill = amplitude, label = electrode)) +
+                    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5,
+                              head_size = 0.9) +
+                    scale_fill_distiller(palette = "RdBu" , limits = c(-3.5,2.5)) +
+                    theme_void() +
+                    coord_equal() +
+                    labs(fill = expression(paste("", mu,"V")))+
+                    theme(legend.position = "right", plot.title = element_text(size =5, face = "bold", hjust = 0.5)) 
+
+  topo_leg = get_legend(Topo_Diff_leg)  
+  
+# Combine figures  
+  fig_topo = cowplot::plot_grid(NULL, fig_topo_P3_emo_CG, NULL, fig_topo_P3_emo_TG, NULL, topo_leg,
+                                       ncol=6,
+                                       rel_widths = c(0.1, 1, 0.1, 1, 0.1, 0.2), 
+                                       rel_heights = c(0.1, 1, 0.1, 1, 0.1, 0.2))
+
+  fig_topo_erp = cowplot::plot_grid(ERP_group, fig_topo, nrow = 2, rel_heights = c(1, 0.4))
+
+  fig_topo_erp  
+  
+
+ggsave(fig_topo_erp, file = "zerp_erps.tiff", dpi = 300)
+
+```
+
+
+## Early and late components {.tabset .tabset-pills}
+
+### P1
+
+For the P1, no training effect (*F*(1,58) = 0.02, *p* = 0.89), but a main effect of facial expression was found (*F*(2,116) = 5.45, *p* < 0.01, $\eta^{2}{p}$ = 0.09). P1 amplitudes were larger for happy vs. neutral faces (*p* = 0.004); we detected no amplitude differences for angry vs. neutral faces (*p* = 0.09), or for happy vs. angry faces (*p* = 0.50). The interaction of training and emotion did not yield significant results (*F*(2,116) = 0.64, *p* = 0.53). 
+
+```{r anova_P1_amp, results = 'asis'}
+
+  P1_amp_all_emo_an = aov_ez("ID", "amplitude", P1_amp_all_emo, between = c("group"),
+                      within = c("emotion") ,
+                      anova_table = list(correction = "none", es = "pes"))
+
+  pander(P1_amp_all_emo_an$anova_table)
+  
+  
+```
+
+```{r P1_amp_ph_calc, include = FALSE}
+
+# Do post-hoc test 
+  P1_amp_ph = emmeans(P1_amp_all_emo_an, ~ "emotion")
+  P1_amp_ph_res = print(pairs(P1_amp_ph))
+
+```
+
+*Post-hoc tests*
+
+```{r P1_amp_ph_res, results = 'asis'}
+
+# Display post-hoc test results
+  pander(P1_amp_ph_res)
+
+```
+
+### N170
+
+N170 amplitudes were neither modulated by training (*F*(1,58) = 0.01, *p* = 0.91), facial expression (*F*(2,116) = 0.36, *p* = 0.70), nor their interaction (*F*(2,116) = 0.39, *p* = 0.68; due to a lack of N170 hemispheric differences averaged ROI results are reported). 
+
+```{r anova_N170_amp, results = 'asis'}
+
+  N170_amp =  aov_ez("ID", "amplitude", N170_amp_all_emo, within = c("emotion"), between = c("group"),
+                      anova_table = list(correction = "none", es = "pes"))
+
+  pander(N170_amp$anova_table)
+
+```
+
+### P3
+
+Concerning the P3, we did not detect a main effect of training (*F*(1,58) = 0.01, *p* = 0.91), but a significant effect of facial expression (*F*(2,116) = 3.58, *p* = 0.02, $\eta^{2}{p}$ = 0.06). P3 amplitudes were larger for happy vs. neutral faces (*p* = 0.02), while P3 amplitudes for angry vs. neutral faces (*p* = 0.09) or happy vs. angry faces were not statistically significant (*p* = 0.83). The facial expression main effect was qualified by an interaction with training (*F*(2,116) = 3.58, *p* = 0.03, $\eta^{2}{p}$ = 0.06). Specifically, the Zirkus Empathico group showed larger P3 amplitudes for happy vs. neutral faces (*p* = 0.01); no significant differences for angry vs. neutral faces (*p* = 0.84) emerged. In contrast, P3 amplitudes for controls were larger for angry vs. neutral faces (*p* = 0.045), with no differences between happy vs. neutral faces (*p* = 0.62) None of the other post-hoc tests yielded significant results (all *p* > .06). 
+
+```{r anova_P3_amp_all_emo, results = 'asis'}
+
+  P3_amp_an_all_emo =  aov_ez("ID", "amplitude", P3_amp_all_emo, within = c("emotion"), between = c("group"),
+                       anova_table = list(correction = "none", es = "pes"))
+
+  pander(P3_amp_an_all_emo$anova_table)
+  
+```
+
+<br>
+
+*Post-hoc tests*
+
+```{r P3_amp_emo_ph_res, include = FALSE}
+
+# Do post-hoc test 
+  P3_amp_ph = emmeans(P3_amp_an_all_emo, ~ "emotion")
+  P3_amp_ph_all_emo = print(pairs(P3_amp_ph))
+
+```
+
+```{r, results = 'asis'}
+# Display post-hoc test results
+  pander(P3_amp_ph_all_emo)
+```
+
+```{r P3_amp_ph_calc, include = FALSE}
+
+# Do post-hoc test 
+  P3_amp_ph = emmeans(P3_amp_an_all_emo, ~ "emotion", by = "group")
+  P3_amp_ph_all_emo = print(pairs(P3_amp_ph))
+  
+```
+
+```{r, results = 'asis'}
+# Display post-hoc test results
+  pander(P3_amp_ph_all_emo)
+```
+
