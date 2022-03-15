@@ -1,7 +1,7 @@
 name: "Data_Analysis"
 output_dir: "docs"
 navbar:
-  title: "Naumann et al."
+  title: "NAU ZERP"
   #type: inverse 
   left:
     - text: "Introduction"
@@ -10,18 +10,15 @@ navbar:
     - text: "Sample description"
       icon: glyphicon glyphicon-education
       href: Script_1_Sampl_Descr.html
-    - text: "Child-/Parental measures"
+    - text: "Confirmatory Analysis"
       icon: glyphicon-hand-up
-      href: Script_2_Report_Measures.html
-    - text: "ERPs"
+      href: Script_2_Conf_Analysis.html
+    - text: "Complementary Analysis"
       icon: glyphicon-user
-      href: Script_3_ERPs.html
-    - text: "Correlational analysis"
-      icon: glyphicon-resize-small
-      href: Script_4_Brain_Behavior.html
-    - text: "Supplement"
+      href: Script_3_Compl_Analysis.html
+    - text: "Further fidelity"
       icon: glyphicon glyphicon-piggy-bank
-      href: Script_5_Supplement.html
+      href: Script_4_Further_Fidel.html
   right:
     - icon: ai ai-osf ai-lg
       href: https://osf.io/vzgtb/ 

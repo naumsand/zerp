@@ -33,9 +33,11 @@ output:
   rm(list=ls())
   
 # Set libraries
+  library(eeptools)
   library(expss)
   library(gtsummary)
   library(miceadds)
+  library(tadaatoolbox)
   library(tidyverse)
 
 # Round to 2 digits   
@@ -48,9 +50,140 @@ output:
 
 # Participants
   
+```{r prep_data, eval = FALSE, include = FALSE}
+
+# Load raw questionnaire data
+  load.Rdata(filename="./data/qn_data_orig.Rdata", "qn_data")
+
+# Re-code gender
+  qn_data$sex[qn_data$sex == 1] = "Male"
+  qn_data$sex[qn_data$sex == 2] = "Female"
+  
+# Re-code training group
+  qn_data$group[qn_data$group == "ZE"] = "TG"
+  qn_data$group[qn_data$group == "SB"] = "CG"
+
+# Define N/A data
+  qn_data[qn_data==-99] = NA
+  
+# Calculate age (Extract age from birth/test date)
+  qn_data$age = as.numeric(cbind(age_calc(as.Date(qn_data$birth_date),
+                                     as.Date(qn_data$test_date), units = "years"))) # Needs to be numeric to create table
+  
+# Remove birth and test date column
+  qn_data = subset(qn_data, select=-c(birth_date,test_date))
+  
+# Calculate Winkler-Index 
+
+  # Create Winkler Index 
+  
+    # For the Winkler Index, one awards points for income, occupation and education level of each
+    # parent. Points range from 1-5. These points are added up. The maximum value would be 15 points.
+    # For education and occupation, the parent with the larger score was chosen per family. 
+  
+  # Income
+    # 1 = 0-1250 Euro
+    # 2 = 1250-2000 Euro
+    # 3 = 2000-3000 Euro,
+    # 4 = 3000-5000 Euro
+    # 5 = more than 5000 Euro
+  
+    qn_data$income_rec[qn_data$income==1 | qn_data$income==2 | qn_data$income==3 | qn_data$income==4] = 1
+    qn_data$income_rec[qn_data$income==5 | qn_data$income==6 | qn_data$income==7] = 2
+    qn_data$income_rec[qn_data$income==8 | qn_data$income==9 | qn_data$income==10] = 3
+    qn_data$income_rec[qn_data$income==11 | qn_data$income==12] = 4
+    qn_data$income_rec[qn_data$income==13] = 5
+    
+  # Education
+    # 1 = no degree
+    # 2 = secondary modern school [German: "Hauptschule"]
+    # 3 = middle school [German: "Realschule"]
+    # 4 = advanced technical college entrance qualification [German: "Fachhochschulreife"]
+    # 5 = higher education entrance qualification (A-levels) [German: "Abitur"]
+  
+  # for mum
+    qn_data$mum_ed_rec[qn_data$mum_ed==7 | qn_data$mum_ed==8] = 1
+    qn_data$mum_ed_rec[qn_data$mum_ed==1 | qn_data$mum_ed==6] = 2
+    qn_data$mum_ed_rec[qn_data$mum_ed==2 | qn_data$mum_ed==3] = 3
+    qn_data$mum_ed_rec[qn_data$mum_ed==4] = 4
+    qn_data$mum_ed_rec[qn_data$mum_ed==5] = 5
+
+  
+  # for dad
+    qn_data$dad_ed_rec[qn_data$dad_ed==7 | qn_data$dad_ed==8] = 1
+    qn_data$dad_ed_rec[qn_data$dad_ed==1 | qn_data$dad_ed==6] = 2
+    qn_data$dad_ed_rec[qn_data$dad_ed==2 | qn_data$dad_ed==3] = 3
+    qn_data$dad_ed_rec[qn_data$dad_ed==4] = 4
+    qn_data$dad_ed_rec[qn_data$dad_ed==5] = 5
+  
+  # Occupation 
+    # 1 = student
+    # 2 = skilled worker [German:Gelernter "Facharbeiter"]
+    # 3 = foremen/forwomen [German: "Vorarbeiter"]
+    # 4 = clerk in the middle grade of the civil service [German: "Beamter mittlerer Dienst"]
+    # 5 = senior officials [German: "Beamte höherer Dienst"]
+  
+  # for mum
+    qn_data$occ_mum[qn_data$mum_occup_ISCO==5 | qn_data$mum_occup_ISCO==11 |
+                      qn_data$mum_occup_ISCO==12 | qn_data$mum_occup_ISCO==51 | 
+                      qn_data$mum_occup_ISCO==52] = 1
+    
+    qn_data$occ_mum[qn_data$mum_occup_ISCO==13 | qn_data$mum_occup_ISCO==21 |
+                      qn_data$mum_occup_ISCO==26 | qn_data$mum_occup_ISCO==31 |
+                      qn_data$mum_occup_ISCO==32] = 2
+    
+    qn_data$occ_mum[qn_data$mum_occup_ISCO==14 | qn_data$mum_occup_ISCO==33 | 
+                      qn_data$mum_occup_ISCO==41] = 3
+    
+    qn_data$occ_mum[qn_data$mum_occup_ISCO==2 | qn_data$mum_occup_ISCO==22 | 
+                      qn_data$mum_occup_ISCO==23 | qn_data$mum_occup_ISCO==24 |
+                      qn_data$mum_occup_ISCO==34 | qn_data$mum_occup_ISCO==42] = 4
+    
+    qn_data$occ_mum[qn_data$mum_occup_ISCO==25 | 
+                      qn_data$mum_occup_ISCO==35 | qn_data$mum_occup_ISCO==43 |
+                      qn_data$mum_occup_ISCO==44] = 5
+  
+  # for dad
+    qn_data$occ_dad[qn_data$dad_occup_ISCO==5 | qn_data$dad_occup_ISCO==11 |
+                      qn_data$dad_occup_ISCO==12 | qn_data$dad_occup_ISCO==51 |
+                      qn_data$dad_occup_ISCO==52] = 1
+    
+    qn_data$occ_dad[qn_data$dad_occup_ISCO==13 | qn_data$dad_occup_ISCO==21 | 
+                      qn_data$dad_occup_ISCO==26 | qn_data$dad_occup_ISCO==31 | 
+                      qn_data$dad_occup_ISCO==32] = 2
+    
+    qn_data$occ_dad[qn_data$dad_occup_ISCO==14 | qn_data$dad_occup_ISCO==33 | 
+                      qn_data$dad_occup_ISCO==41] = 3
+    
+    qn_data$occ_dad[qn_data$dad_occup_ISCO==2 | qn_data$dad_occup_ISCO==22 | 
+                      qn_data$dad_occup_ISCO==23 | qn_data$dad_occup_ISCO==24 |
+                      qn_data$dad_occup_ISCO==34 | qn_data$dad_occup_ISCO==42] = 4
+    
+    qn_data$occ_dad[qn_data$dad_occup_ISCO==25 | qn_data$dad_occup_ISCO==35 |
+                      qn_data$dad_occup_ISCO==43 | qn_data$dad_occup_ISCO==44] = 5
+  
+  # Calculate Winkler index
+    # Sum up all points (choose the parent with the larger score). 
+  
+    for (h in 1:length(qn_data$ID)){
+      qn_data$wink_ind[h] = sum(qn_data$income_rec[h],
+                            max(qn_data$occ_dad[h],qn_data$occ_mum[h]),
+                            max(qn_data$mum_ed_rec[h],qn_data$dad_ed_rec[h]))
+    }
+     
+  
+# Remove extra SES data columns
+  qn_data = subset(qn_data, select=-c(mum_occup_ISCO,dad_occup_ISCO, income, mum_ed, dad_ed, occ_mum, occ_dad, income_rec, dad_ed_rec, mum_ed_rec))
+  
+  
+# Save in Rdata format
+  save(qn_data, file = "./data/qn_data.RData")  
+
+```
+
 ```{r load_data, include = FALSE}
 
-# Load questionnaire data
+# Load data
   load.Rdata(filename="./data/qn_data.Rdata", "qn_data")
 
 ```
@@ -63,7 +196,7 @@ output:
 
 
 # Select screening variables
-  qn_data_demog = qn_data %>% select(group, sex, sibs, age, wink_ind, PPVT_perc, CPM)
+  qn_data_demog = qn_data %>% select(group, sex, sibs, age, wink_ind, PPVT_perc, CPM, T_Self_Report, train_weeks)
 
 # Rename groups
   qn_data_demog$group = dplyr::recode(qn_data_demog$group, 
@@ -77,20 +210,23 @@ output:
                       wink_ind = "SES (Winkler index)",
                       PPVT_perc = "Verbal age (PPVT percentiles)",
                       CPM = "Nonverbal IQ (CPM)")
+  
+# Make SES categorical variable
+  qn_data_demog$wink_ind = factor(qn_data_demog$wink_ind)
 
 # Prepare table
   demog_table =
     tbl_summary(
       qn_data_demog,
       by = group, # split table by group
-      type = c(sibs, age, wink_ind, PPVT_perc, CPM) ~ "continuous",
+      type = c(age, PPVT_perc, CPM) ~ "continuous",
       statistic = list(all_continuous() ~ "{mean} ({sd})", # descriptives definition
                      all_categorical() ~ "{n} / {N} ({p}%)"),
       digits = all_continuous() ~ 2,
       missing = "no" # don't list missing data separately
     ) %>%
     add_n() %>% # add column with total number of non-missing observations
-    add_p() %>% # test for a difference between groups
+    #add_p() %>% # test for a difference between groups
     modify_header(label = "**Variable**") %>% # update the column header
     bold_labels()
   
@@ -102,3 +238,19 @@ output:
 </div>
 
 Note. SES = socioeconomic status (Winkler & Stolzenberg, 1998, range: 3-15, low SES = 3-6, medium SES = 7-10, high SES = 11-15), PPVT = Peabody Picture Vocabulary Test, CPM = Coloured Progressive Matrices.
+
+```{r diff_train_time, results = "asis", eval = FALSE}
+
+  tadaa_t.test(data = qn_data , response = T_Self_Report, group = group, print = "markdown")
+```
+
+# Session info
+
+<!-- Provide session info  -->
+
+```{r session_info, results = TRUE}
+
+# Get session info 
+  sessionInfo()
+
+```

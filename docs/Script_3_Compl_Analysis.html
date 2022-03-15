@@ -1,0 +1,2244 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="generator" content="pandoc" />
+
+    
+    
+    <title>Complementary analysis</title>
+    <!-- Material Design fonts -->
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700">
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+
+        <script src="site_libs/header-attrs-2.7/header-attrs.js"></script>
+        <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link href="site_libs/bootstrap-3.3.7/css/bootstrap.min.css" rel="stylesheet" />
+        <script src="site_libs/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+        <script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+        <script src="site_libs/navigation-1.1/tabsets.js"></script>
+        <script src="site_libs/navigation-1.1/codefolding.js"></script>
+        <link href="site_libs/magnific-popup-1.1.0/magnific-popup.css" rel="stylesheet" />
+        <script src="site_libs/magnific-popup-1.1.0/jquery.magnific-popup.min.js"></script>
+        <link href="site_libs/bootstrap_material-0.1/bootstrap-material-design.min.css" rel="stylesheet" />
+        <link href="site_libs/bootstrap_material-0.1/ripples.min.css" rel="stylesheet" />
+        <script src="site_libs/bootstrap_material-0.1/material.min.js"></script>
+        <script src="site_libs/bootstrap_material-0.1/ripples.min.js"></script>
+        <link href="site_libs/material-0.1/material.css" rel="stylesheet" />
+        <script src="site_libs/material-0.1/material.js"></script>
+        <link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+        <link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+    
+    
+        <style type="text/css">code{white-space: pre;}</style>
+    <style type="text/css">
+      pre > code.sourceCode { white-space: pre; position: relative; }
+      pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+      pre > code.sourceCode > span:empty { height: 1.2em; }
+      code.sourceCode > span { color: inherit; text-decoration: inherit; }
+      div.sourceCode { margin: 1em 0; }
+      pre.sourceCode { margin: 0; }
+      @media screen {
+      div.sourceCode { overflow: auto; }
+      }
+      @media print {
+      pre > code.sourceCode { white-space: pre-wrap; }
+      pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+      }
+      pre.numberSource code
+        { counter-reset: source-line 0; }
+      pre.numberSource code > span
+        { position: relative; left: -4em; counter-increment: source-line; }
+      pre.numberSource code > span > a:first-child::before
+        { content: counter(source-line);
+          position: relative; left: -1em; text-align: right; vertical-align: baseline;
+          border: none; display: inline-block;
+          -webkit-touch-callout: none; -webkit-user-select: none;
+          -khtml-user-select: none; -moz-user-select: none;
+          -ms-user-select: none; user-select: none;
+          padding: 0 4px; width: 4em;
+          background-color: #ffffff;
+          color: #a0a0a0;
+        }
+      pre.numberSource { margin-left: 3em; border-left: 1px solid #a0a0a0;  padding-left: 4px; }
+      div.sourceCode
+        { color: #1f1c1b; background-color: #ffffff; }
+      @media screen {
+      pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+      }
+      code span { color: #1f1c1b; } /* Normal */
+      code span.al { color: #bf0303; background-color: #f7e6e6; font-weight: bold; } /* Alert */
+      code span.an { color: #ca60ca; } /* Annotation */
+      code span.at { color: #0057ae; } /* Attribute */
+      code span.bn { color: #b08000; } /* BaseN */
+      code span.bu { color: #644a9b; font-weight: bold; } /* BuiltIn */
+      code span.cf { color: #1f1c1b; font-weight: bold; } /* ControlFlow */
+      code span.ch { color: #924c9d; } /* Char */
+      code span.cn { color: #aa5500; } /* Constant */
+      code span.co { color: #898887; } /* Comment */
+      code span.cv { color: #0095ff; } /* CommentVar */
+      code span.do { color: #607880; } /* Documentation */
+      code span.dt { color: #0057ae; } /* DataType */
+      code span.dv { color: #b08000; } /* DecVal */
+      code span.er { color: #bf0303; text-decoration: underline; } /* Error */
+      code span.ex { color: #0095ff; font-weight: bold; } /* Extension */
+      code span.fl { color: #b08000; } /* Float */
+      code span.fu { color: #644a9b; } /* Function */
+      code span.im { color: #ff5500; } /* Import */
+      code span.in { color: #b08000; } /* Information */
+      code span.kw { color: #1f1c1b; font-weight: bold; } /* Keyword */
+      code span.op { color: #1f1c1b; } /* Operator */
+      code span.ot { color: #006e28; } /* Other */
+      code span.pp { color: #006e28; } /* Preprocessor */
+      code span.re { color: #0057ae; background-color: #e0e9f8; } /* RegionMarker */
+      code span.sc { color: #3daee9; } /* SpecialChar */
+      code span.ss { color: #ff5500; } /* SpecialString */
+      code span.st { color: #bf0303; } /* String */
+      code span.va { color: #0057ae; } /* Variable */
+      code span.vs { color: #bf0303; } /* VerbatimString */
+      code span.wa { color: #bf0303; } /* Warning */
+    </style>
+    
+        <link rel="stylesheet" href="web_style.css" type="text/css" />
+    
+    <!-- tabsets -->
+    <script>
+      $(document).ready(function () {
+	  window.buildTabsets("toc");
+      });
+      $(document).ready(function () {
+	  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+	      $(this).parent().toggleClass('nav-tabs-open')
+	  });
+      });
+    </script>
+
+    <!-- code folding -->
+        <script>
+      $(document).ready(function () {
+	  	  	  window.initializeCodeFolding("hide" === "show");
+	        });
+    </script>
+    
+    <!-- code download -->
+    
+
+    <!-- tabsets dropdown -->
+
+    <style type="text/css">
+      .tabset-dropdown > .nav-tabs {
+	  display: inline-table;
+	  max-height: 500px;
+	  min-height: 44px;
+	  overflow-y: auto;
+	  background: white;
+	  border: 1px solid #ddd;
+	  border-radius: 4px;
+      }
+      
+      .tabset-dropdown > .nav-tabs > li.active:before {
+	  content: "";
+	  font-family: 'Glyphicons Halflings';
+	  display: inline-block;
+	  padding: 10px;
+	  border-right: 1px solid #ddd;
+      }
+      
+      .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+	  content: "&#xe258;";
+	  border: none;
+      }
+      
+      .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+	  content: "";
+	  font-family: 'Glyphicons Halflings';
+	  display: inline-block;
+	  padding: 10px;
+	  border-right: 1px solid #ddd;
+      }
+      
+      .pages .tabset-dropdown > .nav-tabs > li.active {
+	  display: block;
+      }
+
+      .pages .tabset-dropdown > .nav-tabs > li.active > a {
+	  background-color: transparent !important;
+	  color: #000000 !important;
+      }
+      
+      .tabset-dropdown > .nav-tabs > li > a,
+      .tabset-dropdown > .nav-tabs > li > a:focus,
+      .tabset-dropdown > .nav-tabs > li > a:hover {
+	  border: none;
+	  display: inline-block;
+	  border-radius: 4px;
+	  background-color: transparent;
+	  color: #00A698 !important;
+	  font-weight: 300 !important;
+	  font-size: 14px;
+      }
+      
+      .tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+	  display: block;
+	  float: none;
+      }
+      
+      .tabset-dropdown > .nav-tabs > li {
+	  display: none;
+      }
+    </style>
+    
+</head>
+
+<body>
+
+  <div class="header-panel shadow z-2">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-xs-3">
+	  	  <div id="header">
+	    <h1 class="title">Complementary analysis</h1>
+	    	    	    	  </div>
+	  	</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="container-fluid main-container">
+    <div class="row">
+
+<nav class="col-xs-3 menu">
+<div id="toc">
+<ul>
+<li><a href="#training-fidelity">Training fidelity</a></li>
+<li><a href="#long-term-effects">Long-term effects</a></li>
+<li><a href="#correlations">Correlations</a></li>
+<li><a href="#session-info">Session info</a></li>
+</ul>
+</div>
+</nav>
+      
+<div class="pages col-xs-9">
+
+        
+<div class="row">
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">NAU ZERP</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">
+    <span class="glyphicon glyphicon-info-sign"></span>
+     
+    Introduction
+  </a>
+</li>
+<li>
+  <a href="Script_1_Sampl_Descr.html">
+    <span class="glyphicon glyphicon glyphicon glyphicon-education"></span>
+     
+    Sample description
+  </a>
+</li>
+<li>
+  <a href="Script_2_Conf_Analysis.html">
+    <span class="glyphicon glyphicon-hand-up"></span>
+     
+    Confirmatory Analysis
+  </a>
+</li>
+<li>
+  <a href="Script_3_Compl_Analysis.html">
+    <span class="glyphicon glyphicon-user"></span>
+     
+    Complementary Analysis
+  </a>
+</li>
+<li>
+  <a href="Script_4_Further_Fidel.html">
+    <span class="glyphicon glyphicon glyphicon glyphicon-piggy-bank"></span>
+     
+    Further fidelity
+  </a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://osf.io/vzgtb/">
+    <span class="ai ai ai ai-osf ai-lg"></span>
+     
+  </a>
+</li>
+<li>
+  <a href="mailto:sandra.naumann@hu-berlin.de">
+    <span class="fas fa-envelope fa-lg"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+<link rel="stylesheet" href="https://cdn.rawgit.com/jpswalsh/academicons/master/css/academicons.min.css">
+</div>
+
+    
+<div class="row">
+
+<div class="col-xs-10">
+<!-- Set up workspace -->
+<div id="training-fidelity" class="section level1">
+<h1>Training fidelity</h1>
+<p><strong>Training engagement across groups</strong></p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="co"># Select screening variables</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true"></a>  qn_data_train_time =<span class="st"> </span>qn_data <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(group, T_Self_Report, train_weeks)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true"></a><span class="co"># Rename groups</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true"></a>  qn_data_train_time<span class="op">$</span>group =<span class="st"> </span>dplyr<span class="op">::</span><span class="kw">recode</span>(qn_data_train_time<span class="op">$</span>group, </span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true"></a>                         <span class="dt">CG =</span> <span class="st">&quot;Controls&quot;</span>, <span class="dt">TG =</span> <span class="st">&quot;Zirkus Empathico&quot;</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true"></a><span class="co"># Apply labels</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true"></a>  qn_data_train_time =<span class="st"> </span><span class="kw">apply_labels</span>(qn_data_train_time,</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true"></a>                      <span class="dt">T_Self_Report =</span> <span class="st">&quot;Training time (min)&quot;</span>,</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true"></a>                      <span class="dt">sibs =</span> <span class="st">&quot;Training duration (weeks)&quot;</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true"></a><span class="co"># Prepare table</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true"></a>  train_time_table =</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true"></a><span class="st">    </span><span class="kw">tbl_summary</span>(</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true"></a>      qn_data_train_time,</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true"></a>      <span class="dt">by =</span> group, <span class="co"># split table by group</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true"></a>      <span class="dt">type =</span> <span class="kw">c</span>(T_Self_Report, train_weeks) <span class="op">~</span><span class="st"> &quot;continuous&quot;</span>,</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true"></a>      <span class="dt">statistic =</span> <span class="kw">list</span>(<span class="kw">all_continuous</span>() <span class="op">~</span><span class="st"> &quot;{mean} ({sd})&quot;</span>, <span class="co"># descriptives definition</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true"></a>                     <span class="kw">all_categorical</span>() <span class="op">~</span><span class="st"> &quot;{n} / {N} ({p}%)&quot;</span>),</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true"></a>      <span class="dt">digits =</span> <span class="kw">all_continuous</span>() <span class="op">~</span><span class="st"> </span><span class="dv">2</span>,</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true"></a>      <span class="dt">missing =</span> <span class="st">&quot;no&quot;</span> <span class="co"># don&#39;t list missing data separately</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true"></a>    ) <span class="op">%&gt;%</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true"></a><span class="st">    </span><span class="kw">add_n</span>() <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># add column with total number of non-missing observations</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true"></a><span class="st">    </span><span class="kw">modify_header</span>(<span class="dt">label =</span> <span class="st">&quot;**Variable**&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># update the column header</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true"></a><span class="st">    </span><span class="kw">bold_labels</span>()</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true"></a>  </span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true"></a><span class="co"># Print table </span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true"></a>  train_time_table</span></code></pre></div>
+<style>html {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
+}
+
+#qumwtkhuqw .gt_table {
+  display: table;
+  border-collapse: collapse;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#qumwtkhuqw .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#qumwtkhuqw .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#qumwtkhuqw .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 0;
+  padding-bottom: 4px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#qumwtkhuqw .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#qumwtkhuqw .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#qumwtkhuqw .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#qumwtkhuqw .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#qumwtkhuqw .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#qumwtkhuqw .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#qumwtkhuqw .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#qumwtkhuqw .gt_group_heading {
+  padding: 8px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#qumwtkhuqw .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#qumwtkhuqw .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#qumwtkhuqw .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#qumwtkhuqw .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#qumwtkhuqw .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 12px;
+}
+
+#qumwtkhuqw .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#qumwtkhuqw .gt_first_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+}
+
+#qumwtkhuqw .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#qumwtkhuqw .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#qumwtkhuqw .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#qumwtkhuqw .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#qumwtkhuqw .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#qumwtkhuqw .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding: 4px;
+}
+
+#qumwtkhuqw .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#qumwtkhuqw .gt_sourcenote {
+  font-size: 90%;
+  padding: 4px;
+}
+
+#qumwtkhuqw .gt_left {
+  text-align: left;
+}
+
+#qumwtkhuqw .gt_center {
+  text-align: center;
+}
+
+#qumwtkhuqw .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#qumwtkhuqw .gt_font_normal {
+  font-weight: normal;
+}
+
+#qumwtkhuqw .gt_font_bold {
+  font-weight: bold;
+}
+
+#qumwtkhuqw .gt_font_italic {
+  font-style: italic;
+}
+
+#qumwtkhuqw .gt_super {
+  font-size: 65%;
+}
+
+#qumwtkhuqw .gt_footnote_marks {
+  font-style: italic;
+  font-size: 65%;
+}
+</style>
+<div id="qumwtkhuqw" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;"><table class="gt_table">
+  
+  <thead class="gt_col_headings">
+    <tr>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1"><strong>Variable</strong></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>N</strong></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>Controls</strong>, N = 38<sup class="gt_footnote_marks">1</sup></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>Zirkus Empathico</strong>, N = 36<sup class="gt_footnote_marks">1</sup></th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr>
+      <td class="gt_row gt_left" style="font-weight: bold;">Training time (min)</td>
+      <td class="gt_row gt_center">71</td>
+      <td class="gt_row gt_center">323.76 (127.95)</td>
+      <td class="gt_row gt_center">351.21 (122.52)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="font-weight: bold;">train_weeks</td>
+      <td class="gt_row gt_center">74</td>
+      <td class="gt_row gt_center">7.09 (0.90)</td>
+      <td class="gt_row gt_center">6.98 (1.27)</td>
+    </tr>
+  </tbody>
+  
+  <tfoot>
+    <tr class="gt_footnotes">
+      <td colspan="4">
+        <p class="gt_footnote">
+          <sup class="gt_footnote_marks">
+            <em>1</em>
+          </sup>
+           
+          Mean (SD)
+          <br />
+        </p>
+      </td>
+    </tr>
+  </tfoot>
+</table></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true"></a><span class="co"># Correlation training time with Screen time</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true"></a>  <span class="co">#cor_qn_data = subset(qn_data, select = c(T_Self_Report, T_Screen_Time)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true"></a>  <span class="co">#cor_qn_data =  na.omit(cor_qn_data)</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true"></a>  <span class="co">#cor.test(cor_qn_data$T_Screen_Time, cor_qn_data$T_Self_Report, method = c(&quot;pearson&quot;))</span></span></code></pre></div>
+<p><strong>Difference testing for Training duration (in weeks)</strong></p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true"></a><span class="kw">tadaa_t.test</span>(qn_data_train_time, train_weeks, group, <span class="dt">direction =</span> <span class="st">&quot;two.sided&quot;</span>, <span class="dt">paired =</span> <span class="ot">FALSE</span>, </span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true"></a>    <span class="dt">var.equal =</span> <span class="ot">TRUE</span>, <span class="dt">conf.level =</span> <span class="fl">0.95</span>, <span class="dt">print =</span> <span class="kw">c</span>(<span class="st">&quot;markdown&quot;</span>))</span></code></pre></div>
+<p>Table 1: <strong>Two Sample t-test</strong> with alternative hypothesis: <span class="math inline">\(\mu_1 \neq \mu_2\)</span></p>
+<table>
+<thead>
+<tr class="header">
+<th align="center">Diff</th>
+<th align="center"><span class="math inline">\(\mu_1\)</span> Controls</th>
+<th align="center"><span class="math inline">\(\mu_2\)</span> Zirkus Empathico</th>
+<th align="center">t</th>
+<th align="center">SE</th>
+<th align="center">df</th>
+<th align="center"><span class="math inline">\(CI_{95\%}\)</span></th>
+<th align="center">p</th>
+<th align="center">Cohen's d</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">0.11</td>
+<td align="center">7.09</td>
+<td align="center">6.98</td>
+<td align="center">0.43</td>
+<td align="center">0.26</td>
+<td align="center">72</td>
+<td align="center">(-0.4 - 0.62)</td>
+<td align="center">.668</td>
+<td align="center">0.1</td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+<p><br></p>
+<p><strong>Difference testing for total training time (minutes)</strong></p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true"></a><span class="kw">tadaa_t.test</span>(qn_data_train_time, T_Self_Report, group, <span class="dt">direction =</span> <span class="st">&quot;two.sided&quot;</span>, <span class="dt">paired =</span> <span class="ot">FALSE</span>, </span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true"></a>    <span class="dt">var.equal =</span> <span class="ot">TRUE</span>, <span class="dt">conf.level =</span> <span class="fl">0.95</span>, <span class="dt">print =</span> <span class="kw">c</span>(<span class="st">&quot;markdown&quot;</span>))</span></code></pre></div>
+<p>Table 2: <strong>Two Sample t-test</strong> with alternative hypothesis: <span class="math inline">\(\mu_1 \neq \mu_2\)</span></p>
+<table>
+<thead>
+<tr class="header">
+<th align="center">Diff</th>
+<th align="center"><span class="math inline">\(\mu_1\)</span> Controls</th>
+<th align="center"><span class="math inline">\(\mu_2\)</span> Zirkus Empathico</th>
+<th align="center">t</th>
+<th align="center">SE</th>
+<th align="center">df</th>
+<th align="center"><span class="math inline">\(CI_{95\%}\)</span></th>
+<th align="center">p</th>
+<th align="center">Cohen's d</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">-27.45</td>
+<td align="center">323.76</td>
+<td align="center">351.21</td>
+<td align="center">-0.92</td>
+<td align="center">29.79</td>
+<td align="center">69</td>
+<td align="center">(-86.87 - 31.97)</td>
+<td align="center">.36</td>
+<td align="center">-0.22</td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+<p><br></p>
+<p><strong>Parental involvement</strong></p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true"></a><span class="kw">tadaa_t.test</span>(app_stats, Practiced_without_parent, group, <span class="dt">direction =</span> <span class="st">&quot;two.sided&quot;</span>, </span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true"></a>    <span class="dt">paired =</span> <span class="ot">FALSE</span>, <span class="dt">var.equal =</span> <span class="ot">TRUE</span>, <span class="dt">conf.level =</span> <span class="fl">0.95</span>, <span class="dt">print =</span> <span class="kw">c</span>(<span class="st">&quot;markdown&quot;</span>))</span></code></pre></div>
+<p>Table 3: <strong>Two Sample t-test</strong> with alternative hypothesis: <span class="math inline">\(\mu_1 \neq \mu_2\)</span></p>
+<table>
+<thead>
+<tr class="header">
+<th align="center">Diff</th>
+<th align="center"><span class="math inline">\(\mu_1\)</span> Controls</th>
+<th align="center"><span class="math inline">\(\mu_2\)</span> Zirkus Empathico</th>
+<th align="center">t</th>
+<th align="center">SE</th>
+<th align="center">df</th>
+<th align="center"><span class="math inline">\(CI_{95\%}\)</span></th>
+<th align="center">p</th>
+<th align="center">Cohen's d</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">0.26</td>
+<td align="center">3.38</td>
+<td align="center">3.11</td>
+<td align="center">0.85</td>
+<td align="center">0.31</td>
+<td align="center">70</td>
+<td align="center">(-0.35 - 0.88)</td>
+<td align="center">.396</td>
+<td align="center">0.2</td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+<p><br></p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true"></a><span class="co"># with(app_stats, aggregate(Practiced_without_parent ~ group, FUN = sd))</span></span></code></pre></div>
+</div>
+<div id="long-term-effects" class="section level1">
+<h1>Long-term effects</h1>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true"></a><span class="co"># http://www.danieldsjoberg.com/gtsummary/articles/tbl_summary.html</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true"></a>  <span class="kw">load.Rdata</span>(<span class="dt">filename=</span><span class="st">&quot;./data/qn_data_itt.Rdata&quot;</span>, <span class="st">&quot;qn_data_itt&quot;</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true"></a>  qn_data_itt =<span class="st"> </span><span class="kw">subset</span>(qn_data_itt, ID <span class="op">!=</span><span class="st"> &quot;3&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;6&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;7&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;9&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;17&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;21&quot;</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true"></a>                       <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;26&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;28&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;29&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;34&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;35&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;36&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;39&quot;</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true"></a>                       <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;40&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;41&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;42&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;44&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;46&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;48&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;49&quot;</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true"></a>                       <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;50&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;51&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;54&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;55&quot;</span>  <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;56&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;62&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;65&quot;</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true"></a>                       <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;66&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;68&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;70&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;71&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;72&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;73&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;75&quot;</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true"></a>                       <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;76&quot;</span>)</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true"></a><span class="co"># Select screening variables</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true"></a>  qn_data_demog =<span class="st"> </span><span class="kw">subset</span>(qn_data_itt, <span class="dt">select =</span> <span class="kw">c</span>(<span class="st">&quot;group&quot;</span>, <span class="st">&quot;sex&quot;</span>, <span class="st">&quot;age&quot;</span>))</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true"></a></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true"></a></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true"></a><span class="co"># Rename groups</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true"></a>  qn_data_demog<span class="op">$</span>group =<span class="st"> </span>dplyr<span class="op">::</span><span class="kw">recode</span>(qn_data_demog<span class="op">$</span>group, </span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true"></a>                         <span class="dt">CG =</span> <span class="st">&quot;Controls&quot;</span>, <span class="dt">TG =</span> <span class="st">&quot;Zirkus Empathico&quot;</span>)</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true"></a></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true"></a><span class="co"># Apply labels</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true"></a>  qn_data_demog =<span class="st"> </span><span class="kw">apply_labels</span>(qn_data_demog,</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true"></a>                      <span class="dt">sex =</span> <span class="st">&quot;Sex&quot;</span>,</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true"></a>                      <span class="dt">age =</span> <span class="st">&quot;Age (years)&quot;</span>)</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true"></a></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true"></a><span class="co"># Prepare table</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true"></a>  demog_table =</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true"></a><span class="st">    </span><span class="kw">tbl_summary</span>(</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true"></a>      qn_data_demog,</span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true"></a>      <span class="dt">by =</span> group, <span class="co"># split table by group</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true"></a>      <span class="dt">type =</span> <span class="kw">c</span>(age) <span class="op">~</span><span class="st"> &quot;continuous&quot;</span>,</span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true"></a>      <span class="dt">statistic =</span> <span class="kw">list</span>(<span class="kw">all_continuous</span>() <span class="op">~</span><span class="st"> &quot;{mean} ({sd})&quot;</span>, <span class="co"># descriptives definition</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true"></a>                     <span class="kw">all_categorical</span>() <span class="op">~</span><span class="st"> &quot;{n} / {N} ({p}%)&quot;</span>),</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true"></a>      <span class="dt">digits =</span> <span class="kw">all_continuous</span>() <span class="op">~</span><span class="st"> </span><span class="dv">2</span>,</span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true"></a>      <span class="dt">missing =</span> <span class="st">&quot;no&quot;</span> <span class="co"># don&#39;t list missing data separately</span></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true"></a>    ) <span class="op">%&gt;%</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true"></a><span class="st">    </span><span class="kw">add_n</span>() <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># add column with total number of non-missing observations</span></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true"></a><span class="st">    </span><span class="kw">add_p</span>() <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># test for a difference between groups</span></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true"></a><span class="st">    </span><span class="kw">modify_header</span>(<span class="dt">label =</span> <span class="st">&quot;**Variable**&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># update the column header</span></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true"></a><span class="st">    </span><span class="kw">bold_labels</span>()</span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true"></a>  </span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true"></a><span class="co"># Print table </span></span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true"></a>  demog_table</span></code></pre></div>
+<style>html {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
+}
+
+#oobbtzwgos .gt_table {
+  display: table;
+  border-collapse: collapse;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#oobbtzwgos .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#oobbtzwgos .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#oobbtzwgos .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 0;
+  padding-bottom: 4px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#oobbtzwgos .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#oobbtzwgos .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#oobbtzwgos .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#oobbtzwgos .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#oobbtzwgos .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#oobbtzwgos .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#oobbtzwgos .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#oobbtzwgos .gt_group_heading {
+  padding: 8px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#oobbtzwgos .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#oobbtzwgos .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#oobbtzwgos .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#oobbtzwgos .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#oobbtzwgos .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 12px;
+}
+
+#oobbtzwgos .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#oobbtzwgos .gt_first_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+}
+
+#oobbtzwgos .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#oobbtzwgos .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#oobbtzwgos .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#oobbtzwgos .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#oobbtzwgos .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#oobbtzwgos .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding: 4px;
+}
+
+#oobbtzwgos .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#oobbtzwgos .gt_sourcenote {
+  font-size: 90%;
+  padding: 4px;
+}
+
+#oobbtzwgos .gt_left {
+  text-align: left;
+}
+
+#oobbtzwgos .gt_center {
+  text-align: center;
+}
+
+#oobbtzwgos .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#oobbtzwgos .gt_font_normal {
+  font-weight: normal;
+}
+
+#oobbtzwgos .gt_font_bold {
+  font-weight: bold;
+}
+
+#oobbtzwgos .gt_font_italic {
+  font-style: italic;
+}
+
+#oobbtzwgos .gt_super {
+  font-size: 65%;
+}
+
+#oobbtzwgos .gt_footnote_marks {
+  font-style: italic;
+  font-size: 65%;
+}
+</style>
+<div id="oobbtzwgos" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;"><table class="gt_table">
+  
+  <thead class="gt_col_headings">
+    <tr>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1"><strong>Variable</strong></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>N</strong></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>Controls</strong>, N = 24<sup class="gt_footnote_marks">1</sup></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>Zirkus Empathico</strong>, N = 17<sup class="gt_footnote_marks">1</sup></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>p-value</strong><sup class="gt_footnote_marks">2</sup></th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr>
+      <td class="gt_row gt_left" style="font-weight: bold;">Sex</td>
+      <td class="gt_row gt_center">41</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">>0.9</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">Female</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">13 / 24 (54%)</td>
+      <td class="gt_row gt_center">9 / 17 (53%)</td>
+      <td class="gt_row gt_center"></td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">Male</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">11 / 24 (46%)</td>
+      <td class="gt_row gt_center">8 / 17 (47%)</td>
+      <td class="gt_row gt_center"></td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="font-weight: bold;">Age (years)</td>
+      <td class="gt_row gt_center">41</td>
+      <td class="gt_row gt_center">4.87 (0.69)</td>
+      <td class="gt_row gt_center">5.08 (0.80)</td>
+      <td class="gt_row gt_center">0.4</td>
+    </tr>
+  </tbody>
+  
+  <tfoot>
+    <tr class="gt_footnotes">
+      <td colspan="5">
+        <p class="gt_footnote">
+          <sup class="gt_footnote_marks">
+            <em>1</em>
+          </sup>
+           
+          n / N (%); Mean (SD)
+          <br />
+        </p>
+        <p class="gt_footnote">
+          <sup class="gt_footnote_marks">
+            <em>2</em>
+          </sup>
+           
+          Pearson's Chi-squared test; Wilcoxon rank sum exact test
+          <br />
+        </p>
+      </td>
+    </tr>
+  </tfoot>
+</table></div>
+<div id="primary-outcomes" class="section level2 tabset tabset-pills">
+<h2 class="tabset tabset-pills">Primary outcomes</h2>
+<div id="gem" class="section level3">
+<h3>GEM</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true"></a><span class="co"># ANCOVA GEM</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true"></a>gem_lt_anc =<span class="st"> </span><span class="kw">aov_ez</span>(<span class="st">&quot;ID&quot;</span>, <span class="st">&quot;GEM&quot;</span>, qn_data_T3, <span class="dt">between =</span> <span class="kw">c</span>(<span class="st">&quot;group&quot;</span>, <span class="st">&quot;time&quot;</span>), <span class="dt">covariate =</span> <span class="kw">c</span>(<span class="st">&quot;GEM_Total_T1&quot;</span>), </span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true"></a>    <span class="dt">observed =</span> <span class="kw">c</span>(<span class="st">&quot;GEM_Total_T1&quot;</span>), <span class="dt">factorize =</span> <span class="ot">FALSE</span>, <span class="dt">anova_table =</span> <span class="kw">list</span>(<span class="dt">correction =</span> <span class="st">&quot;none&quot;</span>, </span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true"></a>        <span class="dt">es =</span> <span class="st">&quot;pes&quot;</span>))</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true"></a><span class="kw">pander</span>(gem_lt_anc<span class="op">$</span>anova_table)</span></code></pre></div>
+<table>
+<caption>Anova Table (Type 3 tests)</caption>
+<colgroup>
+<col width="24%" />
+<col width="11%" />
+<col width="11%" />
+<col width="10%" />
+<col width="11%" />
+<col width="14%" />
+<col width="15%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center"> </th>
+<th align="center">num Df</th>
+<th align="center">den Df</th>
+<th align="center">MSE</th>
+<th align="center">F</th>
+<th align="center">pes</th>
+<th align="center">Pr(&gt;F)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center"><strong>group</strong></td>
+<td align="center">1</td>
+<td align="center">77</td>
+<td align="center">140.7</td>
+<td align="center">10.05</td>
+<td align="center">0.1154</td>
+<td align="center">0.002189</td>
+</tr>
+<tr class="even">
+<td align="center"><strong>time</strong></td>
+<td align="center">1</td>
+<td align="center">77</td>
+<td align="center">140.7</td>
+<td align="center">0.4229</td>
+<td align="center">0.005463</td>
+<td align="center">0.5174</td>
+</tr>
+<tr class="odd">
+<td align="center"><strong>GEM_Total_T1</strong></td>
+<td align="center">1</td>
+<td align="center">77</td>
+<td align="center">140.7</td>
+<td align="center">13.71</td>
+<td align="center">0.1511</td>
+<td align="center">0.0003997</td>
+</tr>
+<tr class="even">
+<td align="center"><strong>group:time</strong></td>
+<td align="center">1</td>
+<td align="center">77</td>
+<td align="center">140.7</td>
+<td align="center">0.4229</td>
+<td align="center">0.005463</td>
+<td align="center">0.5174</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true"></a><span class="co"># Calculate generalized eta square and 95% CI</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true"></a>eff_size_prep =<span class="st"> </span><span class="kw">aov_car</span>(GEM <span class="op">~</span><span class="st"> </span>group <span class="op">*</span><span class="st"> </span>time <span class="op">+</span><span class="st"> </span><span class="kw">Error</span>(ID<span class="op">/</span>time), <span class="dt">data =</span> qn_data_T3)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true"></a>ges_GEM =<span class="st"> </span><span class="kw">eta_squared</span>(eff_size_prep, <span class="dt">generalized =</span> <span class="st">&quot;group&quot;</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true"></a><span class="co"># Extract values and vonvert them to Cohen&#39;s d</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true"></a>GEM_d_group =<span class="st"> </span><span class="dv">2</span> <span class="op">*</span><span class="st"> </span>(<span class="kw">sqrt</span>(ges_GEM<span class="op">$</span>Eta2_generalized[<span class="dv">1</span>]<span class="op">/</span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>ges_GEM<span class="op">$</span>Eta2_generalized[<span class="dv">1</span>])))</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true"></a>GEM_low_CI_group =<span class="st"> </span><span class="dv">2</span> <span class="op">*</span><span class="st"> </span>(<span class="kw">sqrt</span>(ges_GEM<span class="op">$</span>CI_low[<span class="dv">1</span>]<span class="op">/</span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>ges_GEM<span class="op">$</span>CI_low[<span class="dv">1</span>])))</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true"></a>GEM_high_CI_group =<span class="st"> </span><span class="dv">2</span> <span class="op">*</span><span class="st"> </span>(<span class="kw">sqrt</span>(ges_GEM<span class="op">$</span>CI_high[<span class="dv">1</span>]<span class="op">/</span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>ges_GEM<span class="op">$</span>CI_high[<span class="dv">1</span>])))</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true"></a>GEM_d_emo =<span class="st"> </span><span class="dv">2</span> <span class="op">*</span><span class="st"> </span>(<span class="kw">sqrt</span>(ges_GEM<span class="op">$</span>Eta2_generalized[<span class="dv">2</span>]<span class="op">/</span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>ges_GEM<span class="op">$</span>Eta2_generalized[<span class="dv">2</span>])))</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true"></a>GEM_low_CI_emo =<span class="st"> </span><span class="dv">2</span> <span class="op">*</span><span class="st"> </span>(<span class="kw">sqrt</span>(ges_GEM<span class="op">$</span>CI_low[<span class="dv">2</span>]<span class="op">/</span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>ges_GEM<span class="op">$</span>CI_low[<span class="dv">2</span>])))</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true"></a>GEM_high_CI_emo =<span class="st"> </span><span class="dv">2</span> <span class="op">*</span><span class="st"> </span>(<span class="kw">sqrt</span>(ges_GEM<span class="op">$</span>CI_high[<span class="dv">2</span>]<span class="op">/</span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>ges_GEM<span class="op">$</span>CI_high[<span class="dv">2</span>])))</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true"></a></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true"></a>GEM_d_emo_gr =<span class="st"> </span><span class="dv">2</span> <span class="op">*</span><span class="st"> </span>(<span class="kw">sqrt</span>(ges_GEM<span class="op">$</span>Eta2_generalized[<span class="dv">3</span>]<span class="op">/</span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>ges_GEM<span class="op">$</span>Eta2_generalized[<span class="dv">3</span>])))</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true"></a>GEM_low_CI_emo_gr =<span class="st"> </span><span class="dv">2</span> <span class="op">*</span><span class="st"> </span>(<span class="kw">sqrt</span>(ges_GEM<span class="op">$</span>CI_low[<span class="dv">3</span>]<span class="op">/</span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>ges_GEM<span class="op">$</span>CI_low[<span class="dv">3</span>])))</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true"></a>GEM_high_CI_emo_gr =<span class="st"> </span><span class="dv">2</span> <span class="op">*</span><span class="st"> </span>(<span class="kw">sqrt</span>(ges_GEM<span class="op">$</span>CI_high[<span class="dv">3</span>]<span class="op">/</span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>ges_GEM<span class="op">$</span>CI_high[<span class="dv">3</span>])))</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true"></a></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true"></a>d_T3 =<span class="st"> </span><span class="kw">c</span>(GEM_d_emo, GEM_d_group, GEM_d_emo_gr)</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true"></a></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true"></a>low_T3 =<span class="st"> </span><span class="kw">c</span>(GEM_low_CI_emo, GEM_low_CI_group, GEM_low_CI_emo_gr)</span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true"></a></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true"></a>high_T3 =<span class="st"> </span><span class="kw">c</span>(GEM_high_CI_emo, GEM_high_CI_group, GEM_high_CI_emo_gr)</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true"></a></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true"></a>eff_size_T3 =<span class="st"> </span><span class="kw">data.frame</span>(d_T3, low_T3, high_T3)</span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true"></a></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true"></a><span class="kw">pander</span>(eff_size_T3)</span></code></pre></div>
+</div>
+<div id="emk-3-6-em-p" class="section level3">
+<h3>EMK 3-6 EM P</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true"></a>EMK_EM_P_lt_anc =<span class="st"> </span><span class="kw">aov_ez</span>(<span class="st">&quot;ID&quot;</span>, <span class="st">&quot;EMK_EM_P&quot;</span>, qn_data_T3, <span class="dt">between =</span> <span class="kw">c</span>(<span class="st">&quot;group&quot;</span>, <span class="st">&quot;time&quot;</span>), </span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true"></a>    <span class="dt">covariate =</span> <span class="kw">c</span>(<span class="st">&quot;EMK_EM_P_T1&quot;</span>), <span class="dt">observed =</span> <span class="kw">c</span>(<span class="st">&quot;EMK_EM_P_T1&quot;</span>), <span class="dt">factorize =</span> <span class="ot">FALSE</span>, </span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true"></a>    <span class="dt">anova_table =</span> <span class="kw">list</span>(<span class="dt">correction =</span> <span class="st">&quot;none&quot;</span>, <span class="dt">es =</span> <span class="st">&quot;pes&quot;</span>))</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true"></a><span class="kw">pander</span>(EMK_EM_P_lt_anc<span class="op">$</span>anova_table)</span></code></pre></div>
+<table>
+<caption>Anova Table (Type 3 tests)</caption>
+<colgroup>
+<col width="24%" />
+<col width="12%" />
+<col width="12%" />
+<col width="10%" />
+<col width="12%" />
+<col width="14%" />
+<col width="14%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center"> </th>
+<th align="center">num Df</th>
+<th align="center">den Df</th>
+<th align="center">MSE</th>
+<th align="center">F</th>
+<th align="center">pes</th>
+<th align="center">Pr(&gt;F)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center"><strong>group</strong></td>
+<td align="center">1</td>
+<td align="center">77</td>
+<td align="center">9.268</td>
+<td align="center">0.3967</td>
+<td align="center">0.005125</td>
+<td align="center">0.5307</td>
+</tr>
+<tr class="even">
+<td align="center"><strong>time</strong></td>
+<td align="center">1</td>
+<td align="center">77</td>
+<td align="center">9.268</td>
+<td align="center">0.1706</td>
+<td align="center">0.002211</td>
+<td align="center">0.6807</td>
+</tr>
+<tr class="odd">
+<td align="center"><strong>EMK_EM_P_T1</strong></td>
+<td align="center">1</td>
+<td align="center">77</td>
+<td align="center">9.268</td>
+<td align="center">6.272</td>
+<td align="center">0.07532</td>
+<td align="center">0.01438</td>
+</tr>
+<tr class="even">
+<td align="center"><strong>group:time</strong></td>
+<td align="center">1</td>
+<td align="center">77</td>
+<td align="center">9.268</td>
+<td align="center">0.8654</td>
+<td align="center">0.01111</td>
+<td align="center">0.3551</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="secondary-outcomes" class="section level2 tabset tabset-pills">
+<h2 class="tabset tabset-pills">Secondary outcomes</h2>
+<div id="emk-3-6-er-p" class="section level3">
+<h3>EMK 3-6 ER P</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true"></a>EMK_ER_P_lt_anc =<span class="st"> </span><span class="kw">aov_ez</span>(<span class="st">&quot;ID&quot;</span>, <span class="st">&quot;EMK_ER_P&quot;</span>, qn_data_T3, <span class="dt">between =</span> <span class="kw">c</span>(<span class="st">&quot;group&quot;</span>, <span class="st">&quot;time&quot;</span>), </span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true"></a>    <span class="dt">covariate =</span> <span class="kw">c</span>(<span class="st">&quot;EMK_ER_P_T1&quot;</span>), <span class="dt">observed =</span> <span class="kw">c</span>(<span class="st">&quot;EMK_ER_P_T1&quot;</span>), <span class="dt">factorize =</span> <span class="ot">FALSE</span>, </span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true"></a>    <span class="dt">anova_table =</span> <span class="kw">list</span>(<span class="dt">correction =</span> <span class="st">&quot;none&quot;</span>, <span class="dt">es =</span> <span class="st">&quot;pes&quot;</span>))</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true"></a><span class="kw">pander</span>(EMK_ER_P_lt_anc<span class="op">$</span>anova_table)</span></code></pre></div>
+<table>
+<caption>Anova Table (Type 3 tests)</caption>
+<colgroup>
+<col width="22%" />
+<col width="11%" />
+<col width="11%" />
+<col width="8%" />
+<col width="11%" />
+<col width="13%" />
+<col width="21%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center"> </th>
+<th align="center">num Df</th>
+<th align="center">den Df</th>
+<th align="center">MSE</th>
+<th align="center">F</th>
+<th align="center">pes</th>
+<th align="center">Pr(&gt;F)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center"><strong>group</strong></td>
+<td align="center">1</td>
+<td align="center">77</td>
+<td align="center">1.37</td>
+<td align="center">1.367</td>
+<td align="center">0.01745</td>
+<td align="center">0.2459</td>
+</tr>
+<tr class="even">
+<td align="center"><strong>time</strong></td>
+<td align="center">1</td>
+<td align="center">77</td>
+<td align="center">1.37</td>
+<td align="center">0.2737</td>
+<td align="center">0.003542</td>
+<td align="center">0.6024</td>
+</tr>
+<tr class="odd">
+<td align="center"><strong>EMK_ER_P_T1</strong></td>
+<td align="center">1</td>
+<td align="center">77</td>
+<td align="center">1.37</td>
+<td align="center">51.98</td>
+<td align="center">0.403</td>
+<td align="center">0.000000000332</td>
+</tr>
+<tr class="even">
+<td align="center"><strong>group:time</strong></td>
+<td align="center">1</td>
+<td align="center">77</td>
+<td align="center">1.37</td>
+<td align="center">0.5586</td>
+<td align="center">0.007202</td>
+<td align="center">0.4571</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="sdq-pb" class="section level3">
+<h3>SDQ PB</h3>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true"></a><span class="co"># ANCOVA SDQ_PB</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true"></a>SDQ_PB_lt_anc =<span class="st"> </span><span class="kw">aov_ez</span>(<span class="st">&quot;ID&quot;</span>, <span class="st">&quot;SDQ_PB&quot;</span>, qn_data_T3, <span class="dt">between =</span> <span class="kw">c</span>(<span class="st">&quot;group&quot;</span>, <span class="st">&quot;time&quot;</span>), </span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true"></a>    <span class="dt">covariate =</span> <span class="kw">c</span>(<span class="st">&quot;SDQ_PB_T1&quot;</span>), <span class="dt">observed =</span> <span class="kw">c</span>(<span class="st">&quot;SDQ_PB_T1&quot;</span>), <span class="dt">factorize =</span> <span class="ot">FALSE</span>, <span class="dt">anova_table =</span> <span class="kw">list</span>(<span class="dt">correction =</span> <span class="st">&quot;none&quot;</span>, </span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true"></a>        <span class="dt">es =</span> <span class="st">&quot;pes&quot;</span>))</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true"></a><span class="kw">pander</span>(SDQ_PB_lt_anc<span class="op">$</span>anova_table)</span></code></pre></div>
+<table>
+<caption>Anova Table (Type 3 tests)</caption>
+<colgroup>
+<col width="22%" />
+<col width="11%" />
+<col width="11%" />
+<col width="10%" />
+<col width="11%" />
+<col width="14%" />
+<col width="18%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center"> </th>
+<th align="center">num Df</th>
+<th align="center">den Df</th>
+<th align="center">MSE</th>
+<th align="center">F</th>
+<th align="center">pes</th>
+<th align="center">Pr(&gt;F)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center"><strong>group</strong></td>
+<td align="center">1</td>
+<td align="center">77</td>
+<td align="center">2.562</td>
+<td align="center">0.7285</td>
+<td align="center">0.009372</td>
+<td align="center">0.396</td>
+</tr>
+<tr class="even">
+<td align="center"><strong>time</strong></td>
+<td align="center">1</td>
+<td align="center">77</td>
+<td align="center">2.562</td>
+<td align="center">0.7119</td>
+<td align="center">0.00916</td>
+<td align="center">0.4014</td>
+</tr>
+<tr class="odd">
+<td align="center"><strong>SDQ_PB_T1</strong></td>
+<td align="center">1</td>
+<td align="center">77</td>
+<td align="center">2.562</td>
+<td align="center">26.43</td>
+<td align="center">0.2555</td>
+<td align="center">0.000002016</td>
+</tr>
+<tr class="even">
+<td align="center"><strong>group:time</strong></td>
+<td align="center">1</td>
+<td align="center">77</td>
+<td align="center">2.562</td>
+<td align="center">0.9213</td>
+<td align="center">0.01182</td>
+<td align="center">0.3401</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="sdq-bp" class="section level3">
+<h3>SDQ BP</h3>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true"></a><span class="co"># ANCOVA SDQ_Total</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true"></a>SDQ_total_lt_anc =<span class="st"> </span><span class="kw">aov_ez</span>(<span class="st">&quot;ID&quot;</span>, <span class="st">&quot;SDQ_Total&quot;</span>, qn_data_T3, <span class="dt">between =</span> <span class="kw">c</span>(<span class="st">&quot;group&quot;</span>, <span class="st">&quot;time&quot;</span>), </span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true"></a>    <span class="dt">covariate =</span> <span class="kw">c</span>(<span class="st">&quot;SDQ_Total_T1&quot;</span>), <span class="dt">observed =</span> <span class="kw">c</span>(<span class="st">&quot;SDQ_Total_T1&quot;</span>), <span class="dt">factorize =</span> <span class="ot">FALSE</span>, </span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true"></a>    <span class="dt">anova_table =</span> <span class="kw">list</span>(<span class="dt">correction =</span> <span class="st">&quot;none&quot;</span>, <span class="dt">es =</span> <span class="st">&quot;pes&quot;</span>))</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true"></a><span class="kw">pander</span>(SDQ_total_lt_anc<span class="op">$</span>anova_table)</span></code></pre></div>
+<table>
+<caption>Anova Table (Type 3 tests)</caption>
+<colgroup>
+<col width="24%" />
+<col width="11%" />
+<col width="11%" />
+<col width="7%" />
+<col width="11%" />
+<col width="14%" />
+<col width="18%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center"> </th>
+<th align="center">num Df</th>
+<th align="center">den Df</th>
+<th align="center">MSE</th>
+<th align="center">F</th>
+<th align="center">pes</th>
+<th align="center">Pr(&gt;F)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center"><strong>group</strong></td>
+<td align="center">1</td>
+<td align="center">77</td>
+<td align="center">11</td>
+<td align="center">3.114</td>
+<td align="center">0.03887</td>
+<td align="center">0.08157</td>
+</tr>
+<tr class="even">
+<td align="center"><strong>time</strong></td>
+<td align="center">1</td>
+<td align="center">77</td>
+<td align="center">11</td>
+<td align="center">3.271</td>
+<td align="center">0.04075</td>
+<td align="center">0.07441</td>
+</tr>
+<tr class="odd">
+<td align="center"><strong>SDQ_Total_T1</strong></td>
+<td align="center">1</td>
+<td align="center">77</td>
+<td align="center">11</td>
+<td align="center">23.72</td>
+<td align="center">0.2355</td>
+<td align="center">0.000005812</td>
+</tr>
+<tr class="even">
+<td align="center"><strong>group:time</strong></td>
+<td align="center">1</td>
+<td align="center">77</td>
+<td align="center">11</td>
+<td align="center">0.1658</td>
+<td align="center">0.002149</td>
+<td align="center">0.685</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="correlations" class="section level1 tabset tabset-pills">
+<h1 class="tabset tabset-pills">Correlations</h1>
+<div id="overall-correlation" class="section level2">
+<h2>Overall correlation</h2>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true"></a><span class="kw">load.Rdata</span>(<span class="dt">filename =</span> <span class="st">&quot;./data/erp_data.Rdata&quot;</span>, <span class="st">&quot;erp_data&quot;</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true"></a><span class="kw">load.Rdata</span>(<span class="dt">filename =</span> <span class="st">&quot;./data/qn_data_itt.Rdata&quot;</span>, <span class="st">&quot;qn_data_itt&quot;</span>)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true"></a><span class="co"># De-select participants with sufficient EEG data</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true"></a>qn_data_itt =<span class="st"> </span><span class="kw">subset</span>(qn_data_itt, ID <span class="op">!=</span><span class="st"> &quot;30&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;54&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;68&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;69&quot;</span> <span class="op">&amp;</span><span class="st"> </span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true"></a><span class="st">    </span>ID <span class="op">!=</span><span class="st"> &quot;71&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;72&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;73&quot;</span>)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true"></a></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true"></a>qn_data_itt<span class="op">$</span>P3_amp_hap =<span class="st"> </span>erp_data<span class="op">$</span>P3_amp_hap</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true"></a>qn_data_itt<span class="op">$</span>P3_amp_neu =<span class="st"> </span>erp_data<span class="op">$</span>P3_amp_neu</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true"></a>qn_data_itt<span class="op">$</span>P3_amp_ang =<span class="st"> </span>erp_data<span class="op">$</span>P3_amp_ang</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true"></a></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true"></a></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true"></a>qn_data_itt<span class="op">$</span>P3_amp_hap_neu =<span class="st"> </span>qn_data_itt<span class="op">$</span>P3_amp_hap <span class="op">-</span><span class="st"> </span>qn_data_itt<span class="op">$</span>P3_amp_neu</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true"></a>qn_data_itt<span class="op">$</span>P3_amp_hap_ang =<span class="st"> </span>qn_data_itt<span class="op">$</span>P3_amp_hap <span class="op">-</span><span class="st"> </span>qn_data_itt<span class="op">$</span>P3_amp_ang</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true"></a></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true"></a></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true"></a><span class="co"># Define correlation pairs of interest</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true"></a>vars_P3_amp_hap_neu =<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">v1 =</span> <span class="kw">names</span>(qn_data_itt)[<span class="kw">c</span>(<span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> </span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true"></a><span class="st">    &quot;P3_amp_hap_neu&quot;</span>))], <span class="dt">v2 =</span> <span class="kw">names</span>(qn_data_itt)[<span class="kw">c</span>(<span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> </span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true"></a><span class="st">    &quot;EMK_EM_P_T2&quot;</span>), <span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> &quot;EMK_ER_P_T2&quot;</span>), <span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> </span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true"></a><span class="st">    &quot;EMK_ER_CH_T2&quot;</span>), <span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> &quot;SDQ_PB_T2&quot;</span>), <span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> </span></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true"></a><span class="st">    &quot;SDQ_Total_T2&quot;</span>))])</span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true"></a></span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true"></a>vars_P3_amp_hap_ang =<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">v1 =</span> <span class="kw">names</span>(qn_data_itt)[<span class="kw">c</span>(<span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> </span></span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true"></a><span class="st">    &quot;P3_amp_hap_ang&quot;</span>))], <span class="dt">v2 =</span> <span class="kw">names</span>(qn_data_itt)[<span class="kw">c</span>(<span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> </span></span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true"></a><span class="st">    &quot;EMK_EM_P_T2&quot;</span>), <span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> &quot;EMK_ER_P_T2&quot;</span>), <span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> </span></span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true"></a><span class="st">    &quot;EMK_ER_CH_T2&quot;</span>), <span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> &quot;SDQ_PB_T2&quot;</span>), <span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> </span></span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true"></a><span class="st">    &quot;SDQ_Total_T2&quot;</span>))])</span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true"></a></span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true"></a><span class="co"># Combine all correlation pairs</span></span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true"></a>vars_P3_behav =<span class="st"> </span><span class="kw">rbind</span>(vars_P3_amp_hap_neu, vars_P3_amp_hap_ang)</span>
+<span id="cb14-32"><a href="#cb14-32" aria-hidden="true"></a></span>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true"></a><span class="co"># Correlate pairs of interest</span></span>
+<span id="cb14-34"><a href="#cb14-34" aria-hidden="true"></a></span>
+<span id="cb14-35"><a href="#cb14-35" aria-hidden="true"></a>corrs_P3_behav =<span class="st"> </span><span class="kw">do.call</span>(rbind, <span class="kw">mapply</span>(corrFunc, vars_P3_behav[, <span class="dv">1</span>], vars_P3_behav[, </span>
+<span id="cb14-36"><a href="#cb14-36" aria-hidden="true"></a>    <span class="dv">2</span>], <span class="dt">MoreArgs =</span> <span class="kw">list</span>(<span class="dt">data =</span> qn_data_itt), <span class="dt">SIMPLIFY =</span> <span class="ot">FALSE</span>))</span>
+<span id="cb14-37"><a href="#cb14-37" aria-hidden="true"></a></span>
+<span id="cb14-38"><a href="#cb14-38" aria-hidden="true"></a>corrs_P3_behav =<span class="st"> </span><span class="kw">subset</span>(corrs_P3_behav, <span class="dt">select =</span> <span class="op">-</span><span class="kw">c</span>(var1))</span>
+<span id="cb14-39"><a href="#cb14-39" aria-hidden="true"></a></span>
+<span id="cb14-40"><a href="#cb14-40" aria-hidden="true"></a><span class="co"># Print table</span></span>
+<span id="cb14-41"><a href="#cb14-41" aria-hidden="true"></a><span class="kw">pander</span>(corrs_P3_behav)</span></code></pre></div>
+<table style="width:97%;">
+<colgroup>
+<col width="30%" />
+<col width="20%" />
+<col width="15%" />
+<col width="13%" />
+<col width="16%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center"> </th>
+<th align="center">var2</th>
+<th align="center">estimate</th>
+<th align="center">p.value</th>
+<th align="center">statistic</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center"><strong>P3_amp_hap_neu</strong></td>
+<td align="center">EMK_EM_P_T2</td>
+<td align="center">0.1987</td>
+<td align="center">0.1069</td>
+<td align="center">1.635</td>
+</tr>
+<tr class="even">
+<td align="center"><strong>P3_amp_hap_neu1</strong></td>
+<td align="center">EMK_ER_P_T2</td>
+<td align="center">0.04643</td>
+<td align="center">0.7091</td>
+<td align="center">0.3747</td>
+</tr>
+<tr class="odd">
+<td align="center"><strong>P3_amp_hap_neu2</strong></td>
+<td align="center">EMK_ER_CH_T2</td>
+<td align="center">0.004374</td>
+<td align="center">0.972</td>
+<td align="center">0.03526</td>
+</tr>
+<tr class="even">
+<td align="center"><strong>P3_amp_hap_neu3</strong></td>
+<td align="center">SDQ_PB_T2</td>
+<td align="center">0.1955</td>
+<td align="center">0.1129</td>
+<td align="center">1.607</td>
+</tr>
+<tr class="odd">
+<td align="center"><strong>P3_amp_hap_neu4</strong></td>
+<td align="center">SDQ_Total_T2</td>
+<td align="center">-0.09241</td>
+<td align="center">0.457</td>
+<td align="center">-0.7482</td>
+</tr>
+<tr class="even">
+<td align="center"><strong>P3_amp_hap_ang</strong></td>
+<td align="center">EMK_EM_P_T2</td>
+<td align="center">0.08566</td>
+<td align="center">0.4907</td>
+<td align="center">0.6931</td>
+</tr>
+<tr class="odd">
+<td align="center"><strong>P3_amp_hap_ang1</strong></td>
+<td align="center">EMK_ER_P_T2</td>
+<td align="center">0.01737</td>
+<td align="center">0.889</td>
+<td align="center">0.1401</td>
+</tr>
+<tr class="even">
+<td align="center"><strong>P3_amp_hap_ang2</strong></td>
+<td align="center">EMK_ER_CH_T2</td>
+<td align="center">0.1621</td>
+<td align="center">0.1899</td>
+<td align="center">1.325</td>
+</tr>
+<tr class="odd">
+<td align="center"><strong>P3_amp_hap_ang3</strong></td>
+<td align="center">SDQ_PB_T2</td>
+<td align="center">0.05376</td>
+<td align="center">0.6657</td>
+<td align="center">0.434</td>
+</tr>
+<tr class="even">
+<td align="center"><strong>P3_amp_hap_ang4</strong></td>
+<td align="center">SDQ_Total_T2</td>
+<td align="center">-0.1132</td>
+<td align="center">0.3616</td>
+<td align="center">-0.9188</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="correlation-by-group" class="section level2">
+<h2>Correlation by group</h2>
+<p><strong>Controls</strong></p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true"></a><span class="kw">load.Rdata</span>(<span class="dt">filename =</span> <span class="st">&quot;./data/erp_data.Rdata&quot;</span>, <span class="st">&quot;erp_data&quot;</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true"></a><span class="kw">load.Rdata</span>(<span class="dt">filename =</span> <span class="st">&quot;./data/qn_data_itt.Rdata&quot;</span>, <span class="st">&quot;qn_data_itt&quot;</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true"></a><span class="co"># De-select participants with sufficient EEG data</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true"></a>qn_data_itt =<span class="st"> </span><span class="kw">subset</span>(qn_data_itt, ID <span class="op">!=</span><span class="st"> &quot;30&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;54&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;68&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;69&quot;</span> <span class="op">&amp;</span><span class="st"> </span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true"></a><span class="st">    </span>ID <span class="op">!=</span><span class="st"> &quot;71&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;72&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;73&quot;</span>)</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true"></a></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true"></a>qn_data_itt<span class="op">$</span>P3_amp_hap =<span class="st"> </span>erp_data<span class="op">$</span>P3_amp_hap</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true"></a>qn_data_itt<span class="op">$</span>P3_amp_neu =<span class="st"> </span>erp_data<span class="op">$</span>P3_amp_neu</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true"></a>qn_data_itt<span class="op">$</span>P3_amp_ang =<span class="st"> </span>erp_data<span class="op">$</span>P3_amp_ang</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true"></a></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true"></a>qn_data_itt<span class="op">$</span>P3_amp_hap_neu =<span class="st"> </span>qn_data_itt<span class="op">$</span>P3_amp_hap <span class="op">-</span><span class="st"> </span>qn_data_itt<span class="op">$</span>P3_amp_neu</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true"></a>qn_data_itt<span class="op">$</span>P3_ang_hap_ang =<span class="st"> </span>qn_data_itt<span class="op">$</span>P3_amp_hap <span class="op">-</span><span class="st"> </span>qn_data_itt<span class="op">$</span>P3_amp_ang</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true"></a></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true"></a><span class="co"># Select group</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true"></a>qn_data_itt =<span class="st"> </span><span class="kw">subset</span>(qn_data_itt, group <span class="op">==</span><span class="st"> &quot;CG&quot;</span>)</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true"></a></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true"></a></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true"></a><span class="co"># Define correlation pairs of interest</span></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true"></a>vars_P3_amp_hap_neu =<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">v1 =</span> <span class="kw">names</span>(qn_data_itt)[<span class="kw">c</span>(<span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> </span></span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true"></a><span class="st">    &quot;P3_amp_hap_neu&quot;</span>))], <span class="dt">v2 =</span> <span class="kw">names</span>(qn_data_itt)[<span class="kw">c</span>(<span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> </span></span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true"></a><span class="st">    &quot;EMK_EM_P_T2&quot;</span>), <span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> &quot;EMK_ER_P_T2&quot;</span>), <span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> </span></span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true"></a><span class="st">    &quot;EMK_ER_CH_T2&quot;</span>), <span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> &quot;SDQ_PB_T2&quot;</span>), <span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> </span></span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true"></a><span class="st">    &quot;SDQ_Total_T2&quot;</span>))])</span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true"></a></span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true"></a>vars_P3_ang_hap_ang =<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">v1 =</span> <span class="kw">names</span>(qn_data_itt)[<span class="kw">c</span>(<span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> </span></span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true"></a><span class="st">    &quot;P3_ang_hap_ang&quot;</span>))], <span class="dt">v2 =</span> <span class="kw">names</span>(qn_data_itt)[<span class="kw">c</span>(<span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> </span></span>
+<span id="cb15-28"><a href="#cb15-28" aria-hidden="true"></a><span class="st">    &quot;EMK_EM_P_T2&quot;</span>), <span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> &quot;EMK_ER_P_T2&quot;</span>), <span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> </span></span>
+<span id="cb15-29"><a href="#cb15-29" aria-hidden="true"></a><span class="st">    &quot;EMK_ER_CH_T2&quot;</span>), <span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> &quot;SDQ_PB_T2&quot;</span>), <span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> </span></span>
+<span id="cb15-30"><a href="#cb15-30" aria-hidden="true"></a><span class="st">    &quot;SDQ_Total_T2&quot;</span>))])</span>
+<span id="cb15-31"><a href="#cb15-31" aria-hidden="true"></a></span>
+<span id="cb15-32"><a href="#cb15-32" aria-hidden="true"></a><span class="co"># Combine all correlation pairs</span></span>
+<span id="cb15-33"><a href="#cb15-33" aria-hidden="true"></a>vars_P3_behav =<span class="st"> </span><span class="kw">rbind</span>(vars_P3_amp_hap_neu, vars_P3_ang_hap_ang)</span>
+<span id="cb15-34"><a href="#cb15-34" aria-hidden="true"></a></span>
+<span id="cb15-35"><a href="#cb15-35" aria-hidden="true"></a><span class="co"># Correlate pairs of interest</span></span>
+<span id="cb15-36"><a href="#cb15-36" aria-hidden="true"></a></span>
+<span id="cb15-37"><a href="#cb15-37" aria-hidden="true"></a>corrs_P3_behav =<span class="st"> </span><span class="kw">do.call</span>(rbind, <span class="kw">mapply</span>(corrFunc, vars_P3_behav[, <span class="dv">1</span>], vars_P3_behav[, </span>
+<span id="cb15-38"><a href="#cb15-38" aria-hidden="true"></a>    <span class="dv">2</span>], <span class="dt">MoreArgs =</span> <span class="kw">list</span>(<span class="dt">data =</span> qn_data_itt), <span class="dt">SIMPLIFY =</span> <span class="ot">FALSE</span>))</span>
+<span id="cb15-39"><a href="#cb15-39" aria-hidden="true"></a></span>
+<span id="cb15-40"><a href="#cb15-40" aria-hidden="true"></a>corrs_P3_behav =<span class="st"> </span><span class="kw">subset</span>(corrs_P3_behav, <span class="dt">select =</span> <span class="op">-</span><span class="kw">c</span>(var1))</span>
+<span id="cb15-41"><a href="#cb15-41" aria-hidden="true"></a></span>
+<span id="cb15-42"><a href="#cb15-42" aria-hidden="true"></a><span class="co"># Print table</span></span>
+<span id="cb15-43"><a href="#cb15-43" aria-hidden="true"></a><span class="kw">pander</span>(corrs_P3_behav)</span></code></pre></div>
+<table style="width:99%;">
+<colgroup>
+<col width="30%" />
+<col width="20%" />
+<col width="16%" />
+<col width="13%" />
+<col width="16%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center"> </th>
+<th align="center">var2</th>
+<th align="center">estimate</th>
+<th align="center">p.value</th>
+<th align="center">statistic</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center"><strong>P3_amp_hap_neu</strong></td>
+<td align="center">EMK_EM_P_T2</td>
+<td align="center">0.2138</td>
+<td align="center">0.2247</td>
+<td align="center">1.238</td>
+</tr>
+<tr class="even">
+<td align="center"><strong>P3_amp_hap_neu1</strong></td>
+<td align="center">EMK_ER_P_T2</td>
+<td align="center">-0.1501</td>
+<td align="center">0.3968</td>
+<td align="center">-0.8589</td>
+</tr>
+<tr class="odd">
+<td align="center"><strong>P3_amp_hap_neu2</strong></td>
+<td align="center">EMK_ER_CH_T2</td>
+<td align="center">-0.1608</td>
+<td align="center">0.3636</td>
+<td align="center">-0.9217</td>
+</tr>
+<tr class="even">
+<td align="center"><strong>P3_amp_hap_neu3</strong></td>
+<td align="center">SDQ_PB_T2</td>
+<td align="center">0.3412</td>
+<td align="center">0.0483</td>
+<td align="center">2.053</td>
+</tr>
+<tr class="odd">
+<td align="center"><strong>P3_amp_hap_neu4</strong></td>
+<td align="center">SDQ_Total_T2</td>
+<td align="center">0.2707</td>
+<td align="center">0.1215</td>
+<td align="center">1.591</td>
+</tr>
+<tr class="even">
+<td align="center"><strong>P3_ang_hap_ang</strong></td>
+<td align="center">EMK_EM_P_T2</td>
+<td align="center">0.0005148</td>
+<td align="center">0.9977</td>
+<td align="center">0.002912</td>
+</tr>
+<tr class="odd">
+<td align="center"><strong>P3_ang_hap_ang1</strong></td>
+<td align="center">EMK_ER_P_T2</td>
+<td align="center">-0.2183</td>
+<td align="center">0.2148</td>
+<td align="center">-1.266</td>
+</tr>
+<tr class="even">
+<td align="center"><strong>P3_ang_hap_ang2</strong></td>
+<td align="center">EMK_ER_CH_T2</td>
+<td align="center">0.1018</td>
+<td align="center">0.5665</td>
+<td align="center">0.5792</td>
+</tr>
+<tr class="odd">
+<td align="center"><strong>P3_ang_hap_ang3</strong></td>
+<td align="center">SDQ_PB_T2</td>
+<td align="center">0.01743</td>
+<td align="center">0.9221</td>
+<td align="center">0.0986</td>
+</tr>
+<tr class="even">
+<td align="center"><strong>P3_ang_hap_ang4</strong></td>
+<td align="center">SDQ_Total_T2</td>
+<td align="center">0.2139</td>
+<td align="center">0.2245</td>
+<td align="center">1.239</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Zirkus Empathico</strong></p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true"></a><span class="kw">load.Rdata</span>(<span class="dt">filename =</span> <span class="st">&quot;./data/erp_data.Rdata&quot;</span>, <span class="st">&quot;erp_data&quot;</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true"></a><span class="kw">load.Rdata</span>(<span class="dt">filename =</span> <span class="st">&quot;./data/qn_data_itt.Rdata&quot;</span>, <span class="st">&quot;qn_data_itt&quot;</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true"></a><span class="co"># De-select participants with sufficient EEG data</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true"></a>qn_data_itt =<span class="st"> </span><span class="kw">subset</span>(qn_data_itt, ID <span class="op">!=</span><span class="st"> &quot;30&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;54&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;68&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;69&quot;</span> <span class="op">&amp;</span><span class="st"> </span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true"></a><span class="st">    </span>ID <span class="op">!=</span><span class="st"> &quot;71&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;72&quot;</span> <span class="op">&amp;</span><span class="st"> </span>ID <span class="op">!=</span><span class="st"> &quot;73&quot;</span>)</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true"></a></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true"></a>qn_data_itt<span class="op">$</span>P3_amp_hap =<span class="st"> </span>erp_data<span class="op">$</span>P3_amp_hap</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true"></a>qn_data_itt<span class="op">$</span>P3_amp_neu =<span class="st"> </span>erp_data<span class="op">$</span>P3_amp_neu</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true"></a>qn_data_itt<span class="op">$</span>P3_amp_ang =<span class="st"> </span>erp_data<span class="op">$</span>P3_amp_ang</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true"></a></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true"></a>qn_data_itt<span class="op">$</span>P3_amp_hap_neu =<span class="st"> </span>qn_data_itt<span class="op">$</span>P3_amp_hap <span class="op">-</span><span class="st"> </span>qn_data_itt<span class="op">$</span>P3_amp_neu</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true"></a>qn_data_itt<span class="op">$</span>P3_ang_hap_ang =<span class="st"> </span>qn_data_itt<span class="op">$</span>P3_amp_hap <span class="op">-</span><span class="st"> </span>qn_data_itt<span class="op">$</span>P3_amp_ang</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true"></a></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true"></a><span class="co"># Select group</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true"></a>qn_data_itt =<span class="st"> </span><span class="kw">subset</span>(qn_data_itt, group <span class="op">==</span><span class="st"> &quot;TG&quot;</span>)</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true"></a></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true"></a></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true"></a><span class="co"># Define correlation pairs of interest</span></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true"></a>vars_P3_amp_hap_neu =<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">v1 =</span> <span class="kw">names</span>(qn_data_itt)[<span class="kw">c</span>(<span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> </span></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true"></a><span class="st">    &quot;P3_amp_hap_neu&quot;</span>))], <span class="dt">v2 =</span> <span class="kw">names</span>(qn_data_itt)[<span class="kw">c</span>(<span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> </span></span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true"></a><span class="st">    &quot;EMK_EM_P_T2&quot;</span>), <span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> &quot;EMK_ER_P_T2&quot;</span>), <span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> </span></span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true"></a><span class="st">    &quot;EMK_ER_CH_T2&quot;</span>), <span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> &quot;SDQ_PB_T2&quot;</span>), <span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> </span></span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true"></a><span class="st">    &quot;SDQ_Total_T2&quot;</span>))])</span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true"></a></span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true"></a>vars_P3_ang_hap_ang =<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">v1 =</span> <span class="kw">names</span>(qn_data_itt)[<span class="kw">c</span>(<span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> </span></span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true"></a><span class="st">    &quot;P3_ang_hap_ang&quot;</span>))], <span class="dt">v2 =</span> <span class="kw">names</span>(qn_data_itt)[<span class="kw">c</span>(<span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> </span></span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true"></a><span class="st">    &quot;EMK_EM_P_T2&quot;</span>), <span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> &quot;EMK_ER_P_T2&quot;</span>), <span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> </span></span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true"></a><span class="st">    &quot;EMK_ER_CH_T2&quot;</span>), <span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> &quot;SDQ_PB_T2&quot;</span>), <span class="kw">which</span>(<span class="kw">colnames</span>(qn_data_itt) <span class="op">==</span><span class="st"> </span></span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true"></a><span class="st">    &quot;SDQ_Total_T2&quot;</span>))])</span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true"></a></span>
+<span id="cb16-32"><a href="#cb16-32" aria-hidden="true"></a><span class="co"># Combine all correlation pairs</span></span>
+<span id="cb16-33"><a href="#cb16-33" aria-hidden="true"></a>vars_P3_behav =<span class="st"> </span><span class="kw">rbind</span>(vars_P3_amp_hap_neu, vars_P3_ang_hap_ang)</span>
+<span id="cb16-34"><a href="#cb16-34" aria-hidden="true"></a></span>
+<span id="cb16-35"><a href="#cb16-35" aria-hidden="true"></a><span class="co"># Correlate pairs of interest</span></span>
+<span id="cb16-36"><a href="#cb16-36" aria-hidden="true"></a></span>
+<span id="cb16-37"><a href="#cb16-37" aria-hidden="true"></a>corrs_P3_behav =<span class="st"> </span><span class="kw">do.call</span>(rbind, <span class="kw">mapply</span>(corrFunc, vars_P3_behav[, <span class="dv">1</span>], vars_P3_behav[, </span>
+<span id="cb16-38"><a href="#cb16-38" aria-hidden="true"></a>    <span class="dv">2</span>], <span class="dt">MoreArgs =</span> <span class="kw">list</span>(<span class="dt">data =</span> qn_data_itt), <span class="dt">SIMPLIFY =</span> <span class="ot">FALSE</span>))</span>
+<span id="cb16-39"><a href="#cb16-39" aria-hidden="true"></a></span>
+<span id="cb16-40"><a href="#cb16-40" aria-hidden="true"></a>corrs_P3_behav =<span class="st"> </span><span class="kw">subset</span>(corrs_P3_behav, <span class="dt">select =</span> <span class="op">-</span><span class="kw">c</span>(var1))</span>
+<span id="cb16-41"><a href="#cb16-41" aria-hidden="true"></a></span>
+<span id="cb16-42"><a href="#cb16-42" aria-hidden="true"></a><span class="co"># Print table</span></span>
+<span id="cb16-43"><a href="#cb16-43" aria-hidden="true"></a><span class="kw">pander</span>(corrs_P3_behav)</span></code></pre></div>
+<table style="width:97%;">
+<colgroup>
+<col width="30%" />
+<col width="20%" />
+<col width="15%" />
+<col width="13%" />
+<col width="16%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center"> </th>
+<th align="center">var2</th>
+<th align="center">estimate</th>
+<th align="center">p.value</th>
+<th align="center">statistic</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center"><strong>P3_amp_hap_neu</strong></td>
+<td align="center">EMK_EM_P_T2</td>
+<td align="center">0.08857</td>
+<td align="center">0.624</td>
+<td align="center">0.4951</td>
+</tr>
+<tr class="even">
+<td align="center"><strong>P3_amp_hap_neu1</strong></td>
+<td align="center">EMK_ER_P_T2</td>
+<td align="center">0.08842</td>
+<td align="center">0.6246</td>
+<td align="center">0.4942</td>
+</tr>
+<tr class="odd">
+<td align="center"><strong>P3_amp_hap_neu2</strong></td>
+<td align="center">EMK_ER_CH_T2</td>
+<td align="center">0.04739</td>
+<td align="center">0.7934</td>
+<td align="center">0.2642</td>
+</tr>
+<tr class="even">
+<td align="center"><strong>P3_amp_hap_neu3</strong></td>
+<td align="center">SDQ_PB_T2</td>
+<td align="center">-0.03306</td>
+<td align="center">0.8551</td>
+<td align="center">-0.1842</td>
+</tr>
+<tr class="odd">
+<td align="center"><strong>P3_amp_hap_neu4</strong></td>
+<td align="center">SDQ_Total_T2</td>
+<td align="center">-0.2598</td>
+<td align="center">0.1443</td>
+<td align="center">-1.498</td>
+</tr>
+<tr class="even">
+<td align="center"><strong>P3_ang_hap_ang</strong></td>
+<td align="center">EMK_EM_P_T2</td>
+<td align="center">-0.05831</td>
+<td align="center">0.7472</td>
+<td align="center">-0.3252</td>
+</tr>
+<tr class="odd">
+<td align="center"><strong>P3_ang_hap_ang1</strong></td>
+<td align="center">EMK_ER_P_T2</td>
+<td align="center">0.02507</td>
+<td align="center">0.8899</td>
+<td align="center">0.1396</td>
+</tr>
+<tr class="even">
+<td align="center"><strong>P3_ang_hap_ang2</strong></td>
+<td align="center">EMK_ER_CH_T2</td>
+<td align="center">0.1003</td>
+<td align="center">0.5785</td>
+<td align="center">0.5615</td>
+</tr>
+<tr class="odd">
+<td align="center"><strong>P3_ang_hap_ang3</strong></td>
+<td align="center">SDQ_PB_T2</td>
+<td align="center">-0.1495</td>
+<td align="center">0.4064</td>
+<td align="center">-0.8417</td>
+</tr>
+<tr class="even">
+<td align="center"><strong>P3_ang_hap_ang4</strong></td>
+<td align="center">SDQ_Total_T2</td>
+<td align="center">-0.2502</td>
+<td align="center">0.1602</td>
+<td align="center">-1.439</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="session-info" class="section level1">
+<h1>Session info</h1>
+<!-- Provide session info  -->
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true"></a><span class="co"># Get session info</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true"></a><span class="kw">sessionInfo</span>()</span></code></pre></div>
+<pre><code>R version 4.0.2 (2020-06-22)
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+Running under: Windows 10 x64 (build 18362)
+
+Matrix products: default
+
+locale:
+[1] LC_COLLATE=German_Germany.1252  LC_CTYPE=German_Germany.1252   
+[3] LC_MONETARY=German_Germany.1252 LC_NUMERIC=C                   
+[5] LC_TIME=German_Germany.1252    
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] sjmisc_2.8.6        sjstats_0.18.1      sjPlot_2.8.7       
+ [4] rstatix_0.7.0       RColorBrewer_1.1-2  psych_2.1.3        
+ [7] plyr_1.8.6          ppcor_1.1           MASS_7.3-53.1      
+[10] pander_0.6.3        jmv_1.2.23          ggpubr_0.4.0       
+[13] GGally_2.1.1        foreign_0.8-81      esci_0.1.1         
+[16] emmeans_1.5.5-1     eegUtils_0.5.0      corrplot_0.84      
+[19] car_3.0-10          carData_3.0-4       broom_0.7.6        
+[22] afex_0.28-1         lme4_1.1-26         Matrix_1.3-2       
+[25] tadaatoolbox_0.17.0 miceadds_3.11-6     mice_3.13.0        
+[28] gtsummary_1.4.0     expss_0.10.7        eeptools_1.2.4     
+[31] XLConnect_1.0.3     forcats_0.5.1       stringr_1.4.0      
+[34] dplyr_1.0.5         purrr_0.3.4         readr_1.4.0        
+[37] tidyr_1.1.3         tibble_3.1.1        ggplot2_3.3.3      
+[40] tidyverse_1.3.1     kableExtra_1.3.4   
+
+loaded via a namespace (and not attached):
+ [1] estimability_1.3     R.methodsS3_1.8.1    coda_0.19-4         
+ [4] knitr_1.32           multcomp_1.4-16      R.utils_2.10.1      
+ [7] data.table_1.14.0    rpart_4.1-15         generics_0.1.0      
+[10] cowplot_1.1.1        TH.data_1.0-10       commonmark_1.7      
+[13] proxy_0.4-25         future_1.21.0        webshot_0.5.2       
+[16] xml2_1.3.2           lubridate_1.7.10     httpuv_1.5.5        
+[19] assertthat_0.2.1     viridis_0.6.0        xfun_0.22           
+[22] hms_1.0.0            jquerylib_0.1.3      rJava_0.9-13        
+[25] evaluate_0.14        promises_1.2.0.1     fansi_0.4.2         
+[28] dbplyr_2.1.1         readxl_1.3.1         DBI_1.1.1           
+[31] tmvnsim_1.0-2        htmlwidgets_1.5.3    reshape_0.8.8       
+[34] ellipsis_0.3.1       backports_1.2.1      signal_0.7-6        
+[37] bookdown_0.21        insight_0.13.2       jmvcore_1.2.23      
+[40] vctrs_0.3.7          sjlabelled_1.1.7     abind_1.4-5         
+[43] withr_2.4.2          checkmate_2.0.0      vcd_1.4-8           
+[46] mnormt_2.0.2         svglite_2.0.0        cluster_2.1.2       
+[49] lazyeval_0.2.2       crayon_1.4.1         labeling_0.4.2      
+[52] pkgconfig_2.0.3      nlme_3.1-152         vipor_0.4.5         
+[55] nnet_7.3-15          rlang_0.4.10         globals_0.14.0      
+[58] lifecycle_1.0.0      miniUI_0.1.1.1       sandwich_3.0-0      
+[61] modelr_0.1.8         cellranger_1.1.0     matrixStats_0.58.0  
+[64] lmtest_0.9-38        boot_1.3-27          zoo_1.8-9           
+[67] reprex_2.0.0         base64enc_0.1-3      beeswarm_0.4.0      
+[70] png_0.1-7            viridisLite_0.4.0    ini_0.3.1           
+[73] parameters_0.13.0    rootSolve_1.8.2.1    shinydashboard_0.7.1
+ [ reached getOption(&quot;max.print&quot;) -- omitted 90 entries ]</code></pre>
+</div>
+</div>
+
+<div class="col-xs-2">
+
+<div class = "btn-toolbar">
+<div class="btn-group">
+<a class="btn btn-raised btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#"><span>Code</span> <span class="caret"></span></a>
+<ul class="dropdown-menu" style="min-width: 50px;">
+
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+
+</ul>
+</div>
+</div>
+
+</div>
+</div>
+	
+
+
+</div>
+</div>
+
+ <script>
+    $(document).ready(function () {
+	// add bootstrap table styles to pandoc tables
+	$('tr.header').parent('thead').parent('table').addClass('table table-striped table-hover');
+	
+	
+		$('.pages img').addClass("image-lb");
+	$('.pages').magnificPopup({
+	    type:'image',
+	    closeOnContentClick: false,
+	    closeBtnInside: false,
+            delegate: '.image-lb',
+	    gallery: {enabled: true },
+            removalDelay: 500,
+            callbacks: {
+		beforeOpen: function() {
+                    // just a hack that adds mfp-anim class to markup
+                    this.st.image.markup = this.st.image.markup.replace('mfp-figure', 'mfp-figure mfp-with-anim');
+		}
+            },
+            mainClass: 'mfp-move-from-top',
+	    image: {
+	        verticalFit: true,
+		titleSrc: 'alt'
+	    }
+ 	});
+ 	
+	  
+	$('#toc ul li').first().addClass("active");
+	$('#toc ul li').attr("data-target", function() {
+            return($(this).children("a").attr("href"));
+	})
+	$('body .section.level1').first().addClass("active");
+	$('body .section.level1').not('.active').hide();
+	
+	$('#toc a[href*="#"], a[href^="#"]').click(function() {
+	    var id = $(this).attr("href");
+	    if (id === "#") return;
+	    if (id.substring(0, 8) === "#dyntab-") return;
+	    // Menu
+	    var menu_entry = $(".menu li[data-target='"+id+"']");
+	    if (menu_entry.length == 0) {
+		window.location.hash = id;
+		return;
+	    }
+	    menu_entry.addClass("active");
+	    $(".menu li").not(menu_entry).removeClass("active"); 
+	    toggle_page(id);
+	});
+
+	function toggle_page(id) {
+	    $(".page").not(page).removeClass("active").hide();
+	    window.page = id;
+	    var page = $(window.page);
+	    window.location.hash = window.page;
+	    //$(this).addClass("active");
+	    page.show();
+
+	    var totop = setInterval(function () {
+		$(".pages").animate({scrollTop: 0}, 0);
+	    }, 10);
+
+	    setTimeout(function () {
+		page.addClass("active");
+		setTimeout(function () {
+		    clearInterval(totop);
+		}, 1000);
+	    }, 100);
+	    
+	    window.dispatchEvent(new Event('resize'));
+	}
+
+
+	$(".menu li").click(function () {
+	    toggle_page($(this).data("target"));
+	    // Menu
+	    if (!$(this).data("target")) return;
+	    if ($(this).is(".active")) return;
+	    $(".menu li").not($(this)).removeClass("active");
+	    $(this).addClass("active");
+	});
+  
+	  
+	window.page = window.location.hash;
+	if (window.page != "") {
+	    $(".menu").find("li[data-target=" + window.page + "]").trigger("click");
+	}
+	/* init material bootstrap js */
+	$.material.init();
+    });
+ </script>
+
+
+  <!-- dynamically load mathjax for compatibility with self-contained -->
+ <script>
+   (function () {
+       var script = document.createElement("script");
+       script.type = "text/javascript";
+       script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+       document.getElementsByTagName("head")[0].appendChild(script);
+   })();
+ </script>
+ 
+</body>
+</html>

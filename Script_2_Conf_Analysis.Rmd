@@ -1,0 +1,1844 @@
+---
+title: "Confirmatory analysis"
+output: 
+  rmdformats::material:
+    highlight: kate
+    css: web_style.css
+    thumbnails: false
+    lightbox: true
+    gallery: true
+    cards: true
+    self_contained: no
+    number_sections: no
+    code_folding: hide
+    fig_caption: yes
+---
+
+<!-- Set up workspace -->
+
+```{r setup, include = FALSE, message = FALSE, warning = FALSE}
+
+# Set general settings for Markdown file 
+  options(max.print="80")
+
+  knitr::opts_chunk$set(echo=TRUE,
+                 prompt=FALSE,
+                 tidy=TRUE,
+                 comment=NA,
+                 message=FALSE,
+                 warning=FALSE,
+                 results = FALSE,
+  	             fig.align="center")
+  knitr::opts_knit$set(width=80)
+  
+# Swipe environment
+ rm(list=ls())
+  
+# Set libraries
+  library(afex)
+  library(broom)
+  library(car)
+  library(corrplot)
+  library(eegUtils)
+  library(emmeans)
+  library(esci)  # devtools::install_github("rcalinjageman/esci")
+  library(expss)
+  library(foreign)
+  library(GGally)
+  library(ggpubr)
+  library(gtsummary)
+  library(kableExtra)
+  library(jmv)  
+  library(lme4)
+  library(miceadds)
+  library(pander)
+  library(ppcor)
+  library(plyr)
+  library(psych)
+  library(RColorBrewer)
+  library(rstatix)
+  library(sjPlot)
+  library(sjstats)
+  library(stats)
+  library(tadaatoolbox)
+  library(tidyverse)
+ 
+# Round to 2 digits   
+  options(digits=2)
+   
+# Disable scientific notation in R
+  options(scipen = 999)
+   
+# Set figure color palettes
+  ZE_col = c("#878787","#D97909")
+  ZE_ERP_col = c("#59A2F0","#949E4C","grey32") # angry, happy, neutral
+  
+# Set figure theme  
+  theme_SN = theme(axis.title.y = element_text(size = 15,
+                                               margin = margin(t = 0, r = 20, b = 0, l = 0)),
+          panel.grid.major.x = element_blank(), panel.grid.minor.x = element_blank(),
+          panel.grid.major.y = element_line(colour = "black", linetype = "dotted", size=0.6),
+          panel.grid.minor.y = element_blank(),
+          panel.border = element_blank(),
+          text=element_text(size = 15),
+          legend.position = "none")
+```
+
+```{r prep_data, include = FALSE}
+
+# ITT = intention-to-treat
+# PP = per protocol
+
+# Load data
+  load.Rdata(filename="./data/qn_data.Rdata", "qn_data")
+  load.Rdata(filename="./data/qn_data_itt.Rdata", "qn_data_itt")
+  
+# Add training time
+  qn_data_itt$train_time = qn_data$T_Self_Report
+  
+# Calculate change scores (d = delta) for T2
+  qn_data_itt$d_GEM_Total = qn_data_itt$GEM_Total_T2 - qn_data_itt$GEM_Total_T1
+  qn_data_itt$d_EMK_EM_CH = qn_data_itt$EMK_EM_CH_T2 - qn_data_itt$EMK_EM_CH_T1
+  qn_data_itt$d_EMK_EM_P = qn_data_itt$EMK_EM_P_T2 - qn_data_itt$EMK_EM_P_T1
+  qn_data_itt$d_EMK_ER_CH = qn_data_itt$EMK_ER_CH_T2 - qn_data_itt$EMK_ER_CH_T1
+  qn_data_itt$d_EMK_ER_P = qn_data_itt$EMK_ER_P_T2 - qn_data_itt$EMK_ER_P_T1
+  qn_data_itt$d_EMK_PB_CH = qn_data_itt$EMK_PB_CH_T2 - qn_data_itt$EMK_PB_CH_T1
+  qn_data_itt$d_SDQ_PB = qn_data_itt$SDQ_PB_T2 - qn_data_itt$SDQ_PB_T1
+  qn_data_itt$d_SDQ_Total = qn_data_itt$SDQ_Total_T1 - qn_data_itt$SDQ_Total_T2
+  
+# Note: For the SDQ_Total the difference between T1 and T2 are flipped zo invert the score.
+
+# For PP, we excluded 2 participants (30 --> no training times, 72 --> no T2)
+  qn_data_pp = subset(qn_data_itt, ID != "30" & ID != "72")
+
+```
+
+# Data imputation
+
+Missing data (N = 1) were imputed by multiple imputation with chained equations (MICE; mice R package version 3.13.0) employing predictive mean matching (Morris et al., 2014; number of imputation sets m = 50). All primary and secondary endpoints as well as group, age, and sex were integrated as predictors in the imputation model. 
+
+```{r prep_imputation, eval = FALSE}
+
+# Load data
+ load.Rdata(filename="./data/qn_data.Rdata", "qn_data")
+
+# Load package
+# https://www.r-bloggers.com/2015/10/imputing-missing-data-with-r-mice-package/ 
+  library(mice)
+
+# Subset datase
+# Primary/ secondary measures, group age, gender
+  qn_data_sub = subset(qn_data, select = c("ID","group", "age", "sex",
+                                                   "GEM_Total_T1","GEM_Total_T2",
+                                                   "EMK_EM_P_T1","EMK_EM_P_T2",
+                                                   "EMK_EM_CH_T1","EMK_EM_CH_T2",
+                                                   "EMK_ER_P_T1","EMK_ER_P_T2",
+                                                   "EMK_ER_CH_T1","EMK_ER_CH_T2",
+                                                   "EMK_PB_CH_T1","EMK_PB_CH_T2",
+                                                   "SDQ_PB_T1","SDQ_PB_T2",
+                                                   "SDQ_Total_T1","SDQ_Total_T2"))
+
+# Do the imputing (pmm --> Predictive Mean Matching, m = 50)
+  tempData = mice(qn_data_sub, m = 50, maxit = 50, meth ='pmm', seed = 500)
+  qn_data_itt = complete(tempData,1)
+
+# Save in Rdata format
+  save(qn_data_itt, file = "./data/qn_data_itt.RData")
+
+```
+
+**Visualization of effects**
+
+```{r se_sep_meas_comp_boxplot, results = "asis", fig.width = 8, fig.height = 4}
+
+# For visualization purposes all behavioral measures were z-standardized
+  qn_data_itt$zd_GEM_Total = scale(qn_data_itt$d_GEM_Total, center = TRUE, scale = TRUE)
+  qn_data_itt$zd_EMK_EM_CH = scale(qn_data_itt$d_EMK_EM_CH, center = TRUE, scale = TRUE)
+  qn_data_itt$zd_EMK_EM_P = scale(qn_data_itt$d_EMK_EM_P, center = TRUE, scale = TRUE)
+  qn_data_itt$zd_EMK_ER_CH = scale(qn_data_itt$d_EMK_ER_CH, center = TRUE, scale = TRUE)
+  qn_data_itt$zd_EMK_ER_P = scale(qn_data_itt$d_EMK_ER_P, center = TRUE, scale = TRUE)
+  qn_data_itt$zd_EMK_PB_CH = scale(qn_data_itt$d_EMK_PB_CH, center = TRUE, scale = TRUE)
+  qn_data_itt$zd_SDQ_PB = scale(qn_data_itt$d_SDQ_PB, center = TRUE, scale = TRUE)
+  qn_data_itt$zd_SDQ_Total = scale(qn_data_itt$d_SDQ_Total, center = TRUE, scale = TRUE)
+
+# Separate data for CG and TG
+  qn_data_d_scors = subset(qn_data_itt, select = c(group, zd_GEM_Total, zd_EMK_EM_CH, 
+                                               zd_EMK_EM_P, zd_EMK_ER_CH, 
+                                               zd_EMK_ER_P, zd_EMK_PB_CH, zd_SDQ_PB, zd_SDQ_Total))
+  qn_data_d_scors_TG = subset(qn_data_d_scors, group == "TG")
+  qn_data_d_scors_TG = gather(qn_data_d_scors_TG, measure, TG, zd_GEM_Total:zd_SDQ_Total, factor_key=TRUE)
+  
+  
+  qn_data_d_scors_CG = subset(qn_data_d_scors, group == "CG")
+  qn_data_d_scors_CG = gather(qn_data_d_scors_CG, measure, CG, zd_GEM_Total:zd_SDQ_Total,factor_key=TRUE)
+  names(qn_data_d_scors_CG)[3] = "TG"
+  
+  qn_data_d_scors = rbind(qn_data_d_scors_TG, qn_data_d_scors_CG)
+  names(qn_data_d_scors)[3] = "score"
+
+# Visualize separate training outcomes
+  sep_scores_box = ggplot(qn_data_d_scors, aes(x= measure, y=score, fill=group)) +
+      # add shaded areas  
+  annotate("rect", xmin = 2.6, xmax = 3.4, ymin = -2, ymax = 2.8, alpha = .2)+
+  annotate("rect", xmin = 3.6, xmax = 4.4, ymin = -2, ymax = 2.8, alpha = .2)+
+ # annotate("rect", xmin = 4.6, xmax = 5.4, ymin = -2, ymax = 2.8, alpha = .2)+
+  annotate("rect", xmin = 6.6, xmax = 7.4, ymin = -2, ymax = 2.8, alpha = .2)+
+  annotate("rect", xmin = 7.6, xmax = 8.4, ymin = -2, ymax = 2.8, alpha = .2)+
+  stat_boxplot(geom ='errorbar', width=0.5, size=0.7, coef=1, position=position_dodge(0.65)) +
+  geom_boxplot(coef=1, outlier.shape = NA, width=0.7, lwd=1, alpha=1, position=position_dodge(0.65)) +
+  labs(x = "", y = "d [z-standardized]") +
+  scale_x_discrete(labels=c(expression(GEM[P]), expression(EMK:EM[CH]), expression(EMK:EM[P]), expression(EMK:ER[CH]),
+                            expression(EMK:ER[P]), expression(EMK:PB[CH]), expression(SDQ:PB[P]), expression(SDQ:BP[P]))) +
+  scale_fill_manual(labels = c("Controls", "Zirkus Empathico"), values = ZE_col) +
+  theme_bw()+
+  theme_SN +
+  theme(axis.text.x = element_text (size = 10), legend.position = "top", legend.title = element_blank(),
+        axis.title.y = element_text(size = 10, margin = margin(t = 0, r = 5, b = 0, l = 0)),
+        axis.ticks.x=element_blank(), axis.text.y = element_text (size = 10)) +
+  coord_cartesian(ylim = c(-2.2, 2.8), expand = FALSE, clip = "off") +
+  # add asteriks  
+  annotate('text', x = c(3,4,7,8) , y = 2.4, label = '"*"', fontface = "bold", size = 9, parse=TRUE) +
+  # add shaded x-axis extension 
+  annotate("text", x = 2, y = -2.8, label = "Empathy", size = 4) +
+  annotate("text", x = 4.5, y = -2.8, label = "Emotion recognition", size = 4) +
+  annotate("text", x = 7, y = -2.8, label = "Prosocial behavior", size = 4)+
+  annotate("segment", x = 3.5, xend = 3.5, y = -2.2, yend = -2.7, colour = "gray31")+
+  annotate("segment", x = 5.5, xend = 5.5, y = -2.2, yend = -2.7, colour = "gray31")
+    
+# Show plot  
+  sep_scores_box
+  
+ ggsave(sep_scores_box, file = "zerp_sec_measures.png", dpi = 300)  
+  
+```
+
+<p class="caption">Parent and child ratings of socio-emotional competence (SEC) reports. Orange: Zirkus Empathico group. Grey: Control training. Error bars indicate standard errors (SE); d z-standardized represents the standardized change scores (difference between post- and pre-training values). Note: Standardization was achieved by subtracting each value from the variables mean and dividing them by the variable’s standard deviation (x – x̄) /SD). Standardization was only carried out for visualization purposes; statistical analyses were carried out with the raw d values. GEM = Griffith Empathy Measure; EMK = Inventory to survey of emotional competences for three- to six-year-olds; EM = Empathy; ER = Emotion recognition; SDQ = Strength and Difficulties Questionnaire; PB = Prosocial behavior; BP = Behavioral problems. P = parent rating; CH = child assessment.</p>
+
+# Primary outcome: Empathy {.tabset .tabset-pills}
+
+
+
+## GEM {.tabset .tabset-pills}
+
+### ITT
+
+<br>
+
+**Without training time**
+
+```{r, results = "asis"}
+    gem_total_an =  aov_ez("ID", "d_GEM_Total", qn_data_itt, between = 
+                              c("group"),
+    covariate = c("GEM_Total_T1"),
+    observed = c("GEM_Total_T1"), factorize = FALSE,
+    anova_table = list(correction = "none", es = "pes")) 
+    
+    
+  pander(gem_total_an$anova_table)
+```
+
+
+```{r}
+
+# https://thenewstatistics.com/itns/2020/07/04/3-easy-ways-to-obtain-cohens-d-and-its-ci/
+
+# Calculate mean and SD (and square them) for T2-T1 difference per group (ZE and CG)
+  mean_rel_CG = mean(qn_data_itt[qn_data_itt$group == "CG",]$d_GEM_Total)
+  mean_rel_TG = mean(qn_data_itt[qn_data_itt$group == "TG",]$d_GEM_Total)
+
+  sd_rel_CG = sd(qn_data_itt[qn_data_itt$group == "CG",]$d_GEM_Total)
+  sd_rel_TG = sd(qn_data_itt[qn_data_itt$group == "TG",]$d_GEM_Total)
+
+# Calculate difference between TG and CG
+  diff_mean_TG_CG = mean_rel_TG - mean_rel_CG
+
+# Get number of participants per group
+  pnum = table(qn_data_itt["group"])
+  pnum_CG = pnum[1]
+  pnum_TG = pnum[2]
+
+# Get Cohen's and confidence intervals
+  estimate = estimateStandardizedMeanDifference(mean_rel_TG, mean_rel_CG, sd_rel_TG, sd_rel_CG, pnum_TG, pnum_CG,
+                                                 conf.level = .95)
+  
+# Retrieve them from list
+  GEM_Total_d_itt = estimate$cohend
+  GEM_Total_low_d_itt = estimate$cohend.low
+  GEM_Total_high_d_itt = estimate$cohend.high
+  
+```
+
+<br>
+
+**With training time**
+
+```{r, results = "asis"}
+    gem_total_an =  aov_ez("ID", "d_GEM_Total", qn_data_itt, between = 
+                              c("group"),
+    covariate = c("GEM_Total_T1","train_time"),
+    observed = c("GEM_Total_T1","train_time"), factorize = FALSE,
+    anova_table = list(correction = "none", es = "pes")) 
+    
+    
+  pander(gem_total_an$anova_table)
+```
+
+### PP
+
+**Without training time**
+
+```{r, results = "asis"}
+    gem_total_an =  aov_ez("ID", "d_GEM_Total", qn_data_pp, between = 
+                              c("group"),
+    covariate = c("GEM_Total_T1"),
+    observed = c("GEM_Total_T1"), factorize = FALSE,
+    anova_table = list(correction = "none", es = "pes")) 
+    
+  pander(gem_total_an$anova_table)
+```
+
+```{r}
+
+# https://thenewstatistics.com/itns/2020/07/04/3-easy-ways-to-obtain-cohens-d-and-its-ci/
+
+# Calculate mean and SD (and square them) for T2-T1 difference per group (ZE and CG)
+  mean_rel_CG = mean(qn_data_pp[qn_data_pp$group == "CG",]$d_GEM_Total)
+  mean_rel_TG = mean(qn_data_pp[qn_data_pp$group == "TG",]$d_GEM_Total)
+
+  sd_rel_CG = sd(qn_data_pp[qn_data_pp$group == "CG",]$d_GEM_Total)
+  sd_rel_TG = sd(qn_data_pp[qn_data_pp$group == "TG",]$d_GEM_Total)
+
+# Calculate difference between TG and CG
+  diff_mean_TG_CG = mean_rel_TG - mean_rel_CG
+
+# Get number of participants per group
+  pnum = table(qn_data_pp["group"])
+  pnum_CG = pnum[1]
+  pnum_TG = pnum[2]
+
+# Get Cohen's and confidence intervals
+  estimate = estimateStandardizedMeanDifference(mean_rel_TG, mean_rel_CG, sd_rel_TG, sd_rel_CG, pnum_TG, pnum_CG,
+                                                 conf.level = .95)
+  
+# Retrieve them from list
+  GEM_Total_d_pp = estimate$cohend
+  GEM_Total_low_d_pp = estimate$cohend.low
+  GEM_Total_high_d_pp = estimate$cohend.high
+  
+```
+
+<br>
+
+**With training time**
+
+```{r, results = "asis"}
+    gem_total_an =  aov_ez("ID", "d_GEM_Total", qn_data_pp, between = 
+                              c("group"),
+    covariate = c("GEM_Total_T1","train_time"),
+    observed = c("GEM_Total_T1","train_time"), factorize = FALSE,
+    anova_table = list(correction = "none", es = "pes")) 
+    
+    
+  pander(gem_total_an$anova_table)
+```
+
+## EMK 3-6 EM CH {.tabset .tabset-pills}
+
+### ITT
+
+<br>
+
+**Without training time**
+
+```{r, results = "asis"}
+# ANCOVA EMK_EM_CH
+
+  EMK_EM_CH_an = aov_ez("ID", "d_EMK_EM_CH", qn_data_itt, between = c("group"),
+      covariate = c("EMK_EM_CH_T1"),
+      observed = c("EMK_EM_CH_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_EM_CH_an$anova_table)  
+```
+
+```{r}
+
+# https://thenewstatistics.com/itns/2020/07/04/3-easy-ways-to-obtain-cohens-d-and-its-ci/
+
+# Calculate mean and SD (and square them) for T2-T1 difference per group (ZE and CG)
+  mean_rel_CG = mean(qn_data_itt[qn_data_itt$group == "CG",]$d_EMK_EM_CH)
+  mean_rel_TG = mean(qn_data_itt[qn_data_itt$group == "TG",]$d_EMK_EM_CH)
+
+  sd_rel_CG = sd(qn_data_itt[qn_data_itt$group == "CG",]$d_EMK_EM_CH)
+  sd_rel_TG = sd(qn_data_itt[qn_data_itt$group == "TG",]$d_EMK_EM_CH)
+
+# Calculate difference between TG and CG
+  diff_mean_TG_CG = mean_rel_TG - mean_rel_CG
+
+# Get number of participants per group
+  pnum = table(qn_data_itt["group"])
+  pnum_CG = pnum[1]
+  pnum_TG = pnum[2]
+
+# Get Cohen's and confidence intervals
+  estimate = estimateStandardizedMeanDifference(mean_rel_TG, mean_rel_CG, sd_rel_TG, sd_rel_CG, pnum_TG, pnum_CG,
+                                                 conf.level = .95)
+  
+# Retrieve them from list
+  EMK_EM_CH_d_itt = estimate$cohend
+  EMK_EM_CH_low_d_itt = estimate$cohend.low
+  EMK_EM_CH_high_d_itt = estimate$cohend.high
+  
+```
+
+**With training time**
+
+```{r, results = "asis"}
+# ANCOVA EMK_EM_CH
+
+  EMK_EM_CH_an = aov_ez("ID", "d_EMK_EM_CH", qn_data_itt, between = c("group"),
+      covariate = c("EMK_EM_CH_T1","train_time"),
+      observed = c("EMK_EM_CH_T1","train_time"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_EM_CH_an$anova_table)  
+```
+
+### PP
+
+**Without training time**
+
+```{r, results = "asis"}
+# ANCOVA EMK_EM_CH
+
+  EMK_EM_CH_an = aov_ez("ID", "d_EMK_EM_CH", qn_data_pp, between = c("group"),
+      covariate = c("EMK_EM_CH_T1"),
+      observed = c("EMK_EM_CH_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_EM_CH_an$anova_table)  
+```
+
+```{r}
+
+# https://thenewstatistics.com/itns/2020/07/04/3-easy-ways-to-obtain-cohens-d-and-its-ci/
+
+# Calculate mean and SD (and square them) for T2-T1 difference per group (ZE and CG)
+  mean_rel_CG = mean(qn_data_pp[qn_data_pp$group == "CG",]$d_EMK_EM_CH)
+  mean_rel_TG = mean(qn_data_pp[qn_data_pp$group == "TG",]$d_EMK_EM_CH)
+
+  sd_rel_CG = sd(qn_data_pp[qn_data_pp$group == "CG",]$d_EMK_EM_CH)
+  sd_rel_TG = sd(qn_data_pp[qn_data_pp$group == "TG",]$d_EMK_EM_CH)
+
+# Calculate difference between TG and CG
+  diff_mean_TG_CG = mean_rel_TG - mean_rel_CG
+
+# Get number of participants per group
+  pnum = table(qn_data_pp["group"])
+  pnum_CG = pnum[1]
+  pnum_TG = pnum[2]
+
+# Get Cohen's and confidence intervals
+  estimate = estimateStandardizedMeanDifference(mean_rel_TG, mean_rel_CG, sd_rel_TG, sd_rel_CG, pnum_TG, pnum_CG,
+                                                 conf.level = .95)
+  
+# Retrieve them from list
+  EMK_EM_CH_d_pp = estimate$cohend
+  EMK_EM_CH_low_d_pp = estimate$cohend.low
+  EMK_EM_CH_high_d_pp = estimate$cohend.high
+  
+```
+
+<br>
+
+**With training time**
+
+```{r, results = "asis"}
+# ANCOVA EMK_EM_CH
+
+  EMK_EM_CH_an = aov_ez("ID", "d_EMK_EM_CH", qn_data_pp, between = c("group"),
+      covariate = c("EMK_EM_CH_T1","train_time"),
+      observed = c("EMK_EM_CH_T1","train_time"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_EM_CH_an$anova_table)  
+```
+
+## EMK 3-6 EM P {.tabset .tabset-pills}
+
+### ITT
+
+<br>
+
+**Without training time**
+
+```{r, results = "asis"}
+  EMK_EM_P_an = aov_ez("ID", "d_EMK_EM_P", qn_data_itt, between = c("group"),
+      covariate = c("EMK_EM_P_T1"),
+      observed = c("EMK_EM_P_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_EM_P_an$anova_table)   
+```
+
+```{r}
+
+# https://thenewstatistics.com/itns/2020/07/04/3-easy-ways-to-obtain-cohens-d-and-its-ci/
+
+# Calculate mean and SD (and square them) for T2-T1 difference per group (ZE and CG)
+  mean_rel_CG = mean(qn_data_itt[qn_data_itt$group == "CG",]$d_EMK_EM_P)
+  mean_rel_TG = mean(qn_data_itt[qn_data_itt$group == "TG",]$d_EMK_EM_P)
+
+  sd_rel_CG = sd(qn_data_itt[qn_data_itt$group == "CG",]$d_EMK_EM_P)
+  sd_rel_TG = sd(qn_data_itt[qn_data_itt$group == "TG",]$d_EMK_EM_P)
+
+# Calculate difference between TG and CG
+  diff_mean_TG_CG = mean_rel_TG - mean_rel_CG
+
+# Get number of participants per group
+  pnum = table(qn_data_itt["group"])
+  pnum_CG = pnum[1]
+  pnum_TG = pnum[2]
+
+# Get Cohen's and confidence intervals
+  estimate = estimateStandardizedMeanDifference(mean_rel_TG, mean_rel_CG, sd_rel_TG, sd_rel_CG, pnum_TG, pnum_CG,
+                                                 conf.level = .95)
+  
+# Retrieve them from list
+  EMK_EM_P_d_itt = estimate$cohend
+  EMK_EM_P_low_d_itt = estimate$cohend.low
+  EMK_EM_P_high_d_itt = estimate$cohend.high
+  
+```
+
+
+<br>
+
+**With training time**
+
+```{r, results = "asis"}
+  EMK_EM_P_an = aov_ez("ID", "d_EMK_EM_P", qn_data_itt, between = c("group"),
+      covariate = c("EMK_EM_P_T1","train_time"),
+      observed = c("EMK_EM_P_T1","train_time"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_EM_P_an$anova_table)   
+```
+
+### PP
+
+**Without training time**
+
+```{r, results = "asis"}
+  EMK_EM_P_an = aov_ez("ID", "d_EMK_EM_P", qn_data_pp, between = c("group"),
+      covariate = c("EMK_EM_P_T1"),
+      observed = c("EMK_EM_P_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_EM_P_an$anova_table)   
+```
+
+```{r}
+
+# https://thenewstatistics.com/itns/2020/07/04/3-easy-ways-to-obtain-cohens-d-and-its-ci/
+
+# Calculate mean and SD (and square them) for T2-T1 difference per group (ZE and CG)
+  mean_rel_CG = mean(qn_data_pp[qn_data_pp$group == "CG",]$d_EMK_EM_P)
+  mean_rel_TG = mean(qn_data_pp[qn_data_pp$group == "TG",]$d_EMK_EM_P)
+
+  sd_rel_CG = sd(qn_data_pp[qn_data_pp$group == "CG",]$d_EMK_EM_P)
+  sd_rel_TG = sd(qn_data_pp[qn_data_pp$group == "TG",]$d_EMK_EM_P)
+
+# Calculate difference between TG and CG
+  diff_mean_TG_CG = mean_rel_TG - mean_rel_CG
+
+# Get number of participants per group
+  pnum = table(qn_data_pp["group"])
+  pnum_CG = pnum[1]
+  pnum_TG = pnum[2]
+
+# Get Cohen's and confidence intervals
+  estimate = estimateStandardizedMeanDifference(mean_rel_TG, mean_rel_CG, sd_rel_TG, sd_rel_CG, pnum_TG, pnum_CG,
+                                                 conf.level = .95)
+  
+# Retrieve them from list
+  EMK_EM_P_d_pp = estimate$cohend
+  EMK_EM_P_low_d_pp = estimate$cohend.low
+  EMK_EM_P_high_d_pp = estimate$cohend.high
+  
+```
+
+
+<br>
+
+**With training time**
+
+```{r, results = "asis"}
+  EMK_EM_P_an = aov_ez("ID", "d_EMK_EM_P", qn_data_pp, between = c("group"),
+      covariate = c("EMK_EM_P_T1","train_time"),
+      observed = c("EMK_EM_P_T1","train_time"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_EM_P_an$anova_table)   
+```
+
+# Secondary outcome: Emotion recognition {.tabset .tabset-pills}
+
+## EMK 3-6 ER CH {.tabset .tabset-pills}
+
+### ITT
+
+<br>
+
+**Without training time**
+
+```{r, results = "asis"}
+  EMK_ER_CH_an = aov_ez("ID", "d_EMK_ER_CH", qn_data_itt, between = c("group"),
+      covariate = c("EMK_ER_CH_T1"),
+      observed = c("EMK_ER_CH_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_ER_CH_an$anova_table)   
+```
+
+```{r}
+
+# https://thenewstatistics.com/itns/2020/07/04/3-easy-ways-to-obtain-cohens-d-and-its-ci/
+
+# Calculate mean and SD (and square them) for T2-T1 difference per group (ZE and CG)
+  mean_rel_CG = mean(qn_data_itt[qn_data_itt$group == "CG",]$d_EMK_ER_CH)
+  mean_rel_TG = mean(qn_data_itt[qn_data_itt$group == "TG",]$d_EMK_ER_CH)
+
+  sd_rel_CG = sd(qn_data_itt[qn_data_itt$group == "CG",]$d_EMK_ER_CH)
+  sd_rel_TG = sd(qn_data_itt[qn_data_itt$group == "TG",]$d_EMK_ER_CH)
+
+# Calculate difference between TG and CG
+  diff_mean_TG_CG = mean_rel_TG - mean_rel_CG
+
+# Get number of participants per group
+  pnum = table(qn_data_itt["group"])
+  pnum_CG = pnum[1]
+  pnum_TG = pnum[2]
+
+# Get Cohen's and confidence intervals
+  estimate = estimateStandardizedMeanDifference(mean_rel_TG, mean_rel_CG, sd_rel_TG, sd_rel_CG, pnum_TG, pnum_CG,
+                                                 conf.level = .95)
+  
+# Retrieve them from list
+  EMK_ER_CH_d_itt = estimate$cohend
+  EMK_ER_CH_low_d_itt = estimate$cohend.low
+  EMK_ER_CH_high_d_itt = estimate$cohend.high
+  
+```
+
+<br>
+
+**With training time**
+
+```{r, results = "asis"}
+  EMK_ER_CH_an = aov_ez("ID", "d_EMK_ER_CH", qn_data_itt, between = c("group"),
+      covariate = c("EMK_ER_CH_T1","train_time"),
+      observed = c("EMK_ER_CH_T1","train_time"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_ER_CH_an$anova_table)   
+```
+
+### PP
+
+**Without training time**
+
+```{r, results = "asis"}
+  EMK_ER_CH_an = aov_ez("ID", "d_EMK_ER_CH", qn_data_pp, between = c("group"),
+      covariate = c("EMK_ER_CH_T1"),
+      observed = c("EMK_ER_CH_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_ER_CH_an$anova_table)   
+```
+
+```{r}
+
+# https://thenewstatistics.com/itns/2020/07/04/3-easy-ways-to-obtain-cohens-d-and-its-ci/
+
+# Calculate mean and SD (and square them) for T2-T1 difference per group (ZE and CG)
+  mean_rel_CG = mean(qn_data_pp[qn_data_pp$group == "CG",]$d_EMK_ER_CH)
+  mean_rel_TG = mean(qn_data_pp[qn_data_pp$group == "TG",]$d_EMK_ER_CH)
+
+  sd_rel_CG = sd(qn_data_pp[qn_data_pp$group == "CG",]$d_EMK_ER_CH)
+  sd_rel_TG = sd(qn_data_pp[qn_data_pp$group == "TG",]$d_EMK_ER_CH)
+
+# Calculate difference between TG and CG
+  diff_mean_TG_CG = mean_rel_TG - mean_rel_CG
+
+# Get number of participants per group
+  pnum = table(qn_data_pp["group"])
+  pnum_CG = pnum[1]
+  pnum_TG = pnum[2]
+
+# Get Cohen's and confidence intervals
+  estimate = estimateStandardizedMeanDifference(mean_rel_TG, mean_rel_CG, sd_rel_TG, sd_rel_CG, pnum_TG, pnum_CG,
+                                                 conf.level = .95)
+  
+# Retrieve them from list
+  EMK_ER_CH_d_pp = estimate$cohend
+  EMK_ER_CH_low_d_pp = estimate$cohend.low
+  EMK_ER_CH_high_d_pp = estimate$cohend.high
+  
+```
+
+<br>
+
+**With training time**
+
+```{r, results = "asis"}
+  EMK_ER_CH_an = aov_ez("ID", "d_EMK_ER_CH", qn_data_pp, between = c("group"),
+      covariate = c("EMK_ER_CH_T1","train_time"),
+      observed = c("EMK_ER_CH_T1","train_time"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_ER_CH_an$anova_table)   
+```
+
+## EMK 3-6 ER P {.tabset .tabset-pills}
+
+### ITT
+
+<br>
+
+**Without training time**
+
+```{r, results = "asis"}
+  EMK_ER_P_an = aov_ez("ID", "d_EMK_ER_P", qn_data_itt, between = c("group"),
+      covariate = c("EMK_ER_P_T1"),
+      observed = c("EMK_ER_P_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_ER_P_an$anova_table)    
+```
+
+
+```{r}
+
+# https://thenewstatistics.com/itns/2020/07/04/3-easy-ways-to-obtain-cohens-d-and-its-ci/
+
+# Calculate mean and SD (and square them) for T2-T1 difference per group (ZE and CG)
+  mean_rel_CG = mean(qn_data_itt[qn_data_itt$group == "CG",]$d_EMK_ER_P)
+  mean_rel_TG = mean(qn_data_itt[qn_data_itt$group == "TG",]$d_EMK_ER_P)
+
+  sd_rel_CG = sd(qn_data_itt[qn_data_itt$group == "CG",]$d_EMK_ER_P)
+  sd_rel_TG = sd(qn_data_itt[qn_data_itt$group == "TG",]$d_EMK_ER_P)
+
+# Calculate difference between TG and CG
+  diff_mean_TG_CG = mean_rel_TG - mean_rel_CG
+
+# Get number of participants per group
+  pnum = table(qn_data_itt["group"])
+  pnum_CG = pnum[1]
+  pnum_TG = pnum[2]
+
+# Get Cohen's and confidence intervals
+  estimate = estimateStandardizedMeanDifference(mean_rel_TG, mean_rel_CG, sd_rel_TG, sd_rel_CG, pnum_TG, pnum_CG,
+                                                 conf.level = .95)
+  
+# Retrieve them from list
+  EMK_ER_P_d_itt = estimate$cohend
+  EMK_ER_P_low_d_itt = estimate$cohend.low
+  EMK_ER_P_high_d_itt = estimate$cohend.high
+  
+```
+
+<br>
+
+**With training time**
+
+```{r, results = "asis"}
+  EMK_ER_P_an = aov_ez("ID", "d_EMK_ER_P", qn_data_itt, between = c("group"),
+      covariate = c("EMK_ER_P_T1","train_time"),
+      observed = c("EMK_ER_P_T1","train_time"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_ER_P_an$anova_table)    
+```
+
+### PP
+
+**Without training time**
+
+```{r, results = "asis"}
+  EMK_ER_P_an = aov_ez("ID", "d_EMK_ER_P", qn_data_pp, between = c("group"),
+      covariate = c("EMK_ER_P_T1"),
+      observed = c("EMK_ER_P_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_ER_P_an$anova_table)    
+```
+
+```{r}
+
+# https://thenewstatistics.com/itns/2020/07/04/3-easy-ways-to-obtain-cohens-d-and-its-ci/
+
+# Calculate mean and SD (and square them) for T2-T1 difference per group (ZE and CG)
+  mean_rel_CG = mean(qn_data_pp[qn_data_pp$group == "CG",]$d_EMK_ER_P)
+  mean_rel_TG = mean(qn_data_pp[qn_data_pp$group == "TG",]$d_EMK_ER_P)
+
+  sd_rel_CG = sd(qn_data_pp[qn_data_pp$group == "CG",]$d_EMK_ER_P)
+  sd_rel_TG = sd(qn_data_pp[qn_data_pp$group == "TG",]$d_EMK_ER_P)
+
+# Calculate difference between TG and CG
+  diff_mean_TG_CG = mean_rel_TG - mean_rel_CG
+
+# Get number of participants per group
+  pnum = table(qn_data_pp["group"])
+  pnum_CG = pnum[1]
+  pnum_TG = pnum[2]
+
+# Get Cohen's and confidence intervals
+  estimate = estimateStandardizedMeanDifference(mean_rel_TG, mean_rel_CG, sd_rel_TG, sd_rel_CG, pnum_TG, pnum_CG,
+                                                 conf.level = .95)
+  
+# Retrieve them from list
+  EMK_ER_P_d_pp = estimate$cohend
+  EMK_ER_P_low_d_pp = estimate$cohend.low
+  EMK_ER_P_high_d_pp = estimate$cohend.high
+  
+```
+
+<br>
+
+**With training time**
+
+```{r, results = "asis"}
+  EMK_ER_P_an = aov_ez("ID", "d_EMK_ER_P", qn_data_pp, between = c("group"),
+      covariate = c("EMK_ER_P_T1","train_time"),
+      observed = c("EMK_ER_P_T1","train_time"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_ER_P_an$anova_table)    
+```
+
+# Secondary outcome: Prosocial behavior {.tabset .tabset-pills}
+
+## EMK 3-6 PB CH  {.tabset .tabset-pills}
+
+### ITT
+
+<br>
+
+**Without training time**
+
+```{r, results = "asis"}
+  EMK_PB_CH_an = aov_ez("ID", "d_EMK_PB_CH", qn_data_itt, between = c("group"),
+      covariate = c("EMK_PB_CH_T1"),
+      observed = c("EMK_PB_CH_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_PB_CH_an$anova_table)
+```
+
+```{r}
+
+# https://thenewstatistics.com/itns/2020/07/04/3-easy-ways-to-obtain-cohens-d-and-its-ci/
+
+# Calculate mean and SD (and square them) for T2-T1 difference per group (ZE and CG)
+  mean_rel_CG = mean(qn_data_itt[qn_data_itt$group == "CG",]$d_EMK_PB_CH)
+  mean_rel_TG = mean(qn_data_itt[qn_data_itt$group == "TG",]$d_EMK_PB_CH)
+
+  sd_rel_CG = sd(qn_data_itt[qn_data_itt$group == "CG",]$d_EMK_PB_CH)
+  sd_rel_TG = sd(qn_data_itt[qn_data_itt$group == "TG",]$d_EMK_PB_CH)
+
+# Calculate difference between TG and CG
+  diff_mean_TG_CG = mean_rel_TG - mean_rel_CG
+
+# Get number of participants per group
+  pnum = table(qn_data_itt["group"])
+  pnum_CG = pnum[1]
+  pnum_TG = pnum[2]
+
+# Get Cohen's and confidence intervals
+  estimate = estimateStandardizedMeanDifference(mean_rel_TG, mean_rel_CG, sd_rel_TG, sd_rel_CG, pnum_TG, pnum_CG,
+                                                 conf.level = .95)
+  
+# Retrieve them from list
+  EMK_PB_CH_d_itt = estimate$cohend
+  EMK_PB_CH_low_d_itt = estimate$cohend.low
+  EMK_PB_CH_high_d_itt = estimate$cohend.high
+  
+```
+
+<br>
+
+**With training time**
+
+```{r, results = "asis"}
+  EMK_PB_CH_an = aov_ez("ID", "d_EMK_PB_CH", qn_data_itt, between = c("group"),
+      covariate = c("EMK_PB_CH_T1", "train_time"),
+      observed = c("EMK_PB_CH_T1", "train_time"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_PB_CH_an$anova_table)
+```
+
+### PP
+
+**Without training time**
+
+```{r, results = "asis"}
+  EMK_PB_CH_an = aov_ez("ID", "d_EMK_PB_CH", qn_data_pp, between = c("group"),
+      covariate = c("EMK_PB_CH_T1"),
+      observed = c("EMK_PB_CH_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_PB_CH_an$anova_table)
+```
+
+```{r}
+
+# https://thenewstatistics.com/itns/2020/07/04/3-easy-ways-to-obtain-cohens-d-and-its-ci/
+
+# Calculate mean and SD (and square them) for T2-T1 difference per group (ZE and CG)
+  mean_rel_CG = mean(qn_data_pp[qn_data_pp$group == "CG",]$d_EMK_PB_CH)
+  mean_rel_TG = mean(qn_data_pp[qn_data_pp$group == "TG",]$d_EMK_PB_CH)
+
+  sd_rel_CG = sd(qn_data_pp[qn_data_pp$group == "CG",]$d_EMK_PB_CH)
+  sd_rel_TG = sd(qn_data_pp[qn_data_pp$group == "TG",]$d_EMK_PB_CH)
+
+# Calculate difference between TG and CG
+  diff_mean_TG_CG = mean_rel_TG - mean_rel_CG
+
+# Get number of participants per group
+  pnum = table(qn_data_pp["group"])
+  pnum_CG = pnum[1]
+  pnum_TG = pnum[2]
+
+# Get Cohen's and confidence intervals
+  estimate = estimateStandardizedMeanDifference(mean_rel_TG, mean_rel_CG, sd_rel_TG, sd_rel_CG, pnum_TG, pnum_CG,
+                                                 conf.level = .95)
+  
+# Retrieve them from list
+  EMK_PB_CH_d_pp = estimate$cohend
+  EMK_PB_CH_low_d_pp = estimate$cohend.low
+  EMK_PB_CH_high_d_pp = estimate$cohend.high
+  
+```
+
+**With training time**
+
+```{r, results = "asis"}
+  EMK_PB_CH_an = aov_ez("ID", "d_EMK_PB_CH", qn_data_pp, between = c("group"),
+      covariate = c("EMK_PB_CH_T1", "train_time"),
+      observed = c("EMK_PB_CH_T1", "train_time"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_PB_CH_an$anova_table)
+```
+
+## SDQ PB  {.tabset .tabset-pills}
+
+### ITT
+
+<br>
+
+**Without training time**
+
+```{r, results = "asis"}
+  SDQ_PB_an = aov_ez("ID", "d_SDQ_PB", qn_data_itt, between = c("group"),
+      covariate = c("SDQ_PB_T1"),
+      observed = c("SDQ_PB_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(SDQ_PB_an$anova_table)  
+```
+
+```{r}
+
+# https://thenewstatistics.com/itns/2020/07/04/3-easy-ways-to-obtain-cohens-d-and-its-ci/
+
+# Calculate mean and SD (and square them) for T2-T1 difference per group (ZE and CG)
+  mean_rel_CG = mean(qn_data_itt[qn_data_itt$group == "CG",]$d_SDQ_PB)
+  mean_rel_TG = mean(qn_data_itt[qn_data_itt$group == "TG",]$d_SDQ_PB)
+
+  sd_rel_CG = sd(qn_data_itt[qn_data_itt$group == "CG",]$d_SDQ_PB)
+  sd_rel_TG = sd(qn_data_itt[qn_data_itt$group == "TG",]$d_SDQ_PB)
+
+# Calculate difference between TG and CG
+  diff_mean_TG_CG = mean_rel_TG - mean_rel_CG
+
+# Get number of participants per group
+  pnum = table(qn_data_itt["group"])
+  pnum_CG = pnum[1]
+  pnum_TG = pnum[2]
+
+# Get Cohen's and confidence intervals
+  estimate = estimateStandardizedMeanDifference(mean_rel_TG, mean_rel_CG, sd_rel_TG, sd_rel_CG, pnum_TG, pnum_CG,
+                                                 conf.level = .95)
+  
+# Retrieve them from list
+  SDQ_PB_d_itt = estimate$cohend
+  SDQ_PB_low_d_itt = estimate$cohend.low
+  SDQ_PB_high_d_itt = estimate$cohend.high
+  
+```
+
+<br>
+
+**With training time**
+
+```{r, results = "asis"}
+  SDQ_PB_an = aov_ez("ID", "d_SDQ_PB", qn_data_itt, between = c("group"),
+      covariate = c("SDQ_PB_T1", "train_time"),
+      observed = c("SDQ_PB_T1", "train_time"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(SDQ_PB_an$anova_table)  
+```
+
+### PP
+
+**Without training time**
+
+```{r, results = "asis"}
+  SDQ_PB_an = aov_ez("ID", "d_SDQ_PB", qn_data_pp, between = c("group"),
+      covariate = c("SDQ_PB_T1"),
+      observed = c("SDQ_PB_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(SDQ_PB_an$anova_table)  
+```
+
+```{r}
+
+# https://thenewstatistics.com/itns/2020/07/04/3-easy-ways-to-obtain-cohens-d-and-its-ci/
+
+# Calculate mean and SD (and square them) for T2-T1 difference per group (ZE and CG)
+  mean_rel_CG = mean(qn_data_pp[qn_data_pp$group == "CG",]$d_SDQ_PB)
+  mean_rel_TG = mean(qn_data_pp[qn_data_pp$group == "TG",]$d_SDQ_PB)
+
+  sd_rel_CG = sd(qn_data_pp[qn_data_pp$group == "CG",]$d_SDQ_PB)
+  sd_rel_TG = sd(qn_data_pp[qn_data_pp$group == "TG",]$d_SDQ_PB)
+
+# Calculate difference between TG and CG
+  diff_mean_TG_CG = mean_rel_TG - mean_rel_CG
+
+# Get number of participants per group
+  pnum = table(qn_data_pp["group"])
+  pnum_CG = pnum[1]
+  pnum_TG = pnum[2]
+
+# Get Cohen's and confidence intervals
+  estimate = estimateStandardizedMeanDifference(mean_rel_TG, mean_rel_CG, sd_rel_TG, sd_rel_CG, pnum_TG, pnum_CG,
+                                                 conf.level = .95)
+  
+# Retrieve them from list
+  SDQ_PB_d_pp = estimate$cohend
+  SDQ_PB_low_d_pp = estimate$cohend.low
+  SDQ_PB_high_d_pp = estimate$cohend.high
+  
+```
+
+<br>
+
+**With training time**
+
+```{r, results = "asis"}
+  SDQ_PB_an = aov_ez("ID", "d_SDQ_PB", qn_data_pp, between = c("group"),
+      covariate = c("SDQ_PB_T1", "train_time"),
+      observed = c("SDQ_PB_T1", "train_time"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(SDQ_PB_an$anova_table)  
+```
+
+## SDQ BP  {.tabset .tabset-pills}
+
+### ITT
+
+<br>
+
+**Without training time**
+
+```{r, results = "asis"}
+  SDQ_total_an = aov_ez("ID", "d_SDQ_Total", qn_data_itt, between = c("group"),
+      covariate = c("SDQ_Total_T1"),
+      observed = c("SDQ_Total_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(SDQ_total_an$anova_table)   
+```
+
+```{r}
+
+# https://thenewstatistics.com/itns/2020/07/04/3-easy-ways-to-obtain-cohens-d-and-its-ci/
+
+# Calculate mean and SD (and square them) for T2-T1 difference per group (ZE and CG)
+  mean_rel_CG = mean(qn_data_itt[qn_data_itt$group == "CG",]$d_SDQ_Total)
+  mean_rel_TG = mean(qn_data_itt[qn_data_itt$group == "TG",]$d_SDQ_Total)
+
+  sd_rel_CG = sd(qn_data_itt[qn_data_itt$group == "CG",]$d_SDQ_Total)
+  sd_rel_TG = sd(qn_data_itt[qn_data_itt$group == "TG",]$d_SDQ_Total)
+
+# Calculate difference between TG and CG
+  diff_mean_TG_CG = mean_rel_TG - mean_rel_CG
+
+# Get number of participants per group
+  pnum = table(qn_data_itt["group"])
+  pnum_CG = pnum[1]
+  pnum_TG = pnum[2]
+
+# Get Cohen's and confidence intervals
+  estimate = estimateStandardizedMeanDifference(mean_rel_TG, mean_rel_CG, sd_rel_TG, sd_rel_CG, pnum_TG, pnum_CG,
+                                                 conf.level = .95)
+  
+# Retrieve them from list
+  SDQ_Total_d_itt = estimate$cohend
+  SDQ_Total_low_d_itt = estimate$cohend.low
+  SDQ_Total_high_d_itt = estimate$cohend.high
+  
+```
+
+
+<br>
+
+**With training time**
+
+```{r, results = "asis"}
+  SDQ_total_an = aov_ez("ID", "d_SDQ_Total", qn_data_itt, between = c("group"),
+      covariate = c("SDQ_Total_T1","train_time"),
+      observed = c("SDQ_Total_T1","train_time"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(SDQ_total_an$anova_table)   
+```
+
+### PP
+
+**Without training time**
+
+```{r, results = "asis"}
+  SDQ_total_an = aov_ez("ID", "d_SDQ_Total", qn_data_pp, between = c("group"),
+      covariate = c("SDQ_Total_T1"),
+      observed = c("SDQ_Total_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(SDQ_total_an$anova_table)   
+```
+
+```{r}
+
+# https://thenewstatistics.com/itns/2020/07/04/3-easy-ways-to-obtain-cohens-d-and-its-ci/
+
+# Calculate mean and SD (and square them) for T2-T1 difference per group (ZE and CG)
+  mean_rel_CG = mean(qn_data_pp[qn_data_pp$group == "CG",]$d_SDQ_Total)
+  mean_rel_TG = mean(qn_data_pp[qn_data_pp$group == "TG",]$d_SDQ_Total)
+
+  sd_rel_CG = sd(qn_data_pp[qn_data_pp$group == "CG",]$d_SDQ_Total)
+  sd_rel_TG = sd(qn_data_pp[qn_data_pp$group == "TG",]$d_SDQ_Total)
+
+# Calculate difference between TG and CG
+  diff_mean_TG_CG = mean_rel_TG - mean_rel_CG
+
+# Get number of participants per group
+  pnum = table(qn_data_pp["group"])
+  pnum_CG = pnum[1]
+  pnum_TG = pnum[2]
+
+# Get Cohen's and confidence intervals
+  estimate = estimateStandardizedMeanDifference(mean_rel_TG, mean_rel_CG, sd_rel_TG, sd_rel_CG, pnum_TG, pnum_CG,
+                                                 conf.level = .95)
+  
+# Retrieve them from list
+  SDQ_Total_d_pp = estimate$cohend
+  SDQ_Total_low_d_pp = estimate$cohend.low
+  SDQ_Total_high_d_pp = estimate$cohend.high
+  
+```
+
+<br>
+
+**With training time**
+
+```{r, results = "asis"}
+  SDQ_total_an = aov_ez("ID", "d_SDQ_Total", qn_data_pp, between = c("group"),
+      covariate = c("SDQ_Total_T1","train_time"),
+      observed = c("SDQ_Total_T1","train_time"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(SDQ_total_an$anova_table)   
+```
+
+
+# Secondary outcome: ERPs {.tabset .tabset-pills}
+
+```{r prep_ERP_data, include = FALSE}
+
+# Get P1 data
+  P1 = read.delim("./data/P1_singl_trial_data.txt", header = TRUE, sep = " ", dec = ".")
+
+# De-select ape faces
+  P1_stat = subset(P1, emotion != 4)
+
+# Rename emotion
+  P1_stat$emotion[P1_stat$emotion == 1]='happy'
+  P1_stat$emotion[P1_stat$emotion == 2]='neutral'
+  P1_stat$emotion[P1_stat$emotion == 3]='angry'
+
+##### P1
+  P1_mean_amp = aggregate(P1_stat$ROI_GA_amp,
+            list(ID = P1_stat$ID,
+            emotion = P1_stat$emotion), mean)
+
+  P1_amp_hap = as.data.frame(P1_mean_amp[P1_mean_amp$emotion == 'happy',]$x)
+  P1_amp_hap$ID = P1_mean_amp[P1_mean_amp$emotion == 'happy',]$ID
+
+  P1_amp_neu = as.data.frame(P1_mean_amp[P1_mean_amp$emotion == 'neutral',]$x)
+  P1_amp_neu$ID = P1_mean_amp[P1_mean_amp$emotion == 'neutral',]$ID
+
+  P1_amp_ang = as.data.frame(P1_mean_amp[P1_mean_amp$emotion == 'angry',]$x)
+  P1_amp_ang$ID = P1_mean_amp[P1_mean_amp$emotion == 'angry',]$ID
+
+  qn_data_itt$P1_amp_hap = P1_amp_hap$`P1_mean_amp[P1_mean_amp$emotion == "happy", ]$x`[match(qn_data_itt$ID, P1_amp_hap$ID, nomatch = NA)]
+  qn_data_itt$P1_amp_neu = P1_amp_neu$`P1_mean_amp[P1_mean_amp$emotion == "neutral", ]$x`[match(qn_data_itt$ID, P1_amp_neu$ID, nomatch = NA)]
+  qn_data_itt$P1_amp_ang = P1_amp_ang$`P1_mean_amp[P1_mean_amp$emotion == "angry", ]$x`[match(qn_data_itt$ID, P1_amp_ang$ID, nomatch = NA)]
+
+##### N170
+
+# Get N170 data
+  N170l = read.delim("./data/N170_l_singl_trial_data.txt", header = TRUE, sep = " ", dec = ".")
+  N170r = read.delim("./data/N170_r_singl_trial_data.txt", header = TRUE, sep = " ", dec = ".")
+
+# Combine N170 left and right hemisphere
+  N170l = N170l[,-c(1:3, 5:7)]
+  N170r = N170r[,-c(1:3, 5:7)]
+  N170 = rbind(N170l, N170r)
+
+# De-select ape faces
+  N170_stat = subset(N170, emotion != 4)
+
+# Rename emotion
+  N170_stat$emotion[N170_stat$emotion == 1]='happy'
+  N170_stat$emotion[N170_stat$emotion == 2]='neutral'
+  N170_stat$emotion[N170_stat$emotion == 3]='angry'
+
+# Rename hemisphere
+  N170_stat$hem[N170_stat$hem == 1]='left'
+  N170_stat$hem[N170_stat$hem == 2]='right'
+  
+# Calculate amplitude mean for each ERP component and difference scores between emotions
+  
+  N170_mean_amp = aggregate(N170_stat$ROI_GA_amp,
+            list(ID = N170_stat$ID,
+            emotion = N170_stat$emotion), mean)
+
+  N170_amp_hap = as.data.frame(N170_mean_amp[N170_mean_amp$emotion == 'happy',]$x)
+  N170_amp_hap$ID = N170_mean_amp[N170_mean_amp$emotion == 'happy',]$ID
+
+  N170_amp_neu = as.data.frame(N170_mean_amp[N170_mean_amp$emotion == 'neutral',]$x)
+  N170_amp_neu$ID = N170_mean_amp[N170_mean_amp$emotion == 'neutral',]$ID
+
+  N170_amp_ang = as.data.frame(N170_mean_amp[N170_mean_amp$emotion == 'angry',]$x)
+  N170_amp_ang$ID = N170_mean_amp[N170_mean_amp$emotion == 'angry',]$ID
+
+  qn_data_itt$N170_amp_hap = N170_amp_hap$`N170_mean_amp[N170_mean_amp$emotion == "happy", ]$x`[match(qn_data_itt$ID, N170_amp_hap$ID, nomatch = NA)]
+  qn_data_itt$N170_amp_neu = N170_amp_neu$`N170_mean_amp[N170_mean_amp$emotion == "neutral", ]$x`[match(qn_data_itt$ID, N170_amp_neu$ID, nomatch = NA)]
+  qn_data_itt$N170_amp_ang = N170_amp_ang$`N170_mean_amp[N170_mean_amp$emotion == "angry", ]$x`[match(qn_data_itt$ID, N170_amp_ang$ID, nomatch = NA)]
+
+##### P3 data
+  P3 = read.delim("./data/P3_singl_trial_data.txt", header = TRUE, sep = " ", dec = ".")
+  
+# De-select ape faces
+  P3_stat = subset(P3, emotion != 4)
+
+# Rename emotion
+  P3_stat$emotion[P3_stat$emotion == 1]='happy'
+  P3_stat$emotion[P3_stat$emotion == 2]='neutral'
+  P3_stat$emotion[P3_stat$emotion == 3]='angry'
+
+# Calculate amplitude mean for each ERP component and difference scores between emotions
+  
+  P3_mean_amp = aggregate(P3_stat$ROI_GA_amp,
+            list(ID = P3_stat$ID,
+            emotion = P3_stat$emotion), mean)
+
+  P3_amp_hap = as.data.frame(P3_mean_amp[P3_mean_amp$emotion == 'happy',]$x)
+  P3_amp_hap$ID = P3_mean_amp[P3_mean_amp$emotion == 'happy',]$ID
+
+  P3_amp_neu = as.data.frame(P3_mean_amp[P3_mean_amp$emotion == 'neutral',]$x)
+  P3_amp_neu$ID = P3_mean_amp[P3_mean_amp$emotion == 'neutral',]$ID
+
+  P3_amp_ang = as.data.frame(P3_mean_amp[P3_mean_amp$emotion == 'angry',]$x)
+  P3_amp_ang$ID = P3_mean_amp[P3_mean_amp$emotion == 'angry',]$ID
+
+  qn_data_itt$P3_amp_hap = P3_amp_hap$`P3_mean_amp[P3_mean_amp$emotion == "happy", ]$x`[match(qn_data_itt$ID, P3_amp_hap$ID, nomatch = NA)]
+  qn_data_itt$P3_amp_neu = P3_amp_neu$`P3_mean_amp[P3_mean_amp$emotion == "neutral", ]$x`[match(qn_data_itt$ID, P3_amp_neu$ID, nomatch = NA)]
+  qn_data_itt$P3_amp_ang = P3_amp_ang$`P3_mean_amp[P3_mean_amp$emotion == "angry", ]$x`[match(qn_data_itt$ID, P3_amp_ang$ID, nomatch = NA)]
+
+# Extract ERP data and demographics of interest
+
+ erp_data = subset(qn_data_itt, select = c("ID","group", "age", "sex",
+                                            "P1_amp_hap", "P1_amp_neu", "P1_amp_ang",
+                                            "N170_amp_hap", "N170_amp_neu", "N170_amp_ang",
+                                            "P3_amp_hap", "P3_amp_neu", "P3_amp_ang"))
+ 
+ 
+# De-select participants with sufficient EEG data
+  erp_data = subset(erp_data, ID != "30" & ID != "54" 
+                        & ID != "68" & ID != "69" & ID != "71" & ID != "72" & ID != "73")
+ 
+# Save data  
+  save(erp_data, file = "./data/erp_data.RData")
+ 
+# Transform from wide to long format  
+  erp_data_long = gather(erp_data, emotion, amplitude, P1_amp_hap:P3_amp_ang, factor_key=TRUE)
+  
+```
+
+## Visualization
+
+```{r plot_topo_erps, results = "asis"}
+
+# Load EEG topography data
+  topo_emo_cg = read.delim("./data/PFV_emo_topo_cg.txt", header = TRUE, sep = " ", dec = ".")
+  topo_emo_tg = read.delim("./data/PFV_emo_topo_tg.txt", header = TRUE, sep = " ", dec = ".")
+  
+# Load ERP data
+  P1_P3_traj = read.delim("./data/P1_P3_traj.txt", header = TRUE, sep = " ", dec = ".")
+  
+# De-select ape faces (event code: 4)
+  P1_P3_traj = subset(P1_P3_traj, cond != 4)  
+  
+# Rename emotion condition values
+  P1_P3_traj$cond[P1_P3_traj$cond == 1]='happy'
+  P1_P3_traj$cond[P1_P3_traj$cond == 2]='neutral'
+  P1_P3_traj$cond[P1_P3_traj$cond == 3]='angry'
+  
+# Match info of qn_data with EEG data
+  P1_P3_traj$group = qn_data$group[match(P1_P3_traj$ID, qn_data_itt$ID,nomatch = NA)]
+  P1_P3_traj$group = factor(P1_P3_traj$group) 
+  
+# De-select participants with sufficient EEG data
+  P1_P3_traj = subset(P1_P3_traj, ID != "21" & ID != "30" & ID != "54" 
+                        & ID != "68" & ID != "69" & ID != "71" & ID != "72" & ID != "73" & ID != "75")
+  
+# Topoplots P3 - Group x Emotion effects
+
+# Control group    
+  ga_topo_long_cg = gather(topo_emo_cg, electrode, amplitude, Fp1:Oz,factor_key=TRUE)
+
+# Rename A1/A2
+  names(ga_topo_long_cg)[names(ga_topo_long_cg) == "A1"] = "TP9"
+  names(ga_topo_long_cg)[names(ga_topo_long_cg) == "A2"] = "TP10"
+  
+# Plot topoplots for happy
+  Topo_Emo_Hap_CG = subset(ga_topo_long_cg, emo == 1)
+  
+# Plot topoplots for neutral
+  Topo_Emo_Neu_CG = subset(ga_topo_long_cg, emo == 3)
+
+# Plot topoplots for angry
+  Topo_Emo_Ang_CG = subset(ga_topo_long_cg, emo == 2)
+  
+# Calculate difference score angry-neutral
+  Topo_Diff_Ang_Neu_CG = data.frame(time = Topo_Emo_Hap_CG[,1],
+                                  electrode = Topo_Emo_Hap_CG[,3], amplitude = Topo_Emo_Ang_CG$amplitude - Topo_Emo_Neu_CG$amplitude)
+  
+  
+# Calculate difference score happy-neutral
+  Topo_Diff_Hap_Neu_CG = data.frame(time = Topo_Emo_Hap_CG[,1],
+                                  electrode = Topo_Emo_Hap_CG[,3], amplitude = Topo_Emo_Hap_CG$amplitude - Topo_Emo_Neu_CG$amplitude)  
+  
+  
+# Calculate difference score happy-angry
+  Topo_Diff_Hap_Ang_CG = data.frame(time = Topo_Emo_Hap_CG[,1],
+                                  electrode = Topo_Emo_Hap_CG[,3], amplitude = Topo_Emo_Hap_CG$amplitude - Topo_Emo_Ang_CG$amplitude)    
+
+# Select time windows
+  Topo_Diff_Ang_Neu_CG_P3 = subset(Topo_Diff_Ang_Neu_CG, time >= 300 & time <= 500)
+  Topo_Diff_Hap_Neu_CG_P3 = subset(Topo_Diff_Hap_Neu_CG, time >= 300 & time <= 500)
+  Topo_Diff_Hap_Ang_CG_P3 = subset(Topo_Diff_Hap_Ang_CG, time >= 300 & time <= 500)
+
+# Add electrode information  
+  Topo_Diff_Ang_Neu_CG_P3 = electrode_locations(Topo_Diff_Ang_Neu_CG_P3,
+                                                electrode = "electrode",  drop = FALSE, montage = NULL)
+  
+  Topo_Diff_Hap_Neu_CG_P3 = electrode_locations(Topo_Diff_Hap_Neu_CG_P3,
+                                                electrode = "electrode",  drop = FALSE, montage = NULL)
+  
+  Topo_Diff_Hap_Ang_CG_P3 = electrode_locations(Topo_Diff_Hap_Ang_CG_P3,
+                                                electrode = "electrode",  drop = FALSE, montage = NULL)
+
+# Draw topographies
+  Topo_Diff_Ang_Neu_CG_P3_plot = ggplot(Topo_Diff_Ang_Neu_CG_P3,
+                                        aes(x = x, y = y, fill = amplitude, label = electrode)) +
+                    ggtitle("angry \u2013 neutral")+
+                    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5,
+                              head_size = 0.9) +
+                    scale_fill_distiller(palette = "RdBu" , limits = c(-1.5,1.5)) +
+                    theme_void() +
+                    coord_equal() +
+                    labs(fill = expression(paste("Amplitude (", mu,"V)")))+
+                    theme(legend.position = "none", plot.title = element_text(size = 8, face = "bold", hjust = 0.5))
+  
+
+# Draw topographies
+  Topo_Diff_Hap_Neu_CG_P3_plot = ggplot(Topo_Diff_Hap_Neu_CG_P3,
+                                        aes(x = x, y = y, fill = amplitude, label = electrode)) +
+                   ggtitle("  happy \u2013 neutral")+
+                    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5,
+                              head_size = 0.9) +
+                    scale_fill_distiller(palette = "RdBu" , limits = c(-1.5,1.5)) +
+                    theme_void() +
+                    coord_equal() +
+                    labs(fill = expression(paste("Amplitude (", mu,"V)")))+
+                    theme(legend.position = "none", plot.title = element_text(size = 8, face = "bold", hjust = 0.5))  
+  
+# Draw topographies
+  Topo_Diff_Hap_Ang_CG_P3_plot = ggplot(Topo_Diff_Hap_Ang_CG_P3,
+                                        aes(x = x, y = y, fill = amplitude, label = electrode)) +
+                   ggtitle("  happy \u2013 angy")+
+                    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5,
+                              head_size = 0.9) +
+                    scale_fill_distiller(palette = "RdBu" , limits = c(-1.5,1.5)) +
+                    theme_void() +
+                    coord_equal() +
+                    labs(fill = expression(paste("Amplitude (", mu,"V)")))+
+                    theme(legend.position = "none", plot.title = element_text(size = 8, face = "bold", hjust = 0.5))    
+
+
+# Training group    
+  ga_topo_long_tg = gather(topo_emo_tg, electrode, amplitude, Fp1:Oz,factor_key=TRUE)
+
+# Rename A1/A2
+  names(ga_topo_long_tg)[names(ga_topo_long_tg) == "A1"] = "TP9"
+  names(ga_topo_long_tg)[names(ga_topo_long_tg) == "A2"] = "TP10"
+  
+# Plot topoplots for happy
+  Topo_Emo_Hap_TG = subset(ga_topo_long_tg, emo == 1)
+  
+# Plot topoplots for neutral
+  Topo_Emo_Neu_TG = subset(ga_topo_long_tg, emo == 3)
+
+# Plot topoplots for angry
+  Topo_Emo_Ang_TG = subset(ga_topo_long_tg, emo == 2)
+  
+# Calculate difference score angry-neutral
+  Topo_Diff_Ang_Neu_TG = data.frame(time = Topo_Emo_Hap_TG[,1],
+                                  electrode = Topo_Emo_Hap_TG[,3], amplitude = Topo_Emo_Ang_TG$amplitude - Topo_Emo_Neu_TG$amplitude)
+  
+  
+# Calculate difference score happy-neutral
+  Topo_Diff_Hap_Neu_TG = data.frame(time = Topo_Emo_Hap_TG[,1],
+                                  electrode = Topo_Emo_Hap_TG[,3], amplitude = Topo_Emo_Hap_TG$amplitude - Topo_Emo_Neu_TG$amplitude)  
+  
+  
+# Calculate difference score happy-angry
+  Topo_Diff_Hap_Ang_TG = data.frame(time = Topo_Emo_Hap_TG[,1],
+                                  electrode = Topo_Emo_Hap_TG[,3], amplitude = Topo_Emo_Hap_TG$amplitude - Topo_Emo_Ang_TG$amplitude)    
+
+# Select time windows
+  Topo_Diff_Ang_Neu_TG_P3 = subset(Topo_Diff_Ang_Neu_TG, time >= 300 & time <= 500)
+  Topo_Diff_Hap_Neu_TG_P3 = subset(Topo_Diff_Hap_Neu_TG, time >= 300 & time <= 500)
+  Topo_Diff_Hap_Ang_TG_P3 = subset(Topo_Diff_Hap_Ang_TG, time >= 300 & time <= 500)
+
+# Add electrode information  
+  Topo_Diff_Ang_Neu_TG_P3 = electrode_locations(Topo_Diff_Ang_Neu_TG_P3,
+                                                electrode = "electrode",  drop = FALSE, montage = NULL)
+  
+  Topo_Diff_Hap_Neu_TG_P3 = electrode_locations(Topo_Diff_Hap_Neu_TG_P3,
+                                                electrode = "electrode",  drop = FALSE, montage = NULL)
+  
+  Topo_Diff_Hap_Ang_TG_P3 = electrode_locations(Topo_Diff_Hap_Ang_TG_P3,
+                                                electrode = "electrode",  drop = FALSE, montage = NULL)
+
+# Draw topographies
+  Topo_Diff_Ang_Neu_TG_P3_plot = ggplot(Topo_Diff_Ang_Neu_TG_P3,
+                                        aes(x = x, y = y, fill = amplitude, label = electrode)) +
+                    ggtitle("angry \u2013 neutral")+
+                    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5,
+                              head_size = 0.9) +
+                    scale_fill_distiller(palette = "RdBu" , limits = c(-1.5,1.5)) +
+                    theme_void() +
+                    coord_equal() +
+                    labs(fill = expression(paste("Amplitude (", mu,"V)")))+
+                    theme(legend.position = "none", plot.title = element_text(size = 8, face = "bold", hjust = 0.5))
+  
+
+# Draw topographies
+  Topo_Diff_Hap_Neu_TG_P3_plot = ggplot(Topo_Diff_Hap_Neu_TG_P3,
+                                        aes(x = x, y = y, fill = amplitude, label = electrode)) +
+                   ggtitle("  happy \u2013 neutral")+
+                    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5,
+                              head_size = 0.9) +
+                    scale_fill_distiller(palette = "RdBu" , limits = c(-1.5,1.5)) +
+                    theme_void() +
+                    coord_equal() +
+                    labs(fill = expression(paste("Amplitude (", mu,"V)")))+
+                    theme(legend.position = "none", plot.title = element_text(size = 8, face = "bold", hjust = 0.5)) 
+  
+Topo_Diff_Hap_Ang_TG_P3_plot = ggplot(Topo_Diff_Hap_Ang_TG_P3,
+                                        aes(x = x, y = y, fill = amplitude, label = electrode)) +
+                   ggtitle("  happy \u2013 angry")+
+                    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5,
+                              head_size = 0.9) +
+                    scale_fill_distiller(palette = "RdBu" , limits = c(-1.5,1.5)) +
+                    theme_void() +
+                    coord_equal() +
+                    labs(fill = expression(paste("Amplitude (", mu,"V)")))+
+                    theme(legend.position = "none", plot.title = element_text(size = 8, face = "bold", hjust = 0.5)) 
+  
+  
+# Display plots
+  fig_topo_P3_emo_CG = cowplot::plot_grid(Topo_Diff_Hap_Neu_CG_P3_plot, Topo_Diff_Ang_Neu_CG_P3_plot,  Topo_Diff_Hap_Ang_CG_P3_plot, nrow=1)
+  
+  
+  ggsave(fig_topo_P3_emo_CG, file = "Topo_P3_CG.png", dpi = 300,  bg = "transparent")
+  
+  fig_topo_P3_emo_TG = cowplot::plot_grid(Topo_Diff_Hap_Neu_TG_P3_plot, Topo_Diff_Ang_Neu_TG_P3_plot, Topo_Diff_Hap_Ang_TG_P3_plot, nrow=1)
+  
+  ggsave(fig_topo_P3_emo_TG, file = "Topo_P3_TG.png", dpi = 300,  bg = "transparent")
+  
+  
+  
+# ERP - Plot differences between training and control group
+
+  group.labs = c("Controls (N = 34)", "Zirkus Empathico (N = 33)", "")
+  names(group.labs) = c("CG", "TG")
+  
+
+  ERP_group = ggplot(P1_P3_traj, aes(time,amplitude))+
+    theme(panel.background = element_blank(),
+          panel.border = element_rect(colour = "grey", fill=NA, size=2),
+          axis.title.y = element_text(size = 10, margin = margin(t = 0, r = 5, b = 0, l = 0)),
+          axis.title.x = element_text(size = 10, margin = margin(t = 0, r = 0, b = 0, l = 0)),
+          legend.key = element_rect(fill = "white"))+ 
+    stat_summary(fun.y = mean,geom = "line", size = 1, linetype = "solid",aes(colour = cond))+
+    scale_colour_manual(values = ZE_ERP_col)+
+    #ggtitle("P1 & P3") +
+    theme(legend.position="top", strip.background = element_rect(color="darkgrey", fill="white", size=1, linetype="solid"),
+          strip.text.x = element_text(size = 10, face = "bold")) +
+    labs(x = "\nTime [ms]",y = expression(paste("Amplitude [", mu,"V]")),colour = "") +
+    coord_cartesian(ylim=c(-1.5,18),xlim=c(-100,600)) +
+    scale_y_continuous(breaks=seq(-2,18,2))+
+    scale_x_continuous(breaks=seq(-100,600,200))+
+    geom_vline(xintercept = 0,linetype = "dashed",colour="grey") +
+    geom_hline(yintercept = 0,linetype = "dashed",colour="grey") +
+    ggplot2::annotate("rect", xmin = 90, xmax = 130, ymin = -3, ymax = 20, alpha = .2) +
+    ggplot2::annotate("rect", xmin = 180, xmax = 220, ymin = -3, ymax = 20, alpha = .2) +
+    ggplot2::annotate("rect", xmin = 300, xmax = 500, ymin = -3, ymax = 20, alpha = .2) +
+    facet_wrap(~group, labeller = labeller(group = group.labs), ncol = 2)
+  
+  ggsave(ERP_group, file = "Grouped_ERP.png", dpi = 300,  bg = "transparent")
+  
+  
+# Get legend
+  Topo_Diff_leg = ggplot(Topo_Diff_Hap_Neu_TG_P3, aes(x = x, y = y, fill = amplitude, label = electrode)) +
+                    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5,
+                              head_size = 0.9) +
+                    scale_fill_distiller(palette = "RdBu" , limits = c(-1.5,1)) +
+                    theme_void() +
+                    coord_equal() +
+                    labs(fill = expression(paste("", mu,"V")))+
+                    theme(legend.position = "right", plot.title = element_text(size =5, face = "bold", hjust = 0.5)) 
+
+  topo_leg = get_legend(Topo_Diff_leg)  
+  
+  ggsave(topo_leg, file = "leg_topo.png", dpi = 300,  bg = "transparent")
+  
+# Combine figures  
+  fig_topo = cowplot::plot_grid(NULL, fig_topo_P3_emo_CG, NULL, fig_topo_P3_emo_TG, NULL, topo_leg,
+                                       ncol=6,
+                                       rel_widths = c(0.1, 1, 0.1, 1, 0.1, 0.2), 
+                                       rel_heights = c(0.1, 1, 0.1, 1, 0.1, 0.2))
+
+  fig_topo_erp = cowplot::plot_grid(ERP_group, fig_topo, nrow = 2, rel_heights = c(1, 0.4))
+
+  fig_topo_erp  
+  
+# Save figure
+  ggsave(fig_topo_erp, file = "zerp_erps.png", dpi = 300)
+
+```
+
+
+## P1
+
+```{r, results = "asis"}
+
+P1_data = subset(erp_data_long, emotion == "P1_amp_hap" | emotion == "P1_amp_ang" | emotion == "P1_amp_neu")
+                      
+P1_amp_all_emo_an = aov_ez("ID", "amplitude", P1_data, between = c("group"),
+                      within = c("emotion") ,
+                      anova_table = list(correction = "none", es = "pes"))
+
+pander(P1_amp_all_emo_an$anova_table)
+
+```  
+
+```{r P1_amp_ph_calc, include = FALSE}
+
+# Do post-hoc test 
+  P1_amp_ph = emmeans(P1_amp_all_emo_an, ~ "emotion")
+  P1_amp_ph_res = print(pairs(P1_amp_ph))
+
+```
+
+*Post-hoc tests*
+
+```{r P1_amp_ph_res, results = 'asis'}
+
+# Display post-hoc test results
+  pander(P1_amp_ph_res)
+
+```
+
+```{r, include = FALSE}
+
+# Calculate generalized eta square and 95% CI 
+  eff_size_prep = aov_car(amplitude ~ group*emotion + Error(ID/emotion), data = P1_data)
+  ges_P1 = effectsize::eta_squared(eff_size_prep, generalized = "group")
+  
+
+# Extract values and convert them to Cohen's d
+  P1_d_group = 2*(sqrt(ges_P1$Eta2_generalized[1]/(1-ges_P1$Eta2_generalized[1])))
+  P1_low_CI_group = 2*(sqrt(ges_P1$CI_low[1]/(1-ges_P1$CI_low[1])))
+  P1_high_CI_group = 2*(sqrt(ges_P1$CI_high[1]/(1-ges_P1$CI_high[1])))
+
+  P1_d_emo = 2*(sqrt(ges_P1$Eta2_generalized[2]/(1-ges_P1$Eta2_generalized[2])))
+  P1_low_CI_emo = 2*(sqrt(ges_P1$CI_low[2]/(1-ges_P1$CI_low[2])))
+  P1_high_CI_emo = 2*(sqrt(ges_P1$CI_high[2]/(1-ges_P1$CI_high[2])))
+
+  P1_d_emo_gr = 2*(sqrt(ges_P1$Eta2_generalized[3]/(1-ges_P1$Eta2_generalized[3])))
+  P1_low_CI_emo_gr = 2*(sqrt(ges_P1$CI_low[3]/(1-ges_P1$CI_low[3])))
+  P1_high_CI_emo_gr = 2*(sqrt(ges_P1$CI_high[3]/(1-ges_P1$CI_high[3])))
+  
+```
+
+## N170
+
+```{r, results = "asis"}
+
+N170_data = subset(erp_data_long, emotion == "N170_amp_hap" | emotion == "N170_amp_ang" | emotion == "N170_amp_neu")
+                      
+N170_amp_all_emo_an = aov_ez("ID", "amplitude", N170_data, between = c("group"),
+                      within = c("emotion") ,
+                      anova_table = list(correction = "none", es = "pes"))
+
+pander(N170_amp_all_emo_an$anova_table)
+
+```  
+
+
+```{r, include = FALSE}
+
+# # Calculate generalized eta square and 95% CI 
+  eff_size_prep = aov_car(amplitude ~ group*emotion + Error(ID/emotion), data = N170_data)
+  ges_N170 = effectsize::eta_squared(eff_size_prep, generalized = "group")
+
+# Extract values and vonvert them to Cohen's d
+  N170_d_group = 2*(sqrt(ges_N170$Eta2_generalized[1]/(1-ges_N170$Eta2_generalized[1])))
+  N170_low_CI_group = 2*(sqrt(ges_N170$CI_low[1]/(1-ges_N170$CI_low[1])))
+  N170_high_CI_group = 2*(sqrt(ges_N170$CI_high[1]/(1-ges_N170$CI_high[1])))
+
+  N170_d_emo = 2*(sqrt(ges_N170$Eta2_generalized[2]/(1-ges_N170$Eta2_generalized[2])))
+  N170_low_CI_emo = 2*(sqrt(ges_N170$CI_low[2]/(1-ges_N170$CI_low[2])))
+  N170_high_CI_emo = 2*(sqrt(ges_N170$CI_high[2]/(1-ges_N170$CI_high[2])))
+
+  N170_d_emo_gr = 2*(sqrt(ges_N170$Eta2_generalized[3]/(1-ges_N170$Eta2_generalized[3])))
+  N170_low_CI_emo_gr = 2*(sqrt(ges_N170$CI_low[3]/(1-ges_N170$CI_low[3])))
+  N170_high_CI_emo_gr = 2*(sqrt(ges_N170$CI_high[3]/(1-ges_N170$CI_high[3])))
+```
+
+## P3
+
+```{r, results = "asis"}
+
+P3_data = subset (erp_data_long, emotion == "P3_amp_hap" | emotion == "P3_amp_ang" | emotion == "P3_amp_neu")
+                      
+P3_amp_all_emo_an = aov_ez("ID", "amplitude", P3_data, between = c("group"),
+                      within = c("emotion") ,
+                      anova_table = list(correction = "none", es = "pes"))
+
+pander(P3_amp_all_emo_an$anova_table)
+```  
+
+```{r, include = FALSE}
+
+# Do post-hoc test 
+  P3_amp_ph = emmeans(P3_amp_all_emo_an, ~ "emotion")
+  P3_amp_ph_res = print(pairs(P3_amp_ph))
+
+
+# Do post-hoc test 
+  P3_amp_ph = emmeans(P3_amp_all_emo_an, ~ "emotion", by = "group")
+  P3_amp_ph_emo_neu = print(pairs(P3_amp_ph))
+  
+# Do post-hoc test 
+  P3_amp_ph2 = emmeans(P3_amp_all_emo_an, ~ "group", by = "emotion")
+  P3_amp_ph_emo_neu2 = print(pairs(P3_amp_ph2))
+    
+```
+
+```{r, results = "asis"}
+# Display post-hoc test results
+  pander(P3_amp_ph_res)
+```
+
+```{r, results = "asis"}
+# Display post-hoc test results
+  pander(P3_amp_ph_emo_neu)
+```
+
+
+```{r, results = "asis"}
+# Display post-hoc test results
+  pander(P3_amp_ph_emo_neu2)
+```
+
+
+```{r, include = FALSE}
+
+# Calculate generalized eta square and 95% CI
+  eff_size_prep = aov_car(amplitude ~ group*emotion + Error(ID/emotion), data = P3_data)
+  ges_P3 = effectsize::eta_squared(eff_size_prep , generalized = "group")
+
+# Extract values and vonvert them to Cohen's d
+  P3_d_group = 2*(sqrt(ges_P3$Eta2_generalized[1]/(1-ges_P3$Eta2_generalized[1])))
+  P3_low_CI_group = 2*(sqrt(ges_P3$CI_low[1]/(1-ges_P3$CI_low[1])))
+  P3_high_CI_group = 2*(sqrt(ges_P3$CI_high[1]/(1-ges_P3$CI_high[1])))
+
+  P3_d_emo = 2*(sqrt(ges_P3$Eta2_generalized[2]/(1-ges_P3$Eta2_generalized[2])))
+  P3_low_CI_emo = 2*(sqrt(ges_P3$CI_low[2]/(1-ges_P3$CI_low[2])))
+  P3_high_CI_emo = 2*(sqrt(ges_P3$CI_high[2]/(1-ges_P3$CI_high[2])))
+
+  P3_d_emo_gr = 2*(sqrt(ges_P3$Eta2_generalized[3]/(1-ges_P3$Eta2_generalized[3])))
+  P3_low_CI_emo_gr = 2*(sqrt(ges_P3$CI_low[3]/(1-ges_P3$CI_low[3])))
+  P3_high_CI_emo_gr = 2*(sqrt(ges_P3$CI_high[3]/(1-ges_P3$CI_high[3])))
+```
+
+
+# Effect size summary {.tabset .tabset-pills} 
+
+## Intent-to-treat
+
+```{r, results = "asis"}
+
+  d_itt = c(GEM_Total_d_itt, EMK_EM_CH_d_itt, EMK_EM_P_d_itt,
+              EMK_ER_CH_d_itt, EMK_ER_P_d_itt, EMK_PB_CH_d_itt,
+              SDQ_Total_d_itt, SDQ_PB_d_itt)
+
+  low_itt = c(GEM_Total_low_d_itt, EMK_EM_CH_low_d_itt, EMK_EM_P_low_d_itt,
+              EMK_ER_CH_low_d_itt, EMK_ER_P_low_d_itt, EMK_PB_CH_low_d_itt,
+              SDQ_Total_low_d_itt, SDQ_PB_low_d_itt)
+  
+  high_itt = c(GEM_Total_high_d_itt, EMK_EM_CH_high_d_itt, EMK_EM_P_high_d_itt,
+              EMK_ER_CH_high_d_itt, EMK_ER_P_high_d_itt, EMK_PB_CH_high_d_itt,
+              SDQ_Total_high_d_itt, SDQ_PB_high_d_itt)
+
+  eff_size_itt = data.frame(d_itt, low_itt, high_itt)
+  
+  pander(eff_size_itt)
+
+```
+
+## Per-protocol analysis
+
+```{r, results = "asis"}
+
+  d_pp = c(GEM_Total_d_pp, EMK_EM_CH_d_pp, EMK_EM_P_d_pp,
+              EMK_ER_CH_d_pp, EMK_ER_P_d_pp, EMK_PB_CH_d_pp,
+              SDQ_Total_d_pp, SDQ_PB_d_pp)
+
+  low_pp = c(GEM_Total_low_d_pp, EMK_EM_CH_low_d_pp, EMK_EM_P_low_d_pp,
+              EMK_ER_CH_low_d_pp, EMK_ER_P_low_d_pp, EMK_PB_CH_low_d_pp,
+              SDQ_Total_low_d_pp, SDQ_PB_low_d_pp)
+  
+  high_pp = c(GEM_Total_high_d_pp, EMK_EM_CH_high_d_pp, EMK_EM_P_high_d_pp,
+              EMK_ER_CH_high_d_pp, EMK_ER_P_high_d_pp, EMK_PB_CH_high_d_pp,
+              SDQ_Total_high_d_pp, SDQ_PB_high_d_pp)
+
+  eff_size_pp = data.frame(d_pp, low_pp, high_pp)
+  
+  pander(eff_size_pp)
+
+```
+
+```{r, include = FALSE, eval = FALSE}
+mean_groups = qn_data_itt %>%
+  group_by(group) %>%
+  summarise_at(vars(GEM_Total_T1:d_SDQ_Total), list(name = mean))
+
+pander(mean_groups)
+
+sd_groups = qn_data_itt %>%
+  group_by(group) %>%
+  summarise_at(vars(GEM_Total_T1:d_SDQ_Total), list(name = SD))
+
+pander(sd_groups)
+
+```
+
+## ERPs
+
+**P1**
+
+```{r, results = "asis"}
+
+# https://cran.r-project.org/web/packages/effectsize/vignettes/anovaES.html
+# https://ademos.people.uic.edu/Chapter21.html
+
+  d_erp = c(P1_d_emo, P1_d_group, P1_d_emo_gr)
+
+  low_erp = c(P1_low_CI_emo, P1_low_CI_group, P1_low_CI_emo_gr)
+  
+  high_erp = c(P1_high_CI_emo, P1_high_CI_group, P1_high_CI_emo_gr)
+
+  eff_size_erp = data.frame(d_erp, low_erp, high_erp)
+  
+  pander(eff_size_erp)
+
+```
+
+
+**N170**
+
+```{r, results = "asis"}
+
+  d_erp = c(N170_d_emo, N170_d_group, N170_d_emo_gr)
+
+  low_erp = c(N170_low_CI_emo, N170_low_CI_group, N170_low_CI_emo_gr)
+  
+  high_erp = c(N170_high_CI_emo, N170_high_CI_group, N170_high_CI_emo_gr)
+
+  eff_size_erp = data.frame(d_erp, low_erp, high_erp)
+  
+  pander(eff_size_erp)
+
+```
+
+
+**P3**
+
+```{r, results = "asis"}
+
+  d_erp = c(P3_d_emo, P3_d_group, P3_d_emo_gr)
+
+  low_erp = c(P3_low_CI_emo, P3_low_CI_group, P3_low_CI_emo_gr)
+  
+  high_erp = c(P3_high_CI_emo, P3_high_CI_group, P3_high_CI_emo_gr)
+
+  eff_size_erp = data.frame(d_erp, low_erp, high_erp)
+  
+  pander(eff_size_erp)
+
+```
+
+
+# Session info
+
+<!-- Provide session info  -->
+
+```{r session_info, results = TRUE}
+
+# Get session info 
+  sessionInfo()
+
+```

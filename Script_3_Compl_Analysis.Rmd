@@ -1,0 +1,600 @@
+---
+title: "Complementary analysis"
+output: 
+  rmdformats::material:
+    highlight: kate
+    css: web_style.css
+    thumbnails: false
+    lightbox: true
+    gallery: true
+    cards: true
+    self_contained: no
+    number_sections: no
+    code_folding: hide
+    fig_caption: yes
+---
+
+<!-- Set up workspace -->
+
+```{r setup, include = FALSE, message = FALSE, warning = FALSE}
+
+# Set general settings for Markdown file 
+  options(max.print="75")
+
+  knitr::opts_chunk$set(echo=TRUE,
+                 prompt=FALSE,
+                 tidy=TRUE,
+                 comment=NA,
+                 message=FALSE,
+                 warning=FALSE,
+                 results = FALSE,
+  	             fig.align="center")
+  knitr::opts_knit$set(width=75)
+# Swipe environment
+  rm(list=ls())
+  
+# Set libraries
+  library(afex)
+  library(car)
+  library(emmeans)
+  library(expss)
+  library(ggplot2)
+  library(gtsummary)
+  library(lme4)
+  library(MASS)
+  library(miceadds)
+  library(pander)
+  library(ppcor)
+  library(sjmisc)
+  library(sjPlot)
+  library(tadaatoolbox)
+  library(tidyverse)
+  
+# Round to 2 digits   
+  options(digits=2)
+  
+# Disable scientific notation in R
+  options(scipen = 999)
+  
+  
+# Correlation function
+# https://stackoverflow.com/questions/34326906/extracting-and-formatting-results-of-cor-test-on-multiple-pairs-of-columns 
+  corrFunc <- function(var1, var2, data) {
+    result = cor.test(data[,var1], data[,var2])
+    data.frame(var1, var2, result[c("estimate","p.value","statistic")], 
+               stringsAsFactors=FALSE) }
+
+```
+
+```{r load_prep_data, include = FALSE}
+
+# Load questionnaire data
+  load.Rdata(filename="./data/qn_data_orig.Rdata", "qn_data")
+
+# Re-code training group
+  qn_data$group[qn_data$group == "ZE"] = "TG"
+  qn_data$group[qn_data$group == "SB"] = "CG"
+
+# Define N/A data
+  qn_data[qn_data==-99] = NA
+
+  load.Rdata(filename="./data/app_qn.Rdata", "app_qn")
+  
+```
+
+# Training fidelity
+
+**Training engagement across groups**
+
+```{r training_time_stats, results = "asis"}
+
+# Select screening variables
+  qn_data_train_time = qn_data %>% select(group, T_Self_Report, train_weeks)
+
+# Rename groups
+  qn_data_train_time$group = dplyr::recode(qn_data_train_time$group, 
+                         CG = "Controls", TG = "Zirkus Empathico")
+
+# Apply labels
+  qn_data_train_time = apply_labels(qn_data_train_time,
+                      T_Self_Report = "Training time (min)",
+                      sibs = "Training duration (weeks)")
+# Prepare table
+  train_time_table =
+    tbl_summary(
+      qn_data_train_time,
+      by = group, # split table by group
+      type = c(T_Self_Report, train_weeks) ~ "continuous",
+      statistic = list(all_continuous() ~ "{mean} ({sd})", # descriptives definition
+                     all_categorical() ~ "{n} / {N} ({p}%)"),
+      digits = all_continuous() ~ 2,
+      missing = "no" # don't list missing data separately
+    ) %>%
+    add_n() %>% # add column with total number of non-missing observations
+    modify_header(label = "**Variable**") %>% # update the column header
+    bold_labels()
+  
+# Print table 
+  train_time_table
+  
+# Correlation training time with Screen time
+  #cor_qn_data = subset(qn_data, select = c(T_Self_Report, T_Screen_Time)
+  #cor_qn_data =  na.omit(cor_qn_data)
+  #cor.test(cor_qn_data$T_Screen_Time, cor_qn_data$T_Self_Report, method = c("pearson"))
+  
+```
+
+**Difference testing for Training duration (in weeks)**
+
+```{r t_test_training_time, results = "asis"}
+
+tadaa_t.test(
+  qn_data_train_time,
+  train_weeks,
+  group,
+  direction = "two.sided",
+  paired = FALSE,
+  var.equal = TRUE,
+  conf.level = 0.95,
+  print = c("markdown")) 
+```
+
+**Difference testing for total training time (minutes)**
+
+```{r t_test_training_time_2, results = "asis"}
+tadaa_t.test(
+  qn_data_train_time,
+  T_Self_Report,
+  group,
+  direction = "two.sided",
+  paired = FALSE,
+  var.equal = TRUE,
+  conf.level = 0.95,
+  print = c("markdown"))  
+```
+
+
+**Parental involvement**
+
+```{r fidel_stats_prep, include = FALSE}
+
+# Select data for acceptibility questions
+  app_stats = as_tibble(app_qn)
+  app_stats = app_stats %>% dplyr::select(Fun, Motivation, Practiced_without_parent, 
+                                          Use_App_self_explanatory, Use_Training_daily_life,
+                                          Behav_Dealing_w_Feelings, Behav_Interest_Languages)
+  
+# Add training info
+  app_stats$group = app_qn$App  
+  
+# Rename groups
+  app_stats$group = dplyr::recode(app_stats$group, 
+                         CT = "Controls", ZE = "Zirkus Empathico")
+  
+  app_stats[app_stats$group == "0",] = NA
+  
+  app_stats = app_stats[complete.cases(app_stats$group),]
+  
+  with(app_stats, aggregate(Practiced_without_parent ~ group, FUN = sd))
+  
+
+```
+
+```{r parent_invo, results = "asis"}
+tadaa_t.test(
+  app_stats,
+  Practiced_without_parent,
+  group,
+  direction = "two.sided",
+  paired = FALSE,
+  var.equal = TRUE,
+  conf.level = 0.95,
+  print = c("markdown"))  
+
+#with(app_stats, aggregate(Practiced_without_parent ~ group, FUN = sd))
+```
+
+# Long-term effects
+
+```{r results = 'asis', align = "center"}
+
+# http://www.danieldsjoberg.com/gtsummary/articles/tbl_summary.html
+
+
+  load.Rdata(filename="./data/qn_data_itt.Rdata", "qn_data_itt")
+
+  qn_data_itt = subset(qn_data_itt, ID != "3" & ID != "6" & ID != "7" & ID != "9" & ID != "17" & ID != "21"
+                       & ID != "26" & ID != "28" & ID != "29" & ID != "34" & ID != "35" & ID != "36" & ID != "39"
+                       & ID != "40" & ID != "41" & ID != "42" & ID != "44" & ID != "46" & ID != "48" & ID != "49"
+                       & ID != "50" & ID != "51" & ID != "54" & ID != "55"  & ID != "56" & ID != "62" & ID != "65"
+                       & ID != "66" & ID != "68" & ID != "70" & ID != "71" & ID != "72" & ID != "73" & ID != "75"
+                       & ID != "76")
+
+# Select screening variables
+  qn_data_demog = subset(qn_data_itt, select = c("group", "sex", "age"))
+
+
+# Rename groups
+  qn_data_demog$group = dplyr::recode(qn_data_demog$group, 
+                         CG = "Controls", TG = "Zirkus Empathico")
+
+# Apply labels
+  qn_data_demog = apply_labels(qn_data_demog,
+                      sex = "Sex",
+                      age = "Age (years)")
+
+# Prepare table
+  demog_table =
+    tbl_summary(
+      qn_data_demog,
+      by = group, # split table by group
+      type = c(age) ~ "continuous",
+      statistic = list(all_continuous() ~ "{mean} ({sd})", # descriptives definition
+                     all_categorical() ~ "{n} / {N} ({p}%)"),
+      digits = all_continuous() ~ 2,
+      missing = "no" # don't list missing data separately
+    ) %>%
+    add_n() %>% # add column with total number of non-missing observations
+    add_p() %>% # test for a difference between groups
+    modify_header(label = "**Variable**") %>% # update the column header
+    bold_labels()
+  
+# Print table 
+  demog_table
+  
+```
+
+```{r prep_data_T3, include = FALSE}
+
+# load data
+  load.Rdata(filename="./data/qn_data_orig.Rdata", "qn_data_T3")
+
+# Re-code training group
+  qn_data_T3$group[qn_data_T3$group == "ZE"] = "TG"
+  qn_data_T3$group[qn_data_T3$group == "SB"] = "CG"
+
+# Define N/A data
+  qn_data_T3[qn_data_T3==-99] = NA
+
+# Calculate change scores (d = delta) for T2
+  qn_data_T3$d_GEM_Total = qn_data_T3$GEM_Total_T2 - qn_data_T3$GEM_Total_T1
+  qn_data_T3$d_EMK_EM_CH = qn_data_T3$EMK_EM_CH_T2 - qn_data_T3$EMK_EM_CH_T1
+  qn_data_T3$d_EMK_EM_P = qn_data_T3$EMK_EM_P_T2 - qn_data_T3$EMK_EM_P_T1
+  qn_data_T3$d_EMK_ER_CH = qn_data_T3$EMK_ER_CH_T2 - qn_data_T3$EMK_ER_CH_T1
+  qn_data_T3$d_EMK_ER_P = qn_data_T3$EMK_ER_P_T2 - qn_data_T3$EMK_ER_P_T1
+  qn_data_T3$d_EMK_PB_CH = qn_data_T3$EMK_PB_CH_T2 - qn_data_T3$EMK_PB_CH_T1
+  qn_data_T3$d_SDQ_PB = qn_data_T3$SDQ_PB_T2 - qn_data_T3$SDQ_PB_T1
+  qn_data_T3$d_SDQ_Total = qn_data_T3$SDQ_Total_T1 - qn_data_T3$SDQ_Total_T2
+
+
+# Calculate change scores (d = delta) for T3
+  qn_data_T3$d_GEM_Total_lt = qn_data_T3$GEM_Total_T3 - qn_data_T3$GEM_Total_T1
+  qn_data_T3$d_EMK_EM_P_lt = qn_data_T3$EMK_EM_P_T3 - qn_data_T3$EMK_EM_P_T1
+  qn_data_T3$d_EMK_ER_P_lt = qn_data_T3$EMK_ER_P_T3 - qn_data_T3$EMK_ER_P_T1
+  qn_data_T3$d_SDQ_PB_lt = qn_data_T3$SDQ_PB_T3 - qn_data_T3$SDQ_PB_T1
+  qn_data_T3$d_SDQ_Total_lt = qn_data_T3$SDQ_Total_T1 - qn_data_T3$SDQ_Total_T3  
+  
+
+# Select T3 complete cases
+  qn_data_T3 = subset(qn_data_T3, select = c("ID", "group", "d_GEM_Total", "d_EMK_EM_P", "d_EMK_ER_P",
+                                             "d_SDQ_PB", "d_SDQ_Total","GEM_Total_T1", "EMK_EM_P_T1", "EMK_ER_P_T1",
+                                             "SDQ_PB_T1","SDQ_Total_T1","d_GEM_Total_lt", "d_EMK_EM_P_lt",
+                                              "d_EMK_ER_P_lt","d_SDQ_PB_lt", "d_SDQ_Total_lt"))
+  
+  
+
+  qn_data_T3 = qn_data_T3[complete.cases(qn_data_T3$d_GEM_Total_lt), ] 
+
+# Transform from wide to long format  
+  qn_data_T2_T1 = subset(qn_data_T3, select = c("ID", "group", "d_GEM_Total", "d_EMK_EM_P", "d_EMK_ER_P",
+                                             "d_SDQ_PB", "d_SDQ_Total","GEM_Total_T1", "EMK_EM_P_T1", "EMK_ER_P_T1",
+                                             "SDQ_PB_T1","SDQ_Total_T1"))
+  
+  qn_data_T3_T1 = subset(qn_data_T3, select = c("ID", "group", "d_GEM_Total_lt", "d_EMK_EM_P_lt","d_EMK_ER_P_lt","d_SDQ_PB_lt",
+                                             "d_SDQ_Total_lt", "GEM_Total_T1", "EMK_EM_P_T1", "EMK_ER_P_T1",
+                                             "SDQ_PB_T1","SDQ_Total_T1"))
+  
+# Add time info
+  qn_data_T2_T1$time = "short"
+  qn_data_T3_T1$time = "long"
+  
+# Rename columns  
+  qn_data_T2_T1 = as_tibble(qn_data_T2_T1) 
+  qn_data_T2_T1 = dplyr::rename(qn_data_T2_T1, GEM = d_GEM_Total,
+                                        EMK_EM_P = d_EMK_EM_P,
+                                        EMK_ER_P = d_EMK_ER_P,
+                                        SDQ_PB = d_SDQ_PB,
+                                        SDQ_Total = d_SDQ_Total)
+  
+  qn_data_T3_T1 = as_tibble(qn_data_T3_T1) 
+  qn_data_T3_T1 = dplyr::rename(qn_data_T3_T1, GEM = d_GEM_Total_lt,
+                                        EMK_EM_P = d_EMK_EM_P_lt,
+                                        EMK_ER_P = d_EMK_ER_P_lt,
+                                        SDQ_PB = d_SDQ_PB_lt,
+                                        SDQ_Total = d_SDQ_Total_lt)
+  
+# Combine matrices
+  qn_data_T3 = rbind(qn_data_T2_T1, qn_data_T3_T1)
+
+```
+
+## Primary outcomes {.tabset .tabset-pills}
+
+### GEM
+
+```{r ancova_GEM_lt, results = 'asis'}
+   
+# ANCOVA GEM
+  gem_lt_anc =  aov_ez("ID", "GEM", qn_data_T3, between = c("group","time"),
+    covariate = c("GEM_Total_T1"),
+    observed = c("GEM_Total_T1"), factorize = FALSE,
+    anova_table = list(correction = "none", es = "pes"))
+
+   pander(gem_lt_anc$anova_table)
+  
+   
+```
+
+```{r, include = FALSE}
+
+# Do post-hoc test 
+  GEM_ph = emmeans(gem_lt_anc, ~ "group", by = "time")
+  GEM_ph_pr = print(pairs(GEM_ph))
+  
+```
+
+```{r, include = FALSE}
+# Display post-hoc test results
+  pander(GEM_ph_pr)
+```
+
+```{r, eval = FALSE}
+
+# Calculate generalized eta square and 95% CI
+  eff_size_prep = aov_car(GEM ~ group*time + Error(ID/time), data = qn_data_T3)
+  ges_GEM = eta_squared(eff_size_prep , generalized = "group")
+
+# Extract values and vonvert them to Cohen's d
+  GEM_d_group = 2*(sqrt(ges_GEM$Eta2_generalized[1]/(1-ges_GEM$Eta2_generalized[1])))
+  GEM_low_CI_group = 2*(sqrt(ges_GEM$CI_low[1]/(1-ges_GEM$CI_low[1])))
+  GEM_high_CI_group = 2*(sqrt(ges_GEM$CI_high[1]/(1-ges_GEM$CI_high[1])))
+
+  GEM_d_emo = 2*(sqrt(ges_GEM$Eta2_generalized[2]/(1-ges_GEM$Eta2_generalized[2])))
+  GEM_low_CI_emo = 2*(sqrt(ges_GEM$CI_low[2]/(1-ges_GEM$CI_low[2])))
+  GEM_high_CI_emo = 2*(sqrt(ges_GEM$CI_high[2]/(1-ges_GEM$CI_high[2])))
+
+  GEM_d_emo_gr = 2*(sqrt(ges_GEM$Eta2_generalized[3]/(1-ges_GEM$Eta2_generalized[3])))
+  GEM_low_CI_emo_gr = 2*(sqrt(ges_GEM$CI_low[3]/(1-ges_GEM$CI_low[3])))
+  GEM_high_CI_emo_gr = 2*(sqrt(ges_GEM$CI_high[3]/(1-ges_GEM$CI_high[3])))
+
+  d_T3 = c(GEM_d_emo, GEM_d_group, GEM_d_emo_gr)
+
+  low_T3 = c(GEM_low_CI_emo, GEM_low_CI_group, GEM_low_CI_emo_gr)
+  
+  high_T3 = c(GEM_high_CI_emo, GEM_high_CI_group, GEM_high_CI_emo_gr)
+
+  eff_size_T3 = data.frame(d_T3, low_T3, high_T3)
+  
+  pander(eff_size_T3)
+
+```
+
+
+### EMK 3-6 EM P
+
+```{r ancova_EMK_EM_P_T3, results = 'asis'}
+
+  EMK_EM_P_lt_anc = aov_ez("ID", "EMK_EM_P", qn_data_T3, between = c("group","time"),
+      covariate = c("EMK_EM_P_T1"),
+      observed = c("EMK_EM_P_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_EM_P_lt_anc$anova_table)
+
+  
+```
+
+
+
+## Secondary outcomes {.tabset .tabset-pills}
+
+### EMK 3-6 ER P
+
+```{r ancova_EMK_ER_P_T3, results = 'asis'}
+
+  EMK_ER_P_lt_anc = aov_ez("ID", "EMK_ER_P", qn_data_T3, between = c("group","time"),
+      covariate = c("EMK_ER_P_T1"),
+      observed = c("EMK_ER_P_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(EMK_ER_P_lt_anc$anova_table)
+
+```
+
+
+
+
+### SDQ PB
+
+```{r ancova_sdq_PB_T3, results = 'asis'}
+
+# ANCOVA SDQ_PB
+
+  SDQ_PB_lt_anc = aov_ez("ID", "SDQ_PB", qn_data_T3, between = c("group","time"),
+      covariate = c("SDQ_PB_T1"),
+      observed = c("SDQ_PB_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(SDQ_PB_lt_anc$anova_table)
+  
+```
+
+### SDQ BP
+
+```{r ancova_sdq_total_T3, results = 'asis'}
+
+# ANCOVA SDQ_Total
+
+  SDQ_total_lt_anc = aov_ez("ID", "SDQ_Total", qn_data_T3, between = c("group","time"),
+      covariate = c("SDQ_Total_T1"),
+      observed = c("SDQ_Total_T1"), factorize = FALSE,
+      anova_table = list(correction = "none", es = "pes"))
+  
+  pander(SDQ_total_lt_anc$anova_table)
+  
+```
+
+
+
+
+
+
+# Correlations {.tabset .tabset-pills}
+
+## Overall correlation
+
+```{r, results = "asis"}
+
+ load.Rdata(filename="./data/erp_data.Rdata", "erp_data")
+ load.Rdata(filename="./data/qn_data_itt.Rdata", "qn_data_itt")
+ 
+ # De-select participants with sufficient EEG data
+  qn_data_itt = subset(qn_data_itt, ID != "30" & ID != "54" 
+                        & ID != "68" & ID != "69" & ID != "71" & ID != "72" & ID != "73")
+  
+  qn_data_itt$P3_amp_hap = erp_data$P3_amp_hap
+  qn_data_itt$P3_amp_neu = erp_data$P3_amp_neu
+  qn_data_itt$P3_amp_ang = erp_data$P3_amp_ang
+  
+
+  qn_data_itt$P3_amp_hap_neu = qn_data_itt$P3_amp_hap - qn_data_itt$P3_amp_neu
+  qn_data_itt$P3_amp_hap_ang = qn_data_itt$P3_amp_hap - qn_data_itt$P3_amp_ang
+
+  
+  # Define correlation pairs of interest 
+  vars_P3_amp_hap_neu = data.frame(v1=names(qn_data_itt)[c(which(colnames(qn_data_itt)=="P3_amp_hap_neu"))], 
+                    v2=names(qn_data_itt)[c(which(colnames(qn_data_itt)=="EMK_EM_P_T2"), which(colnames(qn_data_itt)=="EMK_ER_P_T2"),
+                            which(colnames(qn_data_itt)=="EMK_ER_CH_T2"), which(colnames(qn_data_itt)=="SDQ_PB_T2"), which(colnames(qn_data_itt)=="SDQ_Total_T2"))])
+  
+  vars_P3_amp_hap_ang = data.frame(v1=names(qn_data_itt)[c(which(colnames(qn_data_itt)=="P3_amp_hap_ang"))], 
+                    v2=names(qn_data_itt)[c(which(colnames(qn_data_itt)=="EMK_EM_P_T2"), which(colnames(qn_data_itt)=="EMK_ER_P_T2"),
+                            which(colnames(qn_data_itt)=="EMK_ER_CH_T2"), which(colnames(qn_data_itt)=="SDQ_PB_T2"), which(colnames(qn_data_itt)=="SDQ_Total_T2"))])
+
+# Combine all correlation pairs 
+  vars_P3_behav = rbind(vars_P3_amp_hap_neu, vars_P3_amp_hap_ang)
+  
+# Correlate pairs of interest  
+  
+  corrs_P3_behav = do.call(rbind, mapply(corrFunc, vars_P3_behav[,1], vars_P3_behav[,2], MoreArgs=list(data=qn_data_itt), SIMPLIFY=FALSE))
+  
+  corrs_P3_behav = subset(corrs_P3_behav , select = -c(var1))
+
+# Print table
+  pander(corrs_P3_behav)
+  
+  
+```
+
+## Correlation by group
+
+**Controls**
+
+```{r, results = "asis"}
+
+ load.Rdata(filename="./data/erp_data.Rdata", "erp_data")
+ load.Rdata(filename="./data/qn_data_itt.Rdata", "qn_data_itt")
+ 
+ # De-select participants with sufficient EEG data
+  qn_data_itt = subset(qn_data_itt, ID != "30" & ID != "54" 
+                        & ID != "68" & ID != "69" & ID != "71" & ID != "72" & ID != "73")
+  
+  qn_data_itt$P3_amp_hap = erp_data$P3_amp_hap
+  qn_data_itt$P3_amp_neu = erp_data$P3_amp_neu
+  qn_data_itt$P3_amp_ang = erp_data$P3_amp_ang
+  
+  qn_data_itt$P3_amp_hap_neu = qn_data_itt$P3_amp_hap - qn_data_itt$P3_amp_neu
+  qn_data_itt$P3_ang_hap_ang = qn_data_itt$P3_amp_hap - qn_data_itt$P3_amp_ang
+  
+# Select group
+  qn_data_itt = subset(qn_data_itt, group == "CG")
+
+  
+  # Define correlation pairs of interest 
+  vars_P3_amp_hap_neu = data.frame(v1=names(qn_data_itt)[c(which(colnames(qn_data_itt)=="P3_amp_hap_neu"))], 
+                    v2=names(qn_data_itt)[c(which(colnames(qn_data_itt)=="EMK_EM_P_T2"), which(colnames(qn_data_itt)=="EMK_ER_P_T2"),
+                            which(colnames(qn_data_itt)=="EMK_ER_CH_T2"), which(colnames(qn_data_itt)=="SDQ_PB_T2"), which(colnames(qn_data_itt)=="SDQ_Total_T2"))])
+  
+  vars_P3_ang_hap_ang = data.frame(v1=names(qn_data_itt)[c(which(colnames(qn_data_itt)=="P3_ang_hap_ang"))], 
+                    v2=names(qn_data_itt)[c(which(colnames(qn_data_itt)=="EMK_EM_P_T2"), which(colnames(qn_data_itt)=="EMK_ER_P_T2"),
+                            which(colnames(qn_data_itt)=="EMK_ER_CH_T2"), which(colnames(qn_data_itt)=="SDQ_PB_T2"), which(colnames(qn_data_itt)=="SDQ_Total_T2"))])
+
+# Combine all correlation pairs 
+  vars_P3_behav = rbind(vars_P3_amp_hap_neu, vars_P3_ang_hap_ang)
+  
+# Correlate pairs of interest  
+  
+  corrs_P3_behav = do.call(rbind, mapply(corrFunc, vars_P3_behav[,1], vars_P3_behav[,2], MoreArgs=list(data=qn_data_itt), SIMPLIFY=FALSE))
+  
+  corrs_P3_behav = subset(corrs_P3_behav , select = -c(var1))
+
+# Print table
+  pander(corrs_P3_behav)
+  
+```
+
+**Zirkus Empathico**
+
+```{r, results = "asis"}
+
+ load.Rdata(filename="./data/erp_data.Rdata", "erp_data")
+ load.Rdata(filename="./data/qn_data_itt.Rdata", "qn_data_itt")
+ 
+ # De-select participants with sufficient EEG data
+  qn_data_itt = subset(qn_data_itt, ID != "30" & ID != "54" 
+                        & ID != "68" & ID != "69" & ID != "71" & ID != "72" & ID != "73")
+  
+  qn_data_itt$P3_amp_hap = erp_data$P3_amp_hap
+  qn_data_itt$P3_amp_neu = erp_data$P3_amp_neu
+  qn_data_itt$P3_amp_ang = erp_data$P3_amp_ang
+  
+  qn_data_itt$P3_amp_hap_neu = qn_data_itt$P3_amp_hap - qn_data_itt$P3_amp_neu
+  qn_data_itt$P3_ang_hap_ang = qn_data_itt$P3_amp_hap - qn_data_itt$P3_amp_ang
+  
+# Select group
+  qn_data_itt = subset(qn_data_itt, group == "TG")
+
+  
+  # Define correlation pairs of interest 
+  vars_P3_amp_hap_neu = data.frame(v1=names(qn_data_itt)[c(which(colnames(qn_data_itt)=="P3_amp_hap_neu"))], 
+                    v2=names(qn_data_itt)[c(which(colnames(qn_data_itt)=="EMK_EM_P_T2"), which(colnames(qn_data_itt)=="EMK_ER_P_T2"),
+                            which(colnames(qn_data_itt)=="EMK_ER_CH_T2"), which(colnames(qn_data_itt)=="SDQ_PB_T2"), which(colnames(qn_data_itt)=="SDQ_Total_T2"))])
+  
+  vars_P3_ang_hap_ang = data.frame(v1=names(qn_data_itt)[c(which(colnames(qn_data_itt)=="P3_ang_hap_ang"))], 
+                    v2=names(qn_data_itt)[c(which(colnames(qn_data_itt)=="EMK_EM_P_T2"), which(colnames(qn_data_itt)=="EMK_ER_P_T2"),
+                            which(colnames(qn_data_itt)=="EMK_ER_CH_T2"), which(colnames(qn_data_itt)=="SDQ_PB_T2"), which(colnames(qn_data_itt)=="SDQ_Total_T2"))])
+
+# Combine all correlation pairs 
+  vars_P3_behav = rbind(vars_P3_amp_hap_neu, vars_P3_ang_hap_ang)
+  
+# Correlate pairs of interest  
+  
+  corrs_P3_behav = do.call(rbind, mapply(corrFunc, vars_P3_behav[,1], vars_P3_behav[,2], MoreArgs=list(data=qn_data_itt), SIMPLIFY=FALSE))
+  
+  corrs_P3_behav = subset(corrs_P3_behav , select = -c(var1))
+
+# Print table
+  pander(corrs_P3_behav)
+  
+```
+
+
+# Session info
+
+<!-- Provide session info  -->
+
+```{r session_info, results = TRUE}
+
+# Get session info 
+  sessionInfo()
+
+```

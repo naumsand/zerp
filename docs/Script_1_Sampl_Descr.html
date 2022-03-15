@@ -213,6 +213,7 @@
 <div id="toc">
 <ul>
 <li><a href="#participants">Participants</a></li>
+<li><a href="#session-info">Session info</a></li>
 </ul>
 </div>
 </nav>
@@ -230,7 +231,7 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="index.html">Naumann et al.</a>
+      <a class="navbar-brand" href="index.html">NAU ZERP</a>
     </div>
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
@@ -249,31 +250,24 @@
   </a>
 </li>
 <li>
-  <a href="Script_2_Report_Measures.html">
+  <a href="Script_2_Conf_Analysis.html">
     <span class="glyphicon glyphicon-hand-up"></span>
      
-    Child-/Parental measures
+    Confirmatory Analysis
   </a>
 </li>
 <li>
-  <a href="Script_3_ERPs.html">
+  <a href="Script_3_Compl_Analysis.html">
     <span class="glyphicon glyphicon-user"></span>
      
-    ERPs
+    Complementary Analysis
   </a>
 </li>
 <li>
-  <a href="Script_4_Brain_Behavior.html">
-    <span class="glyphicon glyphicon-resize-small"></span>
-     
-    Correlational analysis
-  </a>
-</li>
-<li>
-  <a href="Script_5_Supplement.html">
+  <a href="Script_4_Further_Fidel.html">
     <span class="glyphicon glyphicon glyphicon glyphicon-piggy-bank"></span>
      
-    Supplement
+    Further fidelity
   </a>
 </li>
       </ul>
@@ -308,7 +302,7 @@
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true"></a></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true"></a><span class="co"># Select screening variables</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true"></a>  qn_data_demog =<span class="st"> </span>qn_data <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(group, sex, sibs, age, wink_ind, PPVT_perc, CPM)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true"></a>  qn_data_demog =<span class="st"> </span>qn_data <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(group, sex, sibs, age, wink_ind, PPVT_perc, CPM, T_Self_Report, train_weeks)</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true"></a></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true"></a><span class="co"># Rename groups</span></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true"></a>  qn_data_demog<span class="op">$</span>group =<span class="st"> </span>dplyr<span class="op">::</span><span class="kw">recode</span>(qn_data_demog<span class="op">$</span>group, </span>
@@ -322,30 +316,33 @@
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true"></a>                      <span class="dt">wink_ind =</span> <span class="st">&quot;SES (Winkler index)&quot;</span>,</span>
 <span id="cb1-17"><a href="#cb1-17" aria-hidden="true"></a>                      <span class="dt">PPVT_perc =</span> <span class="st">&quot;Verbal age (PPVT percentiles)&quot;</span>,</span>
 <span id="cb1-18"><a href="#cb1-18" aria-hidden="true"></a>                      <span class="dt">CPM =</span> <span class="st">&quot;Nonverbal IQ (CPM)&quot;</span>)</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true"></a></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true"></a><span class="co"># Prepare table</span></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true"></a>  demog_table =</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true"></a><span class="st">    </span><span class="kw">tbl_summary</span>(</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true"></a>      qn_data_demog,</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true"></a>      <span class="dt">by =</span> group, <span class="co"># split table by group</span></span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true"></a>      <span class="dt">type =</span> <span class="kw">c</span>(sibs, age, wink_ind, PPVT_perc, CPM) <span class="op">~</span><span class="st"> &quot;continuous&quot;</span>,</span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true"></a>      <span class="dt">statistic =</span> <span class="kw">list</span>(<span class="kw">all_continuous</span>() <span class="op">~</span><span class="st"> &quot;{mean} ({sd})&quot;</span>, <span class="co"># descriptives definition</span></span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true"></a>                     <span class="kw">all_categorical</span>() <span class="op">~</span><span class="st"> &quot;{n} / {N} ({p}%)&quot;</span>),</span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true"></a>      <span class="dt">digits =</span> <span class="kw">all_continuous</span>() <span class="op">~</span><span class="st"> </span><span class="dv">2</span>,</span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true"></a>      <span class="dt">missing =</span> <span class="st">&quot;no&quot;</span> <span class="co"># don&#39;t list missing data separately</span></span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true"></a>    ) <span class="op">%&gt;%</span></span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true"></a><span class="st">    </span><span class="kw">add_n</span>() <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># add column with total number of non-missing observations</span></span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true"></a><span class="st">    </span><span class="kw">add_p</span>() <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># test for a difference between groups</span></span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true"></a><span class="st">    </span><span class="kw">modify_header</span>(<span class="dt">label =</span> <span class="st">&quot;**Variable**&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># update the column header</span></span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true"></a><span class="st">    </span><span class="kw">bold_labels</span>()</span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true"></a>  </span>
-<span id="cb1-36"><a href="#cb1-36" aria-hidden="true"></a><span class="co"># Print table </span></span>
-<span id="cb1-37"><a href="#cb1-37" aria-hidden="true"></a>  demog_table</span></code></pre></div>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true"></a>  </span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true"></a><span class="co"># Make SES categorical variable</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true"></a>  qn_data_demog<span class="op">$</span>wink_ind =<span class="st"> </span><span class="kw">factor</span>(qn_data_demog<span class="op">$</span>wink_ind)</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true"></a><span class="co"># Prepare table</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true"></a>  demog_table =</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true"></a><span class="st">    </span><span class="kw">tbl_summary</span>(</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true"></a>      qn_data_demog,</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true"></a>      <span class="dt">by =</span> group, <span class="co"># split table by group</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true"></a>      <span class="dt">type =</span> <span class="kw">c</span>(age, PPVT_perc, CPM) <span class="op">~</span><span class="st"> &quot;continuous&quot;</span>,</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true"></a>      <span class="dt">statistic =</span> <span class="kw">list</span>(<span class="kw">all_continuous</span>() <span class="op">~</span><span class="st"> &quot;{mean} ({sd})&quot;</span>, <span class="co"># descriptives definition</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true"></a>                     <span class="kw">all_categorical</span>() <span class="op">~</span><span class="st"> &quot;{n} / {N} ({p}%)&quot;</span>),</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true"></a>      <span class="dt">digits =</span> <span class="kw">all_continuous</span>() <span class="op">~</span><span class="st"> </span><span class="dv">2</span>,</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true"></a>      <span class="dt">missing =</span> <span class="st">&quot;no&quot;</span> <span class="co"># don&#39;t list missing data separately</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true"></a>    ) <span class="op">%&gt;%</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true"></a><span class="st">    </span><span class="kw">add_n</span>() <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># add column with total number of non-missing observations</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true"></a><span class="st">    </span><span class="co">#add_p() %&gt;% # test for a difference between groups</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true"></a><span class="st">    </span><span class="kw">modify_header</span>(<span class="dt">label =</span> <span class="st">&quot;**Variable**&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># update the column header</span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true"></a><span class="st">    </span><span class="kw">bold_labels</span>()</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true"></a>  </span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true"></a><span class="co"># Print table </span></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true"></a>  demog_table</span></code></pre></div>
 <style>html {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
 }
 
-#mugfcrkteo .gt_table {
+#kvlhwftfjt .gt_table {
   display: table;
   border-collapse: collapse;
   margin-left: auto;
@@ -370,7 +367,7 @@
   border-left-color: #D3D3D3;
 }
 
-#mugfcrkteo .gt_heading {
+#kvlhwftfjt .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -382,7 +379,7 @@
   border-right-color: #D3D3D3;
 }
 
-#mugfcrkteo .gt_title {
+#kvlhwftfjt .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -392,7 +389,7 @@
   border-bottom-width: 0;
 }
 
-#mugfcrkteo .gt_subtitle {
+#kvlhwftfjt .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -402,13 +399,13 @@
   border-top-width: 0;
 }
 
-#mugfcrkteo .gt_bottom_border {
+#kvlhwftfjt .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#mugfcrkteo .gt_col_headings {
+#kvlhwftfjt .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -423,7 +420,7 @@
   border-right-color: #D3D3D3;
 }
 
-#mugfcrkteo .gt_col_heading {
+#kvlhwftfjt .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -443,7 +440,7 @@
   overflow-x: hidden;
 }
 
-#mugfcrkteo .gt_column_spanner_outer {
+#kvlhwftfjt .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -455,15 +452,15 @@
   padding-right: 4px;
 }
 
-#mugfcrkteo .gt_column_spanner_outer:first-child {
+#kvlhwftfjt .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#mugfcrkteo .gt_column_spanner_outer:last-child {
+#kvlhwftfjt .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#mugfcrkteo .gt_column_spanner {
+#kvlhwftfjt .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -475,7 +472,7 @@
   width: 100%;
 }
 
-#mugfcrkteo .gt_group_heading {
+#kvlhwftfjt .gt_group_heading {
   padding: 8px;
   color: #333333;
   background-color: #FFFFFF;
@@ -497,7 +494,7 @@
   vertical-align: middle;
 }
 
-#mugfcrkteo .gt_empty_group_heading {
+#kvlhwftfjt .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -512,15 +509,15 @@
   vertical-align: middle;
 }
 
-#mugfcrkteo .gt_from_md > :first-child {
+#kvlhwftfjt .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#mugfcrkteo .gt_from_md > :last-child {
+#kvlhwftfjt .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#mugfcrkteo .gt_row {
+#kvlhwftfjt .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -539,7 +536,7 @@
   overflow-x: hidden;
 }
 
-#mugfcrkteo .gt_stub {
+#kvlhwftfjt .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -551,7 +548,7 @@
   padding-left: 12px;
 }
 
-#mugfcrkteo .gt_summary_row {
+#kvlhwftfjt .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -561,7 +558,7 @@
   padding-right: 5px;
 }
 
-#mugfcrkteo .gt_first_summary_row {
+#kvlhwftfjt .gt_first_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -571,7 +568,7 @@
   border-top-color: #D3D3D3;
 }
 
-#mugfcrkteo .gt_grand_summary_row {
+#kvlhwftfjt .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -581,7 +578,7 @@
   padding-right: 5px;
 }
 
-#mugfcrkteo .gt_first_grand_summary_row {
+#kvlhwftfjt .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -591,11 +588,11 @@
   border-top-color: #D3D3D3;
 }
 
-#mugfcrkteo .gt_striped {
+#kvlhwftfjt .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#mugfcrkteo .gt_table_body {
+#kvlhwftfjt .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -604,7 +601,7 @@
   border-bottom-color: #D3D3D3;
 }
 
-#mugfcrkteo .gt_footnotes {
+#kvlhwftfjt .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -618,13 +615,13 @@
   border-right-color: #D3D3D3;
 }
 
-#mugfcrkteo .gt_footnote {
+#kvlhwftfjt .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding: 4px;
 }
 
-#mugfcrkteo .gt_sourcenotes {
+#kvlhwftfjt .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -638,118 +635,211 @@
   border-right-color: #D3D3D3;
 }
 
-#mugfcrkteo .gt_sourcenote {
+#kvlhwftfjt .gt_sourcenote {
   font-size: 90%;
   padding: 4px;
 }
 
-#mugfcrkteo .gt_left {
+#kvlhwftfjt .gt_left {
   text-align: left;
 }
 
-#mugfcrkteo .gt_center {
+#kvlhwftfjt .gt_center {
   text-align: center;
 }
 
-#mugfcrkteo .gt_right {
+#kvlhwftfjt .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#mugfcrkteo .gt_font_normal {
+#kvlhwftfjt .gt_font_normal {
   font-weight: normal;
 }
 
-#mugfcrkteo .gt_font_bold {
+#kvlhwftfjt .gt_font_bold {
   font-weight: bold;
 }
 
-#mugfcrkteo .gt_font_italic {
+#kvlhwftfjt .gt_font_italic {
   font-style: italic;
 }
 
-#mugfcrkteo .gt_super {
+#kvlhwftfjt .gt_super {
   font-size: 65%;
 }
 
-#mugfcrkteo .gt_footnote_marks {
+#kvlhwftfjt .gt_footnote_marks {
   font-style: italic;
   font-size: 65%;
 }
 </style>
-<div id="mugfcrkteo" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;"><table class="gt_table">
+<div id="kvlhwftfjt" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;"><table class="gt_table">
   
   <thead class="gt_col_headings">
     <tr>
       <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1"><strong>Variable</strong></th>
       <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>N</strong></th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>Controls</strong>, N = 30<sup class="gt_footnote_marks">1</sup></th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>Zirkus Empathico</strong>, N = 30<sup class="gt_footnote_marks">1</sup></th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>p-value</strong><sup class="gt_footnote_marks">2</sup></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>Controls</strong>, N = 38<sup class="gt_footnote_marks">1</sup></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>Zirkus Empathico</strong>, N = 36<sup class="gt_footnote_marks">1</sup></th>
     </tr>
   </thead>
   <tbody class="gt_table_body">
     <tr>
       <td class="gt_row gt_left" style="font-weight: bold;">Sex</td>
-      <td class="gt_row gt_center">60</td>
+      <td class="gt_row gt_center">74</td>
       <td class="gt_row gt_center"></td>
       <td class="gt_row gt_center"></td>
-      <td class="gt_row gt_center">0.8</td>
     </tr>
     <tr>
       <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">Female</td>
       <td class="gt_row gt_center"></td>
-      <td class="gt_row gt_center">16 / 30 (53%)</td>
-      <td class="gt_row gt_center">15 / 30 (50%)</td>
-      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">18 / 38 (47%)</td>
+      <td class="gt_row gt_center">16 / 36 (44%)</td>
     </tr>
     <tr>
       <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">Male</td>
       <td class="gt_row gt_center"></td>
-      <td class="gt_row gt_center">14 / 30 (47%)</td>
-      <td class="gt_row gt_center">15 / 30 (50%)</td>
-      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">20 / 38 (53%)</td>
+      <td class="gt_row gt_center">20 / 36 (56%)</td>
     </tr>
     <tr>
       <td class="gt_row gt_left" style="font-weight: bold;">Siblings</td>
-      <td class="gt_row gt_center">60</td>
-      <td class="gt_row gt_center">1.17 (0.65)</td>
-      <td class="gt_row gt_center">1.27 (0.94)</td>
-      <td class="gt_row gt_center">0.9</td>
+      <td class="gt_row gt_center">74</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">0</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">4 / 38 (11%)</td>
+      <td class="gt_row gt_center">7 / 36 (19%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">1</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">25 / 38 (66%)</td>
+      <td class="gt_row gt_center">18 / 36 (50%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">2</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">8 / 38 (21%)</td>
+      <td class="gt_row gt_center">7 / 36 (19%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">3</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">1 / 38 (2.6%)</td>
+      <td class="gt_row gt_center">3 / 36 (8.3%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">4</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">0 / 38 (0%)</td>
+      <td class="gt_row gt_center">1 / 36 (2.8%)</td>
     </tr>
     <tr>
       <td class="gt_row gt_left" style="font-weight: bold;">Age (years)</td>
-      <td class="gt_row gt_center">60</td>
-      <td class="gt_row gt_center">5.07 (0.80)</td>
-      <td class="gt_row gt_center">5.01 (0.65)</td>
-      <td class="gt_row gt_center">>0.9</td>
+      <td class="gt_row gt_center">74</td>
+      <td class="gt_row gt_center">5.10 (0.90)</td>
+      <td class="gt_row gt_center">5.12 (0.80)</td>
     </tr>
     <tr>
-      <td class="gt_row gt_left" style="font-weight: bold;">SES (Winkler index)</td>
-      <td class="gt_row gt_center">60</td>
-      <td class="gt_row gt_center">11.73 (2.24)</td>
-      <td class="gt_row gt_center">12.23 (1.79)</td>
-      <td class="gt_row gt_center">0.4</td>
+      <td class="gt_row gt_left" style="font-weight: bold;">wink_ind</td>
+      <td class="gt_row gt_center">74</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">5</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">1 / 38 (2.6%)</td>
+      <td class="gt_row gt_center">0 / 36 (0%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">6</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">0 / 38 (0%)</td>
+      <td class="gt_row gt_center">1 / 36 (2.8%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">8</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">2 / 38 (5.3%)</td>
+      <td class="gt_row gt_center">1 / 36 (2.8%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">9</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">2 / 38 (5.3%)</td>
+      <td class="gt_row gt_center">1 / 36 (2.8%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">10</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">5 / 38 (13%)</td>
+      <td class="gt_row gt_center">5 / 36 (14%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">11</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">7 / 38 (18%)</td>
+      <td class="gt_row gt_center">4 / 36 (11%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">12</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">5 / 38 (13%)</td>
+      <td class="gt_row gt_center">7 / 36 (19%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">13</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">8 / 38 (21%)</td>
+      <td class="gt_row gt_center">9 / 36 (25%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">14</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">6 / 38 (16%)</td>
+      <td class="gt_row gt_center">6 / 36 (17%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">15</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">2 / 38 (5.3%)</td>
+      <td class="gt_row gt_center">2 / 36 (5.6%)</td>
     </tr>
     <tr>
       <td class="gt_row gt_left" style="font-weight: bold;">Verbal age (PPVT percentiles)</td>
-      <td class="gt_row gt_center">60</td>
-      <td class="gt_row gt_center">71.58 (22.14)</td>
-      <td class="gt_row gt_center">72.44 (20.07)</td>
-      <td class="gt_row gt_center">0.8</td>
+      <td class="gt_row gt_center">74</td>
+      <td class="gt_row gt_center">68.45 (24.79)</td>
+      <td class="gt_row gt_center">68.39 (24.95)</td>
     </tr>
     <tr>
       <td class="gt_row gt_left" style="font-weight: bold;">Nonverbal IQ (CPM)</td>
-      <td class="gt_row gt_center">60</td>
-      <td class="gt_row gt_center">15.03 (3.95)</td>
-      <td class="gt_row gt_center">13.40 (3.11)</td>
-      <td class="gt_row gt_center">0.046</td>
+      <td class="gt_row gt_center">74</td>
+      <td class="gt_row gt_center">14.79 (3.73)</td>
+      <td class="gt_row gt_center">13.92 (3.43)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="font-weight: bold;">T_Self_Report</td>
+      <td class="gt_row gt_center">71</td>
+      <td class="gt_row gt_center">323.76 (127.95)</td>
+      <td class="gt_row gt_center">351.21 (122.52)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="font-weight: bold;">train_weeks</td>
+      <td class="gt_row gt_center">74</td>
+      <td class="gt_row gt_center">7.09 (0.90)</td>
+      <td class="gt_row gt_center">6.98 (1.27)</td>
     </tr>
   </tbody>
   
   <tfoot>
     <tr class="gt_footnotes">
-      <td colspan="5">
+      <td colspan="4">
         <p class="gt_footnote">
           <sup class="gt_footnote_marks">
             <em>1</em>
@@ -758,20 +848,68 @@
           n / N (%); Mean (SD)
           <br />
         </p>
-        <p class="gt_footnote">
-          <sup class="gt_footnote_marks">
-            <em>2</em>
-          </sup>
-           
-          Pearson's Chi-squared test; Wilcoxon rank sum test; Wilcoxon rank sum exact test
-          <br />
-        </p>
       </td>
     </tr>
   </tfoot>
 </table></div>
 </div>
 <p>Note. SES = socioeconomic status (Winkler &amp; Stolzenberg, 1998, range: 3-15, low SES = 3-6, medium SES = 7-10, high SES = 11-15), PPVT = Peabody Picture Vocabulary Test, CPM = Coloured Progressive Matrices.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true"></a><span class="kw">tadaa_t.test</span>(<span class="dt">data =</span> qn_data, <span class="dt">response =</span> T_Self_Report, <span class="dt">group =</span> group, <span class="dt">print =</span> <span class="st">&quot;markdown&quot;</span>)</span></code></pre></div>
+</div>
+<div id="session-info" class="section level1">
+<h1>Session info</h1>
+<!-- Provide session info  -->
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true"></a><span class="co"># Get session info</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true"></a><span class="kw">sessionInfo</span>()</span></code></pre></div>
+<pre><code>R version 4.0.2 (2020-06-22)
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+Running under: Windows 10 x64 (build 18362)
+
+Matrix products: default
+
+locale:
+[1] LC_COLLATE=German_Germany.1252  LC_CTYPE=German_Germany.1252   
+[3] LC_MONETARY=German_Germany.1252 LC_NUMERIC=C                   
+[5] LC_TIME=German_Germany.1252    
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] tadaatoolbox_0.17.0 miceadds_3.11-6     mice_3.13.0        
+ [4] gtsummary_1.4.0     expss_0.10.7        eeptools_1.2.4     
+ [7] XLConnect_1.0.3     forcats_0.5.1       stringr_1.4.0      
+[10] dplyr_1.0.5         purrr_0.3.4         readr_1.4.0        
+[13] tidyr_1.1.3         tibble_3.1.1        ggplot2_3.3.3      
+[16] tidyverse_1.3.1     kableExtra_1.3.4   
+
+loaded via a namespace (and not attached):
+ [1] minqa_1.2.4         colorspace_2.0-0    rio_0.5.26         
+ [4] class_7.3-18        ellipsis_0.3.1      htmlTable_2.1.0    
+ [7] base64enc_0.1-3     fs_1.5.0            gld_2.6.2          
+[10] proxy_0.4-25        rstudioapi_0.13     mvtnorm_1.1-1      
+[13] fansi_0.4.2         lubridate_1.7.10    xml2_1.3.2         
+[16] splines_4.0.2       rootSolve_1.8.2.1   knitr_1.32         
+[19] pixiedust_0.9.1     Formula_1.2-4       jsonlite_1.7.2     
+[22] nloptr_1.2.2.2      gt_0.2.2            rJava_0.9-13       
+[25] broom_0.7.6         cluster_2.1.2       dbplyr_2.1.1       
+[28] png_0.1-7           compiler_4.0.2      httr_1.4.2         
+[31] backports_1.2.1     assertthat_0.2.1    Matrix_1.3-2       
+[34] cli_2.4.0           formatR_1.9         htmltools_0.5.1.1  
+[37] tools_4.0.2         lmom_2.8            coda_0.19-4        
+[40] gtable_0.3.0        glue_1.4.2          Rcpp_1.0.6         
+[43] carData_3.0-4       cellranger_1.1.0    jquerylib_0.1.3    
+[46] vctrs_0.3.7         svglite_2.0.0       nlme_3.1-152       
+[49] broom.helpers_1.3.0 lmtest_0.9-38       xfun_0.22          
+[52] openxlsx_4.2.3      lme4_1.1-26         rvest_1.0.0        
+[55] lifecycle_1.0.0     statmod_1.4.35      MASS_7.3-53.1      
+[58] zoo_1.8-9           scales_1.1.1        hms_1.0.0          
+[61] expm_0.999-6        RColorBrewer_1.1-2  curl_4.3           
+[64] Exact_2.1           yaml_2.2.1          gridExtra_2.3      
+[67] sass_0.3.1          rpart_4.1-15        latticeExtra_0.6-29
+[70] stringi_1.5.3       highr_0.9           maptools_1.1-1     
+[73] e1071_1.7-6         checkmate_2.0.0     zip_2.1.1          
+ [ reached getOption(&quot;max.print&quot;) -- omitted 45 entries ]</code></pre>
 </div>
 </div>
 
